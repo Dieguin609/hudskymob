@@ -1,1 +1,211 @@
+/* ============================================================
+   RESET E CONFIGURAÇÕES GERAIS
+   ============================================================ */
+* { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
 
+html, body { 
+    /* Força a transparência total no motor GeckoView */
+    background-color: rgba(0, 0, 0, 0) !important; 
+    background: transparent !important;
+    overflow: hidden; 
+    font-family: 'Rajdhani', sans-serif; 
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* ============================================================
+   CAMADA 1: SUA HUD ORIGINAL (MANTIDA)
+   ============================================================ */
+.logo-container {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+}
+.main-logo { width: 85px; height: auto; }
+
+.hud-right-top {
+    position: absolute;
+    top: -40px; 
+    right: 0px; 
+    width: 240px; 
+}
+.overlay-img { width: 100%; height: auto; display: block; }
+
+.text-item {
+    position: absolute;
+    color: #fff;
+    font-weight: 700;
+    text-shadow: 1px 1px 2px #000;
+}
+.clock-pos { top: 92px; right: 30px; font-size: 20px; }
+.money-pos { top: 130px; right: 137px; font-size: 15px; }
+.bank-pos  { top: 130px; right: 27px; font-size: 15px; }
+
+/* ATUALIZADO PARA MOBILE: Radar no topo esquerdo */
+.minimap-area {
+    position: absolute;
+    top: 25px;         /* Mudado de bottom para top */
+    left: 30px;
+    bottom: auto;      /* Garante que ignore o bottom original */
+    width: 170px;
+    height: 170px;
+}
+.minimap-circle {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    overflow: hidden;
+    position: relative;
+    border: 3px solid #fff;
+    background: #1a1a1a;
+}
+#map-img { 
+    position: absolute; 
+    width: 2500px; 
+    transition: none; 
+}
+.player-arrow {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 16px; height: 16px;
+    background: white;
+    clip-path: polygon(50% 0%, 0% 100%, 50% 80%, 100% 100%);
+    transform: translate(-50%, -50%);
+    z-index: 5;
+}
+
+/* ============================================================
+   CAMADA 2: MAPA GRANDE E GPS (ESTILO FIVEM) - INTEGRAL
+   ============================================================ */
+#big-map-layer {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(15, 15, 15, 0.92); /* Cinza escuro elegante */
+    z-index: 9999;
+    overflow: hidden;
+    display: none;
+}
+
+/* Wrapper que segura Imagem + GPS + Blips para o Zoom funcionar em tudo */
+#map-container {
+    position: absolute;
+    width: 2500px; /* IMG_SIZE */
+    height: 2500px;
+    transform-origin: 0 0;
+}
+
+#full-map-img {
+    position: absolute;
+    top: 0; left: 0;
+    width: 2500px;
+    height: 2500px;
+    user-select: none;
+}
+
+/* ESTILO DA LINHA DO GPS - ROXO FIVEM */
+#gps-svg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 2500px;
+    height: 2500px;
+    pointer-events: none;
+    z-index: 2; /* Acima do mapa, abaixo dos ícones */
+}
+
+#gps-path {
+    fill: none;
+    stroke: #bf00ff; /* Roxo vibrante FiveM */
+    stroke-width: 9;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    filter: drop-shadow(0px 0px 4px rgba(191, 0, 255, 0.6)) drop-shadow(0px 0px 1px #000);
+}
+
+#map-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 2500px;
+    height: 2500px;
+    z-index: 3; /* Ícones no topo */
+}
+
+/* ============================================================
+   MENU DE LOCAIS (VERSÃO MINI ARREDONDADA)
+   ============================================================ */
+.map-locations-float {
+    position: absolute;
+    right: 20px; /* Mais colado na borda */
+    top: 40px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; 
+    gap: 6px; /* Espaço menor entre os blocos */
+}
+
+.location-item-alt {
+    display: flex;
+    align-items: center;
+    background: rgba(11, 4, 114, 0.92); 
+    color: #ffffff;
+    padding: 5px 12px; /* Padding reduzido para ficar menor */
+    border-radius: 10px; /* Bordas bem arredondadas */
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    min-width: 140px; /* Largura reduzida */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+
+/* Item de destaque (Roxo) */
+.location-item-alt:first-child {
+    background: #bf00ff;
+    box-shadow: 0 0 12px rgba(191, 0, 255, 0.5);
+}
+
+.location-item-alt:hover {
+    transform: translateX(-5px); /* Em vez de crescer, ele desliza pro lado */
+    background: #e93f9c;
+    color: #000000;
+}
+
+.loc-icon {
+    font-size: 14px; /* Emoji menor */
+    margin-right: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    width: 28px; /* Quadrado do ícone menor */
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+}
+
+.loc-name {
+    font-size: 11px; /* Letra pequena e nítida */
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Esconder o que não precisa para manter o minimalismo */
+.location-header, .loc-dist, .location-footer {
+    display: none;
+}
+
+#gps-path-mini {
+    vector-effect: non-scaling-stroke;
+}
+
+.map-icon-fixed {
+    position: absolute;
+    z-index: 50;
+    pointer-events: none;
+    /* Cálculo baseado na sua escala de 2500px */
+    left: 1867px; /* Exemplo de posição calculada para a prefeitura */
+    top: 1478px;
+}
