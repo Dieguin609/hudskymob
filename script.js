@@ -352,3 +352,75 @@ window.addEventListener('keydown', (e) => {
  * FINAL DO ARQUIVO script.js
  * SkyPixel RPG - Desenvolvido para Geckoju Mobile
  */
+// --- SISTEMA DE BLIPS (ÍCONES NO MAPA) ---
+const blipsData = [
+    { id: 1, x: 1544.3, y: -1675.8, icon: 'assets/blips/police.png', name: 'Departamento Policial' },
+    { id: 2, x: 1172.5, y: -1323.9, icon: 'assets/blips/hospital.png', name: 'Hospital Central' },
+    { id: 3, x: 1481.2, y: -1771.2, icon: 'assets/blips/cityhall.png', name: 'Prefeitura' }
+    // Adicione os outros blips seguindo o seu padrão original
+];
+
+function renderizarBlipsNoMapa() {
+    if (!blipsContainer) return;
+    blipsContainer.innerHTML = ''; // Limpa antes de renderizar
+
+    blipsData.forEach(blip => {
+        const pos = gtaToPos(blip.x, blip.y);
+        const div = document.createElement('div');
+        div.className = 'blip';
+        div.style.left = `${pos.x}px`;
+        div.style.top = `${pos.y}px`;
+        div.style.backgroundImage = `url(${blip.icon})`;
+        
+        // No Mobile, um clique simples no ícone pode abrir o GPS
+        div.onclick = () => gpsParaLocal(blip.x, blip.y, blip.name);
+        
+        blipsContainer.appendChild(div);
+    });
+}
+
+// --- LOGICA DE CLIQUE NO MAPA (GPS LIVRE) ---
+if (bigMapImg) {
+    // No Mobile, o contextmenu é disparado por um toque longo
+    bigMapImg.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        const rect = bigMapImg.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / zoom;
+        const y = (e.clientY - rect.top) / zoom;
+
+        const gtaCoord = posToGta(x, y);
+        marcarDestinoVisual(x, y);
+        
+        // Envia para a GM processar o GPS
+        sendToServer("client:setGPS", gtaCoord.x, gtaCoord.y);
+    });
+}
+function calcularDistancia(x1, y1, x2, y2) {
+    return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+}
+
+function marcarDestinoVisual(x, y) {
+    let cross = document.getElementById('gps-cross');
+    if (!cross) {
+        cross = document.createElement('div');
+        cross.id = 'gps-cross';
+        cross.innerHTML = '❌'; 
+        cross.className = 'marcador-gps';
+        bigMapImg.parentElement.appendChild(cross);
+    }
+    cross.style.left = `${x}px`;
+    cross.style.top = `${y}px`;
+}
+
+// Inicia tudo
+window.onload = () => {
+    updateClock();
+    setInterval(updateClock, 1000);
+    renderLoop(); // Inicia o mapa a 60 FPS
+    
+    // Avisa a GM que o Mobile está pronto
+    setTimeout(() => {
+        sendToServer("client:browserReady");
+        hideOriginalHud();
+    }, 1000);
+};
