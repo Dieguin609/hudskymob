@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    <title>SkyPixel HUD</title>
+</head>
+<body>
+    <div id="main-hud">
+        <div class="logo-container">
+            <img src="Logo.png" class="main-logo">
+        </div>
+
+        <div class="hud-right-top">
+            <img src="overlay.png" class="overlay-img">
+            <div class="info-data">
+                <div id="clock" class="text-item clock-pos">00:00</div>
+                <div id="money-hand" class="text-item money-pos">0</div>
+                <div id="money-bank" class="text-item bank-pos">0</div>
+            </div>
+        </div>
+
+        <div class="minimap-area">
+            <div class="minimap-circle">
+                <img src="map.png" id="map-img" style="position: absolute; width: 2500px; height: 2500px;">
+                
+                <svg id="gps-svg-mini" style="position: absolute; width: 2500px; height: 2500px; pointer-events: none; z-index: 5;">
+                    <polyline id="gps-path-mini" points="" fill="none" stroke="#bf00ff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+
+                <div class="player-arrow"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="big-map-layer" style="display: none;">
+        <div id="map-container">
+            <img src="map.png" id="full-map-img">
+
+            <svg id="gps-svg" width="2500" height="2500">
+                <polyline id="gps-path" points="" />
+            </svg>
+
+            <div id="map-canvas"></div> 
+        </div>
+
+        <div class="map-locations-float">
+            <div id="icon-prefeitura" class="map-icon-fixed">
+                <img src="25.png" width="24">
+            </div>
+            <div class="location-header">SISTEMA DE GPS</div>
+            
+            <div class="location-item-alt" onclick="gpsParaLocal(1242, -1694, 'Hospital')">
+                <div class="loc-icon">🏥</div>
+                <div class="loc-info">
+                    <span class="loc-name">Hospital Central</span>
+                    <span class="loc-dist">Clique para traçar rota</span>
+                </div>
+            </div>
+            <div class="location-item-alt" onclick="gpsParaLocal(1476.84, -1740.43, 'Prefeitura')">
+                <div class="loc-icon"><img src="25.png" width="24"></div>
+                <div class="loc-info">
+                    <span class="loc-name">Prefeitura</span>
+                    <span class="loc-dist">Clique para traçar rota</span>
+                </div>
+            </div>
+            <div class="location-item-alt" onclick="gpsParaLocal(1242, -1694, 'Aera Vermelha 1')">
+                <div class="loc-icon">💀</div>
+                <div class="loc-info">
+                    <span class="loc-name">Aera Vermelha 1</span>
+                    <span class="loc-dist">Clique para traçar rota</span>
+                </div>
+            </div>
+            <div class="location-item-alt" onclick="gpsParaLocal(1242, -1694, 'Loja de Conveniência')">
+                <div class="loc-icon">🏪</div>
+                <div class="loc-info">
+                    <span class="loc-name">Loja de Conveniência</span>
+                    <span class="loc-dist">Clique para traçar rota</span>
+                </div>
+            </div>
+            <div class="location-item-alt" onclick="gpsParaLocal(1242, -1694, 'Auto Escola')">
+                <div class="loc-icon">🏫</div>
+                <div class="loc-info">
+                    <span class="loc-name">Auto Escola</span>
+                    <span class="loc-dist">Clique para traçar rota</span>
+                </div>
+            </div>
+            <div class="location-item-alt" onclick="gpsParaLocal(1242, -1694, 'Vanilla Nithe Club')">
+                <div class="loc-icon">🏪</div>
+                <div class="loc-info">
+                    <span class="loc-name">Vanilla Nithe Club</span>
+                    <span class="loc-dist">Clique para traçar rota</span>
+                </div>
+            </div>
+
+            <div class="location-item-alt" onclick="gpsParaLocal(1543, -1675, 'Delegacia')">
+                <div class="loc-icon">🚔</div>
+                <div class="loc-info">
+                    <span class="loc-name">DP Los Santos</span>
+                    <span class="loc-dist">Clique para traçar rota</span>
+                </div>
+            </div>
+
+            <div class="location-item-alt" onclick="gpsParaLocal(-2024, 156, 'Mecânica')">
+                <div class="loc-icon">🔧</div>
+                <div class="loc-info">
+                    <span class="loc-name">Mecânica Benny's</span>
+                    <span class="loc-dist">Clique para traçar rota</span>
+                </div>
+            </div>
+            <div class="location-item-alt" onclick="gpsParaLocal(2100, -1800, 'Pizzaria')">
+                <div class="loc-icon">🍕</div>
+                <div class="loc-info">
+                    <span class="loc-name">Pizzaria</span>
+                    <span class="loc-dist">Clique para traçar rota</span>
+                </div>
+            </div>
+
+            <div class="location-footer">
+                Botão Direito: Marcar Destino Livre<br>
+                Aperte 'H' para liberar o mouse
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
