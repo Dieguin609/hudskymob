@@ -13,19 +13,18 @@
             height: 100%;
         }
 
-        /* Container Principal do Radar */
+        /* Container Principal do Radar - TAMANHO REDUZIDO */
         .radar-frame {
             position: relative;
-            width: 140px; 
-            height: 140px;
+            width: 110px; /* Reduzido de 140px */
+            height: 110px; /* Reduzido de 140px */
             border-radius: 50%;
-            /* Bordinha branca fina conforme solicitado */
-            border: 2px solid rgba(255, 255, 255, 0.8); 
+            border: 1.5px solid rgba(255, 255, 255, 0.8); 
             background: rgba(0, 0, 0, 0.6);
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-            margin: 15px;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+            margin: 10px;
             overflow: hidden;
-            perspective: 600px; 
+            perspective: 500px; 
         }
 
         /* O Mapa Inclinado (Efeito 3D) */
@@ -43,14 +42,13 @@
             transition: transform 0.15s ease-out, background-position 0.2s ease-out;
         }
 
-        /* SETA USANDO IMAGEM DO JOGO */
+        /* Seta usando Imagem do Jogo - TAMANHO AJUSTADO */
         .player-marker {
             position: absolute;
             top: 48%; 
             left: 50%;
-            width: 18px; /* Tamanho da imagem da seta */
-            height: 18px;
-            /* Caminho da imagem que está no seu jogo */
+            width: 14px; /* Proporcional ao radar menor */
+            height: 14px;
             background-image: url('seta.png'); 
             background-size: contain;
             background-repeat: no-repeat;
@@ -68,7 +66,7 @@
             background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
             pointer-events: none;
             z-index: 11;
-            box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+            box-shadow: inset 0 0 4px rgba(0,0,0,0.5);
         }
     </style>
 </head>
@@ -80,23 +78,18 @@
     </div>
 
     <script>
-        // Sincronização via Geckoju Bridge
         if (window.geckoju) {
             window.geckoju.onData = function(data) {
                 try {
                     const obj = JSON.parse(data);
                     const map = document.getElementById('map');
-
                     if (obj.angle !== undefined) {
                         map.style.transform = `rotateX(48deg) rotateZ(${obj.angle}deg)`;
                     }
-                    
                     if (obj.posX !== undefined && obj.posY !== undefined) {
                         map.style.backgroundPosition = `${obj.posX}% ${obj.posY}%`;
                     }
-                } catch(e) {
-                    console.error("Erro no Radar:", e);
-                }
+                } catch(e) {}
             };
         }
     </script>
