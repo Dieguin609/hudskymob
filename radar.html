@@ -13,19 +13,19 @@
             height: 100%;
         }
 
-        /* Container Principal do Radar - AJUSTADO PARA 135PX */
+        /* Container Principal do Radar - AJUSTADO PARA 115PX */
         .radar-frame {
             position: relative;
-            width: 135px; 
-            height: 135px;
+            width: 115px; 
+            height: 115px;
             border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.8); 
+            border: 1.5px solid rgba(255, 255, 255, 0.8); 
             background: rgba(0, 0, 0, 0.6);
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
-            /* Mantendo colado no topo conforme seu pedido anterior */
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
+            /* Mantendo o alinhamento no topo esquerdo */
             margin: 5px 0 0 15px; 
             overflow: hidden;
-            perspective: 600px; 
+            perspective: 500px; 
         }
 
         /* O Mapa Inclinado (Efeito 3D) */
@@ -48,8 +48,8 @@
             position: absolute;
             top: 48%; 
             left: 50%;
-            width: 16px; /* Ajustado para a proporção de 135px */
-            height: 16px;
+            width: 14px; /* Ajustado para a proporção de 115px */
+            height: 14px;
             background-image: url('seta.png'); 
             background-size: contain;
             background-repeat: no-repeat;
@@ -67,7 +67,7 @@
             background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
             pointer-events: none;
             z-index: 11;
-            box-shadow: inset 0 0 6px rgba(0,0,0,0.5);
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
         }
     </style>
 </head>
