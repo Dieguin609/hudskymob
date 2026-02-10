@@ -7,24 +7,24 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         html, body { 
-            background: transparent !important;
+            background: transparent !important; 
             overflow: hidden; 
             width: 100%;
             height: 100%;
         }
 
-        /* Container Principal do Radar - TAMANHO MÉDIO AJUSTADO */
+        /* Container Principal do Radar - TAMANHO AUMENTADO PARA 145PX */
         .radar-frame {
             position: relative;
-            width: 125px; /* Aumentado para 125px */
-            height: 125px; /* Aumentado para 125px */
+            width: 145px; 
+            height: 145px;
             border-radius: 50%;
             border: 2px solid rgba(255, 255, 255, 0.8); 
             background: rgba(0, 0, 0, 0.6);
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.6);
             margin: 10px;
             overflow: hidden;
-            perspective: 550px; 
+            perspective: 600px; 
         }
 
         /* O Mapa Inclinado (Efeito 3D) */
@@ -47,8 +47,8 @@
             position: absolute;
             top: 48%; 
             left: 50%;
-            width: 16px; /* Aumentado proporcionalmente */
-            height: 16px;
+            width: 18px; /* Aumentado para acompanhar o radar maior */
+            height: 18px;
             background-image: url('seta.png'); 
             background-size: contain;
             background-repeat: no-repeat;
@@ -66,7 +66,7 @@
             background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
             pointer-events: none;
             z-index: 11;
-            box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+            box-shadow: inset 0 0 6px rgba(0,0,0,0.5);
         }
     </style>
 </head>
