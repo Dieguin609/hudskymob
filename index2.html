@@ -29,6 +29,30 @@
             height: auto;
             margin-bottom: 2px;
         }
+        .discord-link {
+        /* Ajuste este valor para diminuir o tamanho do texto */
+        font-size: 10px; 
+        
+        /* Mantém o texto em negrito para não perder a leitura */
+        font-weight: bold; 
+        
+        /* Garante que o texto fique branco e visível */
+        color: rgba(255, 255, 255, 0.9);
+        
+        /* Sombra para ajudar na leitura em lugares claros do mapa */
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        
+        /* Evita que o link pule de linha */
+        white-space: nowrap; 
+    }
+
+    .discord-container {
+        display: flex;
+        align-items: center;
+        /* Diminua o gap se o texto ainda parecer longe do ícone */
+        gap: 5px; 
+        justify-content: flex-end;
+    }
 
         /* 2. Bloco de Status (Data/Hora na frente do seu Cristal) */
         .status-wrapper {
