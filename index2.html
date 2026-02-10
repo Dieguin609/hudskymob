@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        html, body { 
+            background: transparent !important; 
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+
+        .hud-top-right {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 5px; /* Espaçamento menor entre blocos */
+        }
+
+        /* 1. Discord (PNG) */
+        .discord-icon {
+            width: 22px; /* Ícone pequeno */
+            height: auto;
+            margin-bottom: 2px;
+        }
+
+        /* 2. Bloco de Status (Data/Hora na frente do seu Cristal) */
+        .status-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .date-time-container {
+            text-align: right;
+            line-height: 1;
+        }
+        .time { font-size: 14px; font-weight: bold; }
+        .divider { width: 100%; height: 1px; background: rgba(255,255,255,0.4); margin: 2px 0; }
+        .date { font-size: 10px; color: rgba(255,255,255,0.6); }
+
+        /* Espaço para as imagens que você vai baixar */
+        .crystal-img { width: 88px; height: 78px; }
+
+        /* 3. Saldos Fininhos (Estilo FiveM Slim) */
+        .money-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 5px;
+        }
+
+        .row-money {
+            display: flex;
+            gap: 4px;
+            justify-content: flex-end;
+        }
+
+        .btn-slim {
+            background: rgba(0, 0, 0, 0.45); /* Semitransparente */
+            padding: 3px 10px;
+            border-radius: 12px; /* Mais fino */
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            min-width: 80px;
+            border: 0.5px solid rgba(255,255,255,0.05);
+        }
+
+        .btn-slim img { width: 14px; height: 14px; } /* Ícones dos saldos */
+        .val { font-size: 11px; font-weight: bold; white-space: nowrap; }
+    </style>
+</head>
+<body>
+    <div class="hud-top-right">
+        <img src="discord.png" class="discord-icon" alt="">
+
+        <div class="status-wrapper">
+            <div class="date-time-container">
+                <div class="time" id="time">12:33</div>
+                <div class="divider"></div>
+                <div class="date" id="date">10/02/2026</div>
+            </div>
+            <img src="cristal.png" class="crystal-img" alt="">
+        </div>
+
+        <div class="money-grid">
+            <div class="row-money">
+                <div class="btn-slim">
+                    <img src="bank_icon.png" alt="">
+                    <span class="val" id="bank">40.000,00</span>
+                </div>
+                <div class="btn-slim">
+                    <img src="cash_icon.png" alt="">
+                    <span class="val" id="cash">$1.200,00</span>
+                </div>
+            </div>
+            <div class="row-money">
+                <div class="btn-slim">
+                    <img src="vip_icon.png" alt="">
+                    <span class="val" id="coins">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('time').innerText = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+            const d = now.getDate().toString().padStart(2, '0') + "/" + (now.getMonth()+1).toString().padStart(2, '0') + "/" + now.getFullYear();
+            document.getElementById('date').innerText = d;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        if (window.geckoju) {
+            window.geckoju.onData = function(data) {
+                try {
+                    const obj = JSON.parse(data);
+                    if (obj.cash !== undefined) document.getElementById('cash').innerText = "$" + obj.cash.toLocaleString('pt-BR');
+                    if (obj.bank !== undefined) document.getElementById('bank').innerText = obj.bank.toLocaleString('pt-BR');
+                    if (obj.coins !== undefined) document.getElementById('coins').innerText = obj.coins;
+                } catch(e) {}
+            };
+        }
+    </script>
+</body>
+</html>
