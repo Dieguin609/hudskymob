@@ -5,90 +5,120 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        html, body { 
-            background: transparent !important; 
-            overflow: hidden; 
-            width: 100%;
-            height: 100%;
-        }
+        html, body { background: transparent !important; overflow: hidden; width: 100%; height: 100%; }
 
-        /* Container Principal do Radar - AJUSTADO PARA 115PX */
         .radar-frame {
             position: relative;
-            width: 115px; 
-            height: 115px;
+            width: 135px; height: 135px; /* Tamanho ajustado */
             border-radius: 50%;
-            border: 1.5px solid rgba(255, 255, 255, 0.8); 
-            background: rgba(0, 0, 0, 0.6);
-            box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
-            /* Mantendo o alinhamento no topo esquerdo */
-            margin: 5px 0 0 15px; 
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            background: #000;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+            margin: 5px 0 0 15px;
             overflow: hidden;
-            perspective: 500px; 
+            perspective: 600px;
         }
 
-        /* O Mapa Inclinado (Efeito 3D) */
-        .map-layer {
+        /* CONTAINER DO MAPA (Move tudo dentro: Imagem + GPS) */
+        #map-container {
             position: absolute;
-            width: 800%; 
-            height: 800%;
-            top: -350%;
-            left: -350%;
-            background-image: url('map.png'); 
-            background-size: 400%; 
-            background-repeat: no-repeat;
-            transform: rotateX(48deg) rotateZ(0deg);
+            width: 2500px; /* IMG_SIZE fixo do seu PC */
+            height: 2500px;
             transform-origin: center center;
-            transition: transform 0.15s ease-out, background-position 0.2s ease-out;
+            will-change: transform, left, top;
         }
 
-        /* Seta usando Imagem do Jogo */
+        /* A IMAGEM DO MAPA */
+        .map-img {
+            position: absolute;
+            width: 2500px;
+            height: 2500px;
+            background-image: url('map.png'); /* ARQUIVO DO MAPA */
+            background-size: 2500px 2500px;
+            background-repeat: no-repeat;
+        }
+
+        /* A LINHA DO GPS */
+        #gps-svg-mini {
+            position: absolute;
+            width: 2500px;
+            height: 2500px;
+            z-index: 5;
+        }
+
+        /* A SETINHA DO JOGADOR */
         .player-marker {
             position: absolute;
-            top: 48%; 
-            left: 50%;
-            width: 14px; /* Ajustado para a proporção de 115px */
-            height: 14px;
-            background-image: url('seta.png'); 
+            top: 48%; left: 50%;
+            width: 18px; height: 18px;
+            background-image: url('seta.png'); /* ARQUIVO DA SETA */
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
             transform: translate(-50%, -50%);
             z-index: 10;
-            filter: drop-shadow(0 0 2px rgba(0,0,0,0.9));
         }
 
-        /* Overlay de Vidro */
         .glass-effect {
-            position: absolute;
-            inset: 0;
+            position: absolute; inset: 0;
             border-radius: 50%;
             background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
-            pointer-events: none;
             z-index: 11;
-            box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+            box-shadow: inset 0 0 6px rgba(0,0,0,0.5);
         }
     </style>
 </head>
 <body>
     <div class="radar-frame">
-        <div class="map-layer" id="map"></div>
+        <div id="map-container">
+            <div class="map-img"></div>
+            <svg id="gps-svg-mini">
+                <polyline id="gps-line" points="" fill="none" stroke="#bf00ff" stroke-width="12" stroke-linejoin="round" stroke-linecap="round" />
+            </svg>
+        </div>
         <div class="player-marker"></div>
         <div class="glass-effect"></div>
     </div>
 
     <script>
+        const IMG_SIZE = 2500;
+        const MAP_SIZE = 6000;
+        const SCALE = IMG_SIZE / MAP_SIZE;
+        const CENTER_OFFSET = 135 / 2; // Centraliza no radar de 135px
+
+        const mapContainer = document.getElementById('map-container');
+        const gpsLine = document.getElementById('gps-line');
+
         if (window.geckoju) {
             window.geckoju.onData = function(data) {
                 try {
                     const obj = JSON.parse(data);
-                    const map = document.getElementById('map');
-                    if (obj.angle !== undefined) {
-                        map.style.transform = `rotateX(48deg) rotateZ(${obj.angle}deg)`;
+
+                    // Atualiza Posição e Rotação
+                    if (obj.pX !== undefined) {
+                        let x = (IMG_SIZE / 2) + (obj.pX * SCALE);
+                        let y = (IMG_SIZE / 2) - (obj.pY * SCALE);
+
+                        mapContainer.style.left = `${-(x - CENTER_OFFSET)}px`;
+                        mapContainer.style.top = `${-(y - CENTER_OFFSET)}px`;
+                        mapContainer.style.transform = `rotateX(48deg) rotateZ(${obj.pAngle}deg)`;
                     }
-                    if (obj.posX !== undefined && obj.posY !== undefined) {
-                        map.style.backgroundPosition = `${obj.posX}% ${obj.posY}%`;
+
+                    // Desenha a Rota do GPS (Igual ao seu PC)
+                    if (obj.string_rota) {
+                        const pontos = obj.string_rota.split('|');
+                        let polyPoints = "";
+                        pontos.forEach(p => {
+                            const c = p.split(',');
+                            if(c.length >= 2) {
+                                let px = (IMG_SIZE / 2) + (parseFloat(c[0]) * SCALE);
+                                let py = (IMG_SIZE / 2) - (parseFloat(c[1]) * SCALE);
+                                polyPoints += `${px},${py} `;
+                            }
+                        });
+                        gpsLine.setAttribute("points", polyPoints);
+                    } else if (obj.gps_off) {
+                        gpsLine.setAttribute("points", "");
                     }
                 } catch(e) {}
             };
