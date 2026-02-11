@@ -16,24 +16,21 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
             margin: 5px 0 0 15px;
             overflow: hidden;
-            /* Perspectiva para o efeito 3D */
-            perspective: 800px; 
+            perspective: 800px;
             z-index: 1;
         }
 
-        /* DIV PIVÔ (Fica parada no centro e Gira) */
         #rotator {
-            position: absolute;
-            top: 50%; left: 50%;
-            width: 0; height: 0;
-            transform-style: preserve-3d;
+            position: absolute; top: 50%; left: 50%;
+            width: 0; height: 0; transform-style: preserve-3d;
+            /* Suavização via CSS também */
+            transition: transform 0.1s linear; 
         }
 
-        /* O MAPA (Se move dentro do Pivô) */
+        /* ZOOM FIX: Tamanho reduzido para 1500px (Afastar a câmera) */
         #map-layer {
             position: absolute;
-            width: 2500px; height: 2500px;
-            /* Importante: Top/Left 0 para a matemática funcionar */
+            width: 1500px; height: 1500px; 
             top: 0; left: 0;
             will-change: transform;
         }
@@ -45,7 +42,6 @@
             background-repeat: no-repeat;
         }
 
-        /* Seta (Fica parada no centro da tela) */
         .player-marker {
             position: absolute; top: 50%; left: 50%;
             width: 18px; height: 18px;
@@ -69,8 +65,8 @@
         <div id="rotator">
             <div id="map-layer">
                 <div class="map-img"></div>
-                <svg width="2500" height="2500" style="position:absolute; top:0; left:0;">
-                     <polyline id="gps-line" points="" fill="none" stroke="#bf00ff" stroke-width="15" stroke-linecap="round"/>
+                <svg width="1500" height="1500" style="position:absolute; top:0; left:0;">
+                     <polyline id="gps-line" points="" fill="none" stroke="#bf00ff" stroke-width="12" stroke-linecap="round"/>
                 </svg>
             </div>
         </div>
@@ -79,17 +75,31 @@
     </div>
 
     <script>
-        // CONFIGURAÇÕES
-        const IMG_SIZE = 1500;
-        const MAP_SIZE = 6000; 
-        const SCALE = IMG_SIZE / MAP_SIZE; // 0.41666...
+        // --- CONFIGURAÇÃO DE ZOOM ---
+        const IMG_SIZE = 1500; // MANTENHA 1500 PARA VER MAIS RUAS
         
+        const MAP_SIZE = 6000; 
+        const SCALE = IMG_SIZE / MAP_SIZE;
+        const MAP_CENTER_OFFSET = IMG_SIZE / 2;
+
+        // --- CALIBRAÇÃO FINA ---
+        // Se a seta não bater com a rua, mude aqui:
+        const OFFSET_X = 0; 
+        const OFFSET_Y = 0; 
+
         const rotator = document.getElementById('rotator');
         const mapLayer = document.getElementById('map-layer');
         const gpsLine = document.getElementById('gps-line');
 
-        // Posição central da imagem do mapa (1250px)
-        const MAP_CENTER_OFFSET = IMG_SIZE / 2;
+        // Suavização
+        let currentAngle = 0;
+        let targetAngle = 0;
+
+        function shortestAngleDist(a0, a1) {
+            var max = 360;
+            var da = (a1 - a0) % max;
+            return 2 * da % max - da;
+        }
 
         function TentarConectar() {
             if (window.geckoju) {
@@ -98,31 +108,32 @@
                         const obj = JSON.parse(data);
 
                         if (obj.pX !== undefined) {
-                            // 1. Onde o player está no mundo do jogo?
-                            // X cresce p/ direita, Y cresce p/ cima (Norte) no GTA
-                            // No CSS, Y cresce p/ baixo. Por isso o Y é negativo.
-                            
-                            // Deslocamento em pixels a partir do centro do mapa
-                            let offsetX = obj.pX * SCALE;
-                            let offsetY = -(obj.pY * SCALE); // Inverte Y do GTA
+                            // Posição + Offset
+                            let offsetX = (obj.pX * SCALE) + OFFSET_X;
+                            let offsetY = -(obj.pY * SCALE) + OFFSET_Y;
 
-                            // 2. Cálculo Final da Posição
-                            // A imagem tem que mover para ESQUERDA (-) se o player for pra DIREITA (+)
-                            // E tem que começar deslocada pelo centro da imagem (-1250)
                             let finalX = -MAP_CENTER_OFFSET - offsetX;
                             let finalY = -MAP_CENTER_OFFSET - offsetY;
 
-                            // 3. Aplica o movimento
                             mapLayer.style.transform = `translate3d(${finalX}px, ${finalY}px, 0)`;
 
-                            // 4. Aplica a rotação (Inversa ao player)
+                            // Rotação Suave
                             if (obj.pAngle !== undefined) {
-                                // 48deg é a inclinação da câmera
-                                rotator.style.transform = `rotateX(48deg) rotateZ(${obj.pAngle}deg)`;
+                                targetAngle = obj.pAngle;
+                                let dist = shortestAngleDist(currentAngle, targetAngle);
+                                
+                                // Se girar pouco, vai suave. Se girar muito (teleporte), vai direto.
+                                if(Math.abs(dist) < 120) {
+                                    currentAngle += dist * 0.25; 
+                                } else {
+                                    currentAngle = targetAngle;
+                                }
+
+                                rotator.style.transform = `rotateX(48deg) rotateZ(${currentAngle}deg)`;
                             }
                         }
 
-                        // Atualiza GPS
+                        // GPS
                         if (obj.string_rota && obj.string_rota.length > 5) {
                              const pontos = obj.string_rota.split('|');
                              let polyPoints = "";
@@ -145,8 +156,14 @@
                 setTimeout(TentarConectar, 500);
             }
         }
+        
+        // Mantém a animação rodando
+        function animate() {
+            requestAnimationFrame(animate);
+        }
+        
         TentarConectar();
+        animate();
     </script>
 </body>
-
 </html>
