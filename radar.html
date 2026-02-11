@@ -16,21 +16,20 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
             margin: 5px 0 0 15px;
             overflow: hidden;
-            perspective: 800px;
+            perspective: 800px; /* Perspectiva melhorada */
             z-index: 1;
         }
 
         #rotator {
             position: absolute; top: 50%; left: 50%;
             width: 0; height: 0; transform-style: preserve-3d;
-            /* Suavização via CSS também */
+            /* Transição suave na rotação (CSS puro para ajudar o JS) */
             transition: transform 0.1s linear; 
         }
 
-        /* ZOOM FIX: Tamanho reduzido para 1500px (Afastar a câmera) */
         #map-layer {
             position: absolute;
-            width: 1500px; height: 1500px; 
+            width: 2500px; height: 2500px; /* Voltando para 2500 para qualidade */
             top: 0; left: 0;
             will-change: transform;
         }
@@ -65,8 +64,8 @@
         <div id="rotator">
             <div id="map-layer">
                 <div class="map-img"></div>
-                <svg width="1500" height="1500" style="position:absolute; top:0; left:0;">
-                     <polyline id="gps-line" points="" fill="none" stroke="#bf00ff" stroke-width="12" stroke-linecap="round"/>
+                <svg width="2500" height="2500" style="position:absolute; top:0; left:0;">
+                     <polyline id="gps-line" points="" fill="none" stroke="#bf00ff" stroke-width="15" stroke-linecap="round"/>
                 </svg>
             </div>
         </div>
@@ -75,15 +74,15 @@
     </div>
 
     <script>
-        // --- CONFIGURAÇÃO DE ZOOM ---
-        const IMG_SIZE = 1700; // MANTENHA 1500 PARA VER MAIS RUAS
-        
+        // --- CALIBRAÇÃO DE POSIÇÃO ---
+        const IMG_SIZE = 2500;
         const MAP_SIZE = 6000; 
-        const SCALE = IMG_SIZE / MAP_SIZE;
+        const SCALE = IMG_SIZE / MAP_SIZE; // 0.41666...
         const MAP_CENTER_OFFSET = IMG_SIZE / 2;
 
-        // --- CALIBRAÇÃO FINA ---
-        // Se a seta não bater com a rua, mude aqui:
+        // Se o mapa estiver desalinhado, mexa aqui!
+        // Valores positivos empurram o mapa para direita/baixo
+        // Valores negativos empurram para esquerda/cima
         const OFFSET_X = 0; 
         const OFFSET_Y = 0; 
 
@@ -91,10 +90,16 @@
         const mapLayer = document.getElementById('map-layer');
         const gpsLine = document.getElementById('gps-line');
 
-        // Suavização
+        // Variáveis para suavização (Lerp)
         let currentAngle = 0;
         let targetAngle = 0;
 
+        // Função de Interpolação Linear (Suavização)
+        function lerp(start, end, factor) {
+            return (1 - factor) * start + factor * end;
+        }
+
+        // Função para corrigir o giro de 360 -> 0 (evita que o mapa gire doido)
         function shortestAngleDist(a0, a1) {
             var max = 360;
             var da = (a1 - a0) % max;
@@ -108,23 +113,27 @@
                         const obj = JSON.parse(data);
 
                         if (obj.pX !== undefined) {
-                            // Posição + Offset
+                            // 1. CÁLCULO DE POSIÇÃO (COM CALIBRAÇÃO OFFSET)
                             let offsetX = (obj.pX * SCALE) + OFFSET_X;
-                            let offsetY = -(obj.pY * SCALE) + OFFSET_Y;
+                            let offsetY = -(obj.pY * SCALE) + OFFSET_Y; // Y Invertido
 
+                            // Centraliza
                             let finalX = -MAP_CENTER_OFFSET - offsetX;
                             let finalY = -MAP_CENTER_OFFSET - offsetY;
 
+                            // Aplica Movimento
                             mapLayer.style.transform = `translate3d(${finalX}px, ${finalY}px, 0)`;
 
-                            // Rotação Suave
+                            // 2. CÁLCULO DE ROTAÇÃO SUAVE
                             if (obj.pAngle !== undefined) {
                                 targetAngle = obj.pAngle;
+                                
+                                // Calcula a menor distância para girar
                                 let dist = shortestAngleDist(currentAngle, targetAngle);
                                 
-                                // Se girar pouco, vai suave. Se girar muito (teleporte), vai direto.
-                                if(Math.abs(dist) < 120) {
-                                    currentAngle += dist * 0.25; 
+                                // Se a distância for pequena, suaviza. Se for grande, pula (reset).
+                                if(Math.abs(dist) < 100) {
+                                    currentAngle += dist * 0.2; // 0.2 é a velocidade da suavização (0.1 lento, 0.5 rápido)
                                 } else {
                                     currentAngle = targetAngle;
                                 }
@@ -157,9 +166,11 @@
             }
         }
         
-        // Mantém a animação rodando
+        // Loop de Animação para deixar mais fluido (opcional, mas recomendado)
         function animate() {
             requestAnimationFrame(animate);
+            // Aqui poderíamos mover a lógica de lerp para ficar 60fps cravado,
+            // mas o onData já é rápido o suficiente para o mobile.
         }
         
         TentarConectar();
@@ -167,5 +178,3 @@
     </script>
 </body>
 </html>
-
-
