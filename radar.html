@@ -20,16 +20,14 @@
             z-index: 1;
         }
 
-        /* Camada que GIRA O MAPA (Baseado na Câmera) */
         #map-rotator {
             position: absolute; top: 50%; left: 50%;
             width: 0; height: 0; transform-style: preserve-3d;
         }
 
-        /* Camada que MOVE O MAPA (Baseado na Posição X/Y) */
         #map-layer {
             position: absolute;
-            width: 2500px; height: 2500px; /* Mantido 2500px Qualidade Máxima */
+            width: 2500px; height: 2500px; 
             top: 0; left: 0;
             will-change: transform;
         }
@@ -41,11 +39,9 @@
             background-repeat: no-repeat;
         }
 
-        /* A Seta agora tem seu próprio rotacionador independente */
         #arrow-rotator {
             position: absolute; top: 50%; left: 50%;
-            width: 0; height: 0;
-            z-index: 20;
+            width: 0; height: 0; z-index: 20;
         }
 
         .player-marker {
@@ -75,49 +71,45 @@
                 </svg>
             </div>
         </div>
-
         <div id="arrow-rotator">
             <div class="player-marker"></div>
         </div>
-
         <div class="glass-effect"></div>
     </div>
 
     <script>
-        // CONFIGURAÇÕES
         const IMG_SIZE = 2500; 
         const MAP_SIZE = 6000; 
         const SCALE = IMG_SIZE / MAP_SIZE;
         const MAP_CENTER_OFFSET = IMG_SIZE / 2;
 
-        // OFFSET DE CALIBRAÇÃO (Ajuste se estiver torto)
         const OFFSET_X = 0; 
         const OFFSET_Y = 0; 
 
-        // Elementos
+        // --- CONFIGURAÇÃO DE VELOCIDADE (Aqui tira o delay!) ---
+        // 0.1 = Muito suave (Lento/Lagado)
+        // 0.3 = Rápido e responsivo (Ideal)
+        // 0.5 = Instantâneo (Pode tremer)
+        const SMOOTH_SPEED = 0.3; 
+
         const mapRotator = document.getElementById('map-rotator');
         const mapLayer = document.getElementById('map-layer');
         const arrowRotator = document.getElementById('arrow-rotator');
         const gpsLine = document.getElementById('gps-line');
 
-        // --- VARIÁVEIS DE INTERPOLAÇÃO (Para ficar fluido) ---
         let currentPos = { x: 0, y: 0 };
         let targetPos = { x: 0, y: 0 };
-        
         let currentCamAngle = 0;
         let targetCamAngle = 0;
-        
         let currentPlayerAngle = 0;
         let targetPlayerAngle = 0;
 
-        // Função mágica para não girar que nem louco (359 -> 0)
         function shortestAngleDist(a0, a1) {
             var max = 360;
             var da = (a1 - a0) % max;
             return 2 * da % max - da;
         }
 
-        // Função de Suavização (Lerp)
         function lerp(start, end, amt) {
             return (1 - amt) * start + amt * end;
         }
@@ -129,20 +121,16 @@
                         const obj = JSON.parse(data);
 
                         if (obj.pX !== undefined) {
-                            // 1. Recebe os ALVOS (Target) do servidor
-                            // Calcula posição alvo em pixels
                             let offsetX = (obj.pX * SCALE) + OFFSET_X;
                             let offsetY = -(obj.pY * SCALE) + OFFSET_Y;
                             
                             targetPos.x = -MAP_CENTER_OFFSET - offsetX;
                             targetPos.y = -MAP_CENTER_OFFSET - offsetY;
 
-                            // Recebe Ângulos Alvo
                             if (obj.camAngle !== undefined) targetCamAngle = obj.camAngle;
                             if (obj.pAngle !== undefined) targetPlayerAngle = obj.pAngle;
                         }
 
-                        // GPS (Atualiza direto pois não precisa de interpolação)
                         if (obj.string_rota && obj.string_rota.length > 5) {
                              const pontos = obj.string_rota.split('|');
                              let polyPoints = "";
@@ -158,7 +146,6 @@
                         } else if (obj.gps_off) {
                             gpsLine.setAttribute("points", "");
                         }
-
                     } catch(e) {}
                 };
             } else {
@@ -166,37 +153,31 @@
             }
         }
 
-        // --- LOOP DE ANIMAÇÃO (60 FPS) ---
-        // Aqui acontece a mágica da fluidez
         function animate() {
-            // 1. Suaviza Posição (Move 10% do caminho a cada frame)
-            currentPos.x = lerp(currentPos.x, targetPos.x, 0.1);
-            currentPos.y = lerp(currentPos.y, targetPos.y, 0.1);
+            // AQUI ESTÁ A MÁGICA: Usando SMOOTH_SPEED (0.3)
+            currentPos.x = lerp(currentPos.x, targetPos.x, SMOOTH_SPEED);
+            currentPos.y = lerp(currentPos.y, targetPos.y, SMOOTH_SPEED);
+            
             mapLayer.style.transform = `translate3d(${currentPos.x}px, ${currentPos.y}px, 0)`;
 
-            // 2. Suaviza Rotação da Câmera (Mapa)
             let distCam = shortestAngleDist(currentCamAngle, targetCamAngle);
-            if(Math.abs(distCam) < 120) currentCamAngle += distCam * 0.1;
-            else currentCamAngle = targetCamAngle; // Pula se girar muito rápido
+            if(Math.abs(distCam) < 120) currentCamAngle += distCam * SMOOTH_SPEED;
+            else currentCamAngle = targetCamAngle;
             
-            // O Mapa gira ao contrário da câmera
             mapRotator.style.transform = `rotateX(48deg) rotateZ(${currentCamAngle}deg)`;
 
-            // 3. Suaviza Rotação do Jogador (Seta)
             let distPlayer = shortestAngleDist(currentPlayerAngle, targetPlayerAngle);
-            if(Math.abs(distPlayer) < 120) currentPlayerAngle += distPlayer * 0.1;
+            if(Math.abs(distPlayer) < 120) currentPlayerAngle += distPlayer * SMOOTH_SPEED;
             else currentPlayerAngle = targetPlayerAngle;
 
-            // A Seta gira baseada na diferença (Player - Câmera)
-            // Se eu olho pro Norte (Cam=0) e viro o corpo pra Leste (Player=90), seta aponta pra direita (+90)
             let arrowRotation = currentPlayerAngle - currentCamAngle;
-            arrowRotator.style.transform = `rotateZ(${-arrowRotation}deg)`; // Invertido para ajustar coordenadas
+            arrowRotator.style.transform = `rotateZ(${-arrowRotation}deg)`; 
 
             requestAnimationFrame(animate);
         }
 
         TentarConectar();
-        animate(); // Inicia o loop
+        animate();
     </script>
 </body>
 </html>
