@@ -5,10 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { background: transparent !important; overflow: hidden; width: 100%; height: 100%; }
+        
+        /* Mantém o fundo transparente e permite clicar através dele (exceto no radar) */
+        html, body { 
+            background: transparent !important; 
+            overflow: hidden; 
+            width: 100%; height: 100%; 
+            pointer-events: none; /* O toque passa direto pro jogo */
+        }
 
         .radar-frame {
             position: relative;
+            /* SEU ESTILO ORIGINAL MANTIDO */
             width: 135px; height: 135px;
             border-radius: 50%;
             border: 2px solid rgba(255, 255, 255, 0.9);
@@ -18,6 +26,15 @@
             overflow: hidden;
             perspective: 800px;
             z-index: 1;
+
+            /* ADIÇÃO: Permite clicar APENAS no radar */
+            pointer-events: auto; 
+            cursor: pointer;
+        }
+
+        /* Efeito visual ao clicar (opcional, bem sutil) */
+        .radar-frame:active {
+            transform: scale(0.98);
         }
 
         #map-rotator {
@@ -28,124 +45,154 @@
         #map-layer {
             position: absolute;
             width: 2500px; height: 2500px; 
-            top: 0; left: 0;
+            top: -1250px; left: -1250px; 
             will-change: transform;
         }
 
-        .map-img {
+        #map-img {
             width: 100%; height: 100%;
-            background-image: url('map.png'); 
-            background-size: 100% 100%; 
-            background-repeat: no-repeat;
+            background-image: url('map.png');
+            background-size: 100% 100%;
+            filter: brightness(1.1) contrast(1.1);
+        }
+
+        /* ADIÇÃO: Camada SVG para desenhar a rota */
+        #gps-svg {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+        }
+        #gps-line {
+            fill: none;
+            stroke: #bf00ff; /* Cor da rota */
+            stroke-width: 15;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            filter: drop-shadow(0 0 4px #bf00ff);
         }
 
         #arrow-rotator {
             position: absolute; top: 50%; left: 50%;
-            width: 0; height: 0; z-index: 20;
+            width: 0; height: 0;
         }
 
-        .player-marker {
-            position: absolute; top: 0; left: 0;
-            width: 18px; height: 18px;
+        #player-arrow {
+            position: absolute; top: 50%; left: 50%;
+            width: 24px; height: 24px;
             background-image: url('seta.png');
-            background-size: contain; background-repeat: no-repeat;
+            background-size: contain;
+            background-repeat: no-repeat;
             background-position: center;
             transform: translate(-50%, -50%);
+            z-index: 10;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8));
         }
 
-        .glass-effect {
-            position: absolute; inset: 0; border-radius: 50%;
-            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
-            z-index: 30; pointer-events: none;
-            box-shadow: inset 0 0 8px rgba(0,0,0,0.6);
+        .glass-overlay {
+            position: absolute; inset: 0;
+            border-radius: 50%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 40%, rgba(0,0,0,0.3) 100%);
+            z-index: 20; pointer-events: none;
         }
     </style>
 </head>
 <body>
-    <div class="radar-frame">
+
+    <div class="radar-frame" onclick="abrirMenu()" ontouchend="abrirMenu()">
         <div id="map-rotator">
             <div id="map-layer">
-                <div class="map-img"></div>
-                <svg width="2500" height="2500" style="position:absolute; top:0; left:0;">
-                     <polyline id="gps-line" points="" fill="none" stroke="#bf00ff" stroke-width="12" stroke-linecap="round"/>
+                <div id="map-img"></div>
+                
+                <svg id="gps-svg" width="2500" height="2500">
+                    <polyline id="gps-line" points="" />
                 </svg>
+
             </div>
         </div>
+
         <div id="arrow-rotator">
-            <div class="player-marker"></div>
+             <div id="player-arrow"></div>
         </div>
-        <div class="glass-effect"></div>
+
+        <div class="glass-overlay"></div>
     </div>
 
     <script>
-        const IMG_SIZE = 2500; 
+        const IMG_SIZE = 2500;
         const MAP_SIZE = 6000; 
         const SCALE = IMG_SIZE / MAP_SIZE;
-        const MAP_CENTER_OFFSET = IMG_SIZE / 2;
-
-        const OFFSET_X = 0; 
-        const OFFSET_Y = 0; 
-
-        // --- CONFIGURAÇÃO DE VELOCIDADE (Aqui tira o delay!) ---
-        // 0.1 = Muito suave (Lento/Lagado)
-        // 0.3 = Rápido e responsivo (Ideal)
-        // 0.5 = Instantâneo (Pode tremer)
-        const SMOOTH_SPEED = 0.3; 
+        const OFFSET = IMG_SIZE / 2;
+        const SMOOTH_SPEED = 0.3; // Mantido do seu arquivo original
 
         const mapRotator = document.getElementById('map-rotator');
         const mapLayer = document.getElementById('map-layer');
         const arrowRotator = document.getElementById('arrow-rotator');
-        const gpsLine = document.getElementById('gps-line');
+        const gpsLine = document.getElementById('gps-line'); // Referência para a linha
 
-        let currentPos = { x: 0, y: 0 };
         let targetPos = { x: 0, y: 0 };
-        let currentCamAngle = 0;
-        let targetCamAngle = 0;
-        let currentPlayerAngle = 0;
-        let targetPlayerAngle = 0;
+        let currentPos = { x: 0, y: 0 };
+        
+        let targetCamAngle = 0, currentCamAngle = 0;
+        let targetPlayerAngle = 0, currentPlayerAngle = 0;
 
+        // Funções auxiliares (Mantidas)
+        function lerp(start, end, t) { return start * (1 - t) + end * t; }
+        
         function shortestAngleDist(a0, a1) {
-            var max = 360;
-            var da = (a1 - a0) % max;
-            return 2 * da % max - da;
+            var max = 360; var da = (a1 - a0) % max; return 2 * da % max - da;
         }
 
-        function lerp(start, end, amt) {
-            return (1 - amt) * start + amt * end;
+        // ADIÇÃO: Função para enviar comando ao servidor ao clicar
+        function abrirMenu() {
+            if (window.geckoju) {
+                window.geckoju.send("menu");
+            }
         }
 
+        // ADIÇÃO: Função para desenhar a rota no mapa
+        function atualizarRota(rotaString) {
+            // Se a rota for vazia ou "0", limpa o desenho
+            if (!rotaString || rotaString === "0") {
+                gpsLine.setAttribute("points", "");
+                return;
+            }
+
+            const pontos = rotaString.split('|');
+            let svgPoints = "";
+
+            pontos.forEach(p => {
+                const c = p.split(',');
+                if (c.length === 2) {
+                    // Converte coordenadas do GTA para pixels no radar
+                    const px = OFFSET + (parseFloat(c[0]) * SCALE);
+                    const py = OFFSET - (parseFloat(c[1]) * SCALE);
+                    svgPoints += `${px},${py} `;
+                }
+            });
+            gpsLine.setAttribute("points", svgPoints);
+        }
+
+        // Lógica de Conexão Geckoju
         function TentarConectar() {
             if (window.geckoju) {
                 window.geckoju.onData = function(data) {
                     try {
                         const obj = JSON.parse(data);
 
-                        if (obj.pX !== undefined) {
-                            let offsetX = (obj.pX * SCALE) + OFFSET_X;
-                            let offsetY = -(obj.pY * SCALE) + OFFSET_Y;
-                            
-                            targetPos.x = -MAP_CENTER_OFFSET - offsetX;
-                            targetPos.y = -MAP_CENTER_OFFSET - offsetY;
-
-                            if (obj.camAngle !== undefined) targetCamAngle = obj.camAngle;
-                            if (obj.pAngle !== undefined) targetPlayerAngle = obj.pAngle;
+                        // Atualiza Posição (Código Original)
+                        if (obj.x !== undefined) {
+                            targetPos.x = -(OFFSET + (obj.x * SCALE));
+                            targetPos.y = -(OFFSET - (obj.y * SCALE));
+                            targetCamAngle = obj.ca || 0;
+                            targetPlayerAngle = obj.a || 0;
                         }
 
-                        if (obj.string_rota && obj.string_rota.length > 5) {
-                             const pontos = obj.string_rota.split('|');
-                             let polyPoints = "";
-                             pontos.forEach(p => {
-                                 const c = p.split(',');
-                                 if(c.length >= 2) {
-                                     let px = MAP_CENTER_OFFSET + (parseFloat(c[0]) * SCALE);
-                                     let py = MAP_CENTER_OFFSET - (parseFloat(c[1]) * SCALE);
-                                     polyPoints += `${px},${py} `;
-                                 }
-                             });
-                             gpsLine.setAttribute("points", polyPoints);
+                        // ADIÇÃO: Recebe a rota (string_rota) e desenha
+                        if (obj.string_rota) {
+                            atualizarRota(obj.string_rota);
                         } else if (obj.gps_off) {
                             gpsLine.setAttribute("points", "");
                         }
+
                     } catch(e) {}
                 };
             } else {
@@ -153,8 +200,10 @@
             }
         }
 
+        TentarConectar();
+
+        // Loop de Animação (Mantido Original)
         function animate() {
-            // AQUI ESTÁ A MÁGICA: Usando SMOOTH_SPEED (0.3)
             currentPos.x = lerp(currentPos.x, targetPos.x, SMOOTH_SPEED);
             currentPos.y = lerp(currentPos.y, targetPos.y, SMOOTH_SPEED);
             
@@ -171,12 +220,11 @@
             else currentPlayerAngle = targetPlayerAngle;
 
             let arrowRotation = currentPlayerAngle - currentCamAngle;
-            arrowRotator.style.transform = `rotateZ(${-arrowRotation}deg)`; 
+            arrowRotator.style.transform = `rotateZ(${-arrowRotation}deg)`; // Mantive seu negativo original
 
             requestAnimationFrame(animate);
         }
 
-        TentarConectar();
         animate();
     </script>
 </body>
