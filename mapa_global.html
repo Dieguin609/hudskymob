@@ -6,7 +6,7 @@
     <title>Mapa Global SkyPixel</title>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <style>
-        /* ================= ESTILOS (MANTIDOS ORIGINAIS) ================= */
+        /* ================= ESTILOS ================= */
         * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; user-select: none; -webkit-user-select: none; }
         
         body {
@@ -28,7 +28,7 @@
 
         #map-img {
             width: 100%; height: 100%;
-            background-image: url('map.png'); /* Certifique-se que map.png está na pasta */
+            background-image: url('map.png'); 
             background-size: 100% 100%;
         }
 
@@ -47,11 +47,11 @@
         #player-arrow {
             position: absolute;
             width: 24px; height: 24px;
-            background-image: url('seta.png'); /* Certifique-se que seta.png está na pasta */
+            background-image: url('seta.png'); 
             background-size: contain; background-repeat: no-repeat; background-position: center;
             z-index: 100;
             transform: translate(-50%, -50%);
-            display: none; /* Começa invisível */
+            display: none; /* Começa invisível até receber dados */
             transition: top 0.1s linear, left 0.1s linear, transform 0.1s linear;
         }
 
@@ -142,7 +142,7 @@
             return { x: (px - OFFSET) / SCALE, y: (OFFSET - py) / SCALE };
         }
 
-        // ================= COMUNICAÇÃO OFICIAL GECKOJU (CORRIGIDO) =================
+        // ================= COMUNICAÇÃO OFICIAL GECKOJU =================
         
         function fecharMapa() {
             if(window.geckoju) {
@@ -224,15 +224,9 @@
 
         // ================= CONTROLES (TOUCH) =================
         
-        function actualizarTransform() {
-            container.style.transform = `translate(${mapX}px, ${mapY}px) scale(${zoom})`;
-            // Mantém os ícones no tamanho correto invertendo o zoom
-            marcador.style.transform = `translate(-50%, -50%) rotate(45deg) scale(${1/zoom})`;
-        }
-        
-        // CORREÇÃO: Função auxiliar para chamar o nome certo (tinha um erro de digitação antes)
         function atualizarTransform() {
              container.style.transform = `translate(${mapX}px, ${mapY}px) scale(${zoom})`;
+             // Mantém os ícones no tamanho correto invertendo o zoom
              marcador.style.transform = `translate(-50%, -50%) rotate(45deg) scale(${1/zoom})`;
         }
 
