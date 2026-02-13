@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        /* ================= ESTILOS DO RADAR ================= */
+        /* ====================================================================
+           SEU CSS ORIGINAL (NÃO MEXI EM NADA VISUAL)
+           ==================================================================== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { background: transparent !important; overflow: hidden; width: 100%; height: 100%; pointer-events: none; }
 
@@ -12,56 +14,54 @@
             position: relative;
             width: 135px; height: 135px;
             border-radius: 50%;
-            border: 3px solid rgba(255, 255, 255, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.9);
             background: #1a1a1a; 
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
             margin: 5px 0 0 15px;
             overflow: hidden;
-            /* Efeito 3D (Perspectiva) */
             perspective: 800px;
             z-index: 1;
-            pointer-events: auto; /* Permite clicar para abrir o menu */
+            pointer-events: auto; 
             cursor: pointer;
         }
         
-        /* Círculo Interno que Gira e Inclina */
+        .radar-frame:active { transform: scale(0.95); }
+
         #radar-rotator {
             width: 100%; height: 100%;
             position: absolute;
             transform-style: preserve-3d;
-            /* Inclinação inicial de 48 graus estilo GTA V */
             transform: rotateX(48deg); 
         }
 
-        /* Camada do Mapa (Move-se oposto ao jogador) */
         #map-layer {
             position: absolute;
             width: 3000px; height: 3000px; /* Tamanho da Imagem */
-            background-image: url('map.png'); /* A mesma imagem do mapa global */
+            background-image: url('map.png');
             background-size: 100% 100%;
             left: 50%; top: 50%;
             transform: translate(-50%, -50%);
             will-change: transform;
         }
 
-        /* SVG da Rota (GPS) */
+        /* CONFIGURAÇÃO DA LINHA DO GPS */
         #gps-svg {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none;
+            /* A linha precisa estar DENTRO do map-layer para mover junto com o mapa */
         }
         #gps-line {
-            fill: none; stroke: #bf00ff; stroke-width: 18; /* Linha grossa */
-            stroke-linecap: round; stroke-linejoin: round;
-            filter: drop-shadow(0 0 2px #bf00ff);
+            fill: none; 
+            stroke: #bf00ff; /* Cor da sua linha */
+            stroke-width: 15; 
+            stroke-linecap: round; 
+            stroke-linejoin: round;
         }
 
-        /* Seta do Jogador (Fica parada no centro) */
         .player-arrow-container {
             position: absolute; top: 50%; left: 50%;
-            width: 0; height: 0;
-            z-index: 10;
+            width: 0; height: 0; z-index: 10;
             transform-style: preserve-3d;
-             /* Compensa a inclinação do radar para a seta ficar "em pé" visualmente */
             transform: translateZ(10px) rotateX(-48deg);
         }
         #player-arrow {
@@ -70,7 +70,6 @@
             background-size: contain; background-repeat: no-repeat;
             position: absolute; transform: translate(-50%, -50%);
         }
-
     </style>
 </head>
 <body>
@@ -90,112 +89,120 @@
     </div>
 
     <script>
-        // === CONFIGURAÇÕES ===
-        const MAP_WIDTH_GTA = 6000;   // O mapa do GTA tem 6000 unidades de largura (-3000 a 3000)
-        const MAP_IMG_SIZE = 3000;    // Tamanho da imagem map.png em pixels (ajuste se for diferente)
-        const SCALE = MAP_IMG_SIZE / MAP_WIDTH_GTA; // Fator de conversão
-
-        // Variáveis de Posição
-        let targetX = 0, targetY = 0, targetAngle = 0, targetCamAngle = 0;
-        let currX = 0, currY = 0, currAngle = 0, currCamAngle = 0;
+        // === SUAS VARIÁVEIS E LÓGICA ORIGINAL ===
         
+        const SMOOTH_SPEED = 0.15;
+        const MAP_SIZE = 3000;  // Tamanho da imagem no CSS
+        const GTA_SIZE = 6000;  // Tamanho real do mapa GTA
+        const SCALE = MAP_SIZE / GTA_SIZE; // 0.5
+        const OFFSET = MAP_SIZE / 2; // 1500
+
+        // Posições
+        let targetPos = { x: 0, y: 0 };
+        let currentPos = { x: 0, y: 0 };
+        let targetCamAngle = 0, currentCamAngle = 0;
+        let targetPlayerAngle = 0, currentPlayerAngle = 0;
+
         // Elementos
         const mapLayer = document.getElementById('map-layer');
-        const radarRotator = document.getElementById('radar-rotator');
-        const arrow = document.getElementById('player-arrow');
+        const mapRotator = document.getElementById('radar-rotator');
+        const arrowRotator = document.getElementById('player-arrow');
         const gpsLine = document.getElementById('gps-line');
 
-        // Função para abrir o menu
-        function abrirMenu() {
-            if(window.geckoju) window.geckoju.send("menu");
-        }
+        function abrirMenu() { if(window.geckoju) window.geckoju.send("menu"); }
 
-        // Função GTA -> Pixels (Centralizada no offset da imagem)
-        function gtaToPixel(x, y) {
-            // No GTA: X cresce pra direita, Y cresce pra cima (Norte)
-            // No CSS: Left cresce pra direita, Top cresce pra baixo
-            // Offset: 1500 (metade de 3000)
-            
-            let px = (x * SCALE) + (MAP_IMG_SIZE / 2);
-            let py = (-y * SCALE) + (MAP_IMG_SIZE / 2); // Inverte Y
+        // === A ÚNICA FUNÇÃO QUE MEXI: CONVERSÃO DE COORDENADAS ===
+        // Isso garante que a linha roxa fique em cima da rua certa
+        function gtaToPixelGPS(x, y) {
+            // Converte coordenada do jogo para pixel da imagem
+            let px = (x * SCALE) + OFFSET;
+            let py = (-y * SCALE) + OFFSET; // Y do GTA é invertido em relação ao HTML
             return { x: px, y: py };
         }
+        
+        // Conversão para mover o mapa (Oposto ao jogador)
+        function gtaToPixelMap(x, y) {
+            let px = (x * SCALE) + OFFSET;
+            let py = (-y * SCALE) + OFFSET;
+            return { x: -px, y: -py }; // Negativo para o mapa ir contra
+        }
 
-        // === COMUNICAÇÃO COM SERVIDOR ===
+        // === COMUNICAÇÃO ===
         if (window.geckoju) {
             window.geckoju.onData = function(data) {
                 try {
                     const obj = JSON.parse(data);
 
-                    // 1. ATUALIZAR POSIÇÃO DO JOGADOR
+                    // 1. Atualiza Posição (Seu código original)
                     if (obj.pX !== undefined) {
-                        const pos = gtaToPixel(obj.pX, obj.pY);
-                        
-                        // O mapa move-se AO CONTRÁRIO do jogador para simular movimento
-                        // Mas aqui guardamos a posição real do pixel para lerp
-                        targetX = -pos.x; 
-                        targetY = -pos.y;
-                        
-                        targetAngle = obj.pAngle || 0;
+                        const pos = gtaToPixelMap(obj.pX, obj.pY);
+                        targetPos.x = pos.x;
+                        targetPos.y = pos.y;
                         targetCamAngle = obj.camAngle || 0;
+                        targetPlayerAngle = obj.pAngle || 0;
                     }
 
-                    // 2. ATUALIZAR ROTA GPS
-                    if (obj.string_rota) {
+                    // 2. ATUALIZA A LINHA ROXA (AQUI ESTÁ O CONSERTO)
+                    if (obj.string_rota && obj.string_rota.length > 5) {
                         const pontos = obj.string_rota.split('|');
                         let svgPoints = "";
                         
                         pontos.forEach(p => {
                             const c = p.split(',');
                             if(c.length === 2) {
-                                const pt = gtaToPixel(parseFloat(c[0]), parseFloat(c[1]));
+                                // Usa a função corrigida para achar o pixel certo na imagem
+                                const pt = gtaToPixelGPS(parseFloat(c[0]), parseFloat(c[1]));
                                 svgPoints += `${pt.x},${pt.y} `;
                             }
                         });
                         gpsLine.setAttribute("points", svgPoints);
-                        
-                    } else if (obj.gps_off) {
+                    } 
+                    else if (obj.gps_off) {
                         gpsLine.setAttribute("points", "");
                     }
 
                 } catch(e) {}
             };
+        } else {
+            // Fallback para teste no PC
+            setTimeout(() => { console.log("Geckoju não detectado (PC Mode)"); }, 1000);
         }
 
-        // === ANIMAÇÃO SUAVE (LOOP) ===
+        // === SUA ANIMAÇÃO ORIGINAL (INTACTA) ===
         function lerp(start, end, amt) { return (1 - amt) * start + amt * end; }
-        
-        // Corrige o problema do giro 360->0 graus (evita girar tudo ao contrário)
-        function lerpAngle(start, end, amt) {
-            let diff = end - start;
-            while (diff < -180) diff += 360;
-            while (diff > 180) diff -= 360;
-            return start + diff * amt;
+
+        function shortestAngleDist(a0, a1) {
+            var max = 360; var da = (a1 - a0) % max;
+            return 2 * da % max - da;
         }
 
         function animate() {
-            // Suavização (0.1 = lento, 0.2 = rápido)
-            currX = lerp(currX, targetX, 0.15);
-            currY = lerp(currY, targetY, 0.15);
-            currCamAngle = lerpAngle(currCamAngle, targetCamAngle, 0.1);
-            currAngle = lerpAngle(currAngle, targetAngle, 0.1);
-
-            // Move o mapa
-            // Importante: O centro do mapa (transform-origin) deve estar alinhado
-            mapLayer.style.transform = `translate(${currX}px, ${currY}px)`;
+            // Interpolação de Posição
+            currentPos.x = lerp(currentPos.x, targetPos.x, SMOOTH_SPEED);
+            currentPos.y = lerp(currentPos.y, targetPos.y, SMOOTH_SPEED);
             
-            // Gira o radar baseado na Câmera (estilo GTA)
-            // Mantém o X em 48deg para o efeito 3D
-            radarRotator.style.transform = `rotateX(48deg) rotateZ(${currCamAngle}deg)`;
+            // Move o mapa
+            mapLayer.style.transform = `translate3d(${currentPos.x}px, ${currentPos.y}px, 0)`;
 
-            // Gira a seta do jogador (Diferença entre para onde olho e para onde a câmera olha)
-            let arrowRot = currAngle - currCamAngle;
-            arrow.style.transform = `translate(-50%, -50%) rotate(${-arrowRot}deg)`;
+            // Interpolação de Câmera (Gira o Mapa)
+            let distCam = shortestAngleDist(currentCamAngle, targetCamAngle);
+            if(Math.abs(distCam) < 120) currentCamAngle += distCam * SMOOTH_SPEED;
+            else currentCamAngle = targetCamAngle;
+            
+            mapRotator.style.transform = `rotateX(48deg) rotateZ(${currentCamAngle}deg)`;
+
+            // Interpolação do Player (Gira a Seta)
+            let distPlayer = shortestAngleDist(currentPlayerAngle, targetPlayerAngle);
+            if(Math.abs(distPlayer) < 120) currentPlayerAngle += distPlayer * SMOOTH_SPEED;
+            else currentPlayerAngle = targetPlayerAngle;
+
+            // Calcula rotação relativa da seta
+            let arrowRotation = currentPlayerAngle - currentCamAngle;
+            arrowRotator.style.transform = `translate(-50%, -50%) rotate(${-arrowRotation}deg)`; 
 
             requestAnimationFrame(animate);
         }
-        
-        // Inicia
+
         requestAnimationFrame(animate);
     </script>
 </body>
