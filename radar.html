@@ -73,10 +73,11 @@
         <div id="map-rotator">
             <div id="map-layer">
                 <div class="map-img"></div>
-                    <svg width="2500" height="2500" style="position:absolute; top:0; left:0; pointer-events:none;">
-                            <polyline id="gps-line" points="" fill="none" stroke="#bf00ff" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-            </div>
+                
+                <svg id="gps-svg" viewBox="0 0 2500 2500" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;">
+                    <polyline id="gps-line" points="" fill="none" stroke="#bf00ff" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                </div>
         </div>
         <div id="arrow-rotator">
             <div class="player-marker"></div>
@@ -143,30 +144,35 @@
                             if (serverPly !== undefined) targetPlayerAngle = serverPly;
                         }
 
-                        // --- 2. ATUALIZAÇÃO PESADA (ROTA) ---
-                        // Só desenha se a rota for NOVA. Se for igual à anterior, ignora.
+                        // ATUALIZAÇÃO DA ROTA (SÓ QUANDO MUDAR)
                         if (obj.string_rota && obj.string_rota.length > 5) {
-                             // TRAVA DE SEGURANÇA: Se a rota for idêntica à última, não faz nada
-                             if (obj.string_rota !== ultimaRotaRecebida) {
-                                 ultimaRotaRecebida = obj.string_rota; // Atualiza a cache
-                                 
-                                 const pontos = obj.string_rota.split('|');
-                                 let polyPoints = "";
-                                 pontos.forEach(p => {
-                                     const c = p.split(',');
-                                     if(c.length >= 2) {
-                                         // Matemática fixa para 2500px / 6000 unidades
-                                         let px = 1250 + (parseFloat(c[0]) * 0.41666); 
-                                         let py = 1250 - (parseFloat(c[1]) * 0.41666);
-                                         polyPoints += `${px},${py} `;
-                                     }
-                                 });
-                                 if(gpsLine) gpsLine.setAttribute("points", polyPoints);
-                             }
+                            
+                            // TRAVA DE SEGURANÇA: Só desenha se a rota for NOVA.
+                            if (obj.string_rota !== ultimaRotaRecebida) {
+                                ultimaRotaRecebida = obj.string_rota; // Atualiza a trava
+                                
+                                const pontos = obj.string_rota.split('|');
+                                let polyPoints = "";
+                                
+                                pontos.forEach(p => {
+                                    const c = p.split(',');
+                                    if(c.length >= 2) {
+                                        // MATEMÁTICA FIXA (2500px / 6000 unidades)
+                                        // 1250 é o centro da imagem
+                                        // 0.41666 é a escala (2500 dividido por 6000)
+                                        let px = 1250 + (parseFloat(c[0]) * 0.416666); 
+                                        let py = 1250 - (parseFloat(c[1]) * 0.416666);
+                                        
+                                        polyPoints += `${px},${py} `;
+                                    }
+                                });
+                                
+                                if(gpsLine) gpsLine.setAttribute("points", polyPoints);
+                            }
                         } 
                         else if (obj.gps_off) {
                             if(gpsLine) gpsLine.setAttribute("points", "");
-                            ultimaRotaRecebida = ""; // Reseta a cache
+                            ultimaRotaRecebida = ""; // Destrava
                         }
 
                     } catch(e) {}
