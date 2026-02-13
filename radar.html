@@ -154,14 +154,17 @@
                                 const pontos = obj.string_rota.split('|');
                                 let polyPoints = "";
                                 
+                                // Dentro do window.geckoju.onData na parte da rota:
                                 pontos.forEach(p => {
                                     const c = p.split(',');
                                     if(c.length >= 2) {
-                                        // MATEMÁTICA FIXA (2500px / 6000 unidades)
-                                        // 1250 é o centro da imagem
-                                        // 0.41666 é a escala (2500 dividido por 6000)
-                                        let px = 1250 + (parseFloat(c[0]) * 0.416666); 
-                                        let py = 1250 - (parseFloat(c[1]) * 0.416666);
+                                        // IMG_SIZE = 2500 | MAP_SIZE = 6000
+                                        // A conta tem que ser idêntica à do movimento do mapa
+                                        let rawX = parseFloat(c[0]);
+                                        let rawY = parseFloat(c[1]);
+
+                                        let px = 1250 + (rawX * (2500 / 6000)); 
+                                        let py = 1250 - (rawY * (2500 / 6000)); // O Y do GTA é invertido!
                                         
                                         polyPoints += `${px},${py} `;
                                     }
