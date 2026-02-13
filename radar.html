@@ -156,18 +156,16 @@
                                 
                                 // Dentro do window.geckoju.onData na parte da rota:
                                 pontos.forEach(p => {
-                                    const c = p.split(',');
-                                    if(c.length >= 2) {
-                                        // IMG_SIZE = 2500 | MAP_SIZE = 6000
-                                        // A conta tem que ser idêntica à do movimento do mapa
-                                        let rawX = parseFloat(c[0]);
-                                        let rawY = parseFloat(c[1]);
-
-                                        let px = 1250 + (rawX * (2500 / 6000)); 
-                                        let py = 1250 - (rawY * (2500 / 6000)); // O Y do GTA é invertido!
-                                        
-                                        polyPoints += `${px},${py} `;
-                                    }
+                                    // Dentro do loop pontos.forEach:
+                                const c = p.split(',');
+                                if(c.length >= 2) {
+                                    // Escala: 2500px (imagem) / 6000 unidades (GTA) = 0.41666
+                                    // O ponto 0,0 do GTA deve ser o ponto 1250,1250 da imagem
+                                    let px = 1250 + (parseFloat(c[0]) * (2500/6000));
+                                    let py = 1250 - (parseFloat(c[1]) * (2500/6000)); // Y é invertido no GTA
+                                    
+                                    polyPoints += `${px},${py} `;
+                                }
                                 });
                                 
                                 if(gpsLine) gpsLine.setAttribute("points", polyPoints);

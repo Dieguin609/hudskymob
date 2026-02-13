@@ -34,9 +34,12 @@
 
         /* ROTA GPS (ROXO) */
         #gps-svg {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 10;
-        }
+        position: absolute;
+        top: 0; left: 0;
+        width: 2500px; height: 2500px;
+        z-index: 5; /* Garante que fica por cima do map-img */
+        pointer-events: none;
+    }
         #gps-path {
             fill: none; stroke: #bf00ff; stroke-width: 15;
             stroke-linecap: round; stroke-linejoin: round;
@@ -199,6 +202,21 @@
                     // B) ATUALIZAR ROTA (Linha Roxa)
                     // Aceita 'rota' ou 'string_rota'
                     let rotaRaw = obj.rota || obj.string_rota;
+                    if (obj.string_rota) {
+                    const pontos = obj.string_rota.split('|');
+                    let polyPoints = "";
+                    pontos.forEach(p => {
+                        const c = p.split(',');
+                        if(c.length >= 2) {
+                            // Conversão exata para a sua imagem de 2500px
+                            let px = 1250 + (parseFloat(c[0]) * (2500/6000));
+                            let py = 1250 - (parseFloat(c[1]) * (2500/6000));
+                            polyPoints += `${px},${py} `;
+                        }
+                    });
+                    // 'gps-path' é o ID da polyline no seu SVG do mapa global
+                    document.getElementById('gps-path').setAttribute("points", polyPoints);
+                }
                     
                     if (rotaRaw) {
                         const pontos = rotaRaw.split('|');
