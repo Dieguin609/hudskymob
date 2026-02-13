@@ -6,7 +6,7 @@
     <title>Mapa Global SkyPixel</title>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <style>
-        /* ================= ESTILOS (IGUAL AO SEU PC) ================= */
+        /* ================= ESTILOS (MANTIDOS ORIGINAIS) ================= */
         * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; user-select: none; -webkit-user-select: none; }
         
         body {
@@ -28,7 +28,7 @@
 
         #map-img {
             width: 100%; height: 100%;
-            background-image: url('map.png'); /* Verifique se a imagem está na pasta */
+            background-image: url('map.png'); /* Certifique-se que map.png está na pasta */
             background-size: 100% 100%;
         }
 
@@ -38,7 +38,7 @@
             pointer-events: none; z-index: 5;
         }
         #gps-path {
-            fill: none; stroke: #bf00ff; stroke-width: 10;
+            fill: none; stroke: #bf00ff; stroke-width: 12;
             stroke-linecap: round; stroke-linejoin: round;
             filter: drop-shadow(0 0 4px #bf00ff);
         }
@@ -47,12 +47,12 @@
         #player-arrow {
             position: absolute;
             width: 24px; height: 24px;
-            background-image: url('seta.png'); /* Verifique se a seta.png está na pasta */
+            background-image: url('seta.png'); /* Certifique-se que seta.png está na pasta */
             background-size: contain; background-repeat: no-repeat; background-position: center;
             z-index: 100;
             transform: translate(-50%, -50%);
-            display: none; /* Começa invisível até o servidor mandar a posição */
-            transition: top 0.2s linear, left 0.2s linear, transform 0.2s linear;
+            display: none; /* Começa invisível */
+            transition: top 0.1s linear, left 0.1s linear, transform 0.1s linear;
         }
 
         /* PINO DE DESTINO */
@@ -84,6 +84,11 @@
             font-size: 14px; font-weight: 700; text-transform: uppercase;
             display: flex; align-items: center; gap: 8px; cursor: pointer;
         }
+        .instr-text {
+            position: absolute; bottom: 20px; width: 100%;
+            text-align: center; color: rgba(255,255,255,0.5);
+            font-size: 12px; pointer-events: none; text-shadow: 1px 1px 2px #000;
+        }
     </style>
 </head>
 <body>
@@ -99,7 +104,6 @@
             </svg>
             
             <div id="destino-marcador" class="waypoint"></div>
-            
             <div id="player-arrow"></div>
         </div>
     </div>
@@ -109,10 +113,13 @@
         <div class="nav-item" onclick="gpsParaLocal(1242, -1694)">🏥 Hospital</div>
         <div class="nav-item" onclick="gpsParaLocal(1543, -1675)">🚔 Delegacia</div>
         <div class="nav-item" onclick="gpsParaLocal(-2024, 156)">🔧 Mecânica</div>
+        <div class="nav-item" onclick="gpsParaLocal(2100, -1800)">🍕 Pizzaria</div>
     </div>
 
+    <div class="instr-text">Segure o dedo para marcar um destino livre</div>
+
     <script>
-        // CONFIGURAÇÃO IGUAL AO SEU PC
+        // CONFIGURAÇÕES
         const IMG_SIZE = 2500;
         const MAP_SIZE = 6000;
         const SCALE = IMG_SIZE / MAP_SIZE;
@@ -127,45 +134,52 @@
         const playerArrow = document.getElementById('player-arrow');
         const gpsPath = document.getElementById('gps-path');
 
-        // Converter GTA -> Pixels
+        // FUNÇÕES DE CONVERSÃO
         function gtaToPixels(x, y) {
             return { x: OFFSET + (x * SCALE), y: OFFSET - (y * SCALE) };
         }
-        
-        // Converter Pixels -> GTA (para o clique)
         function pixelsToGta(px, py) {
             return { x: (px - OFFSET) / SCALE, y: (OFFSET - py) / SCALE };
         }
 
-        // ================= COMUNICAÇÃO (AQUI É O SEGREDO) =================
+        // ================= COMUNICAÇÃO OFICIAL GECKOJU (CORRIGIDO) =================
         
         function fecharMapa() {
-            if(window.geckoju) window.geckoju.send("fecharMapaGlobal");
+            if(window.geckoju) {
+                window.geckoju.send("fecharMapaGlobal");
+            } else {
+                console.log("Fechando mapa (Teste PC)");
+                document.body.style.display = 'none';
+            }
         }
 
         function gpsParaLocal(x, y) {
-            // Visual
+            // 1. Atualiza Visualmente
             const pos = gtaToPixels(x, y);
             marcador.style.left = pos.x + 'px';
             marcador.style.top = pos.y + 'px';
             marcador.style.display = 'block';
             
-            // Focar no local
+            // Centraliza
             zoom = 1.5;
             mapX = (window.innerWidth/2) - (pos.x * zoom);
             mapY = (window.innerHeight/2) - (pos.y * zoom);
             atualizarTransform();
 
-            // Enviar pro Servidor
-            if(window.geckoju) window.geckoju.send(`gps:${x},${y}`);
+            // 2. Envia para o Servidor (API Mobile)
+            if(window.geckoju) {
+                window.geckoju.send(`gps:${x},${y}`);
+            }
         }
 
+        // ESCUTA DADOS DO SERVIDOR (API Mobile)
         if(window.geckoju) {
             window.geckoju.onData = function(data) {
                 try {
                     const obj = JSON.parse(data);
 
-                    // 1. ATUALIZAR POSIÇÃO DO JOGADOR (Aceita pX ou x)
+                    // A) ATUALIZAR POSIÇÃO DO JOGADOR
+                    // Aceita 'pX' (padrão PC) ou 'x' (padrão curto)
                     let px = (obj.pX !== undefined) ? obj.pX : obj.x;
                     let py = (obj.pY !== undefined) ? obj.pY : obj.y;
                     let pa = (obj.angle !== undefined) ? obj.angle : obj.a;
@@ -182,7 +196,8 @@
                         }
                     }
 
-                    // 2. ATUALIZAR ROTA (Aceita 'rota' ou 'string_rota')
+                    // B) ATUALIZAR ROTA (Linha Roxa)
+                    // Aceita 'rota' ou 'string_rota'
                     let rotaRaw = obj.rota || obj.string_rota;
                     
                     if (rotaRaw) {
@@ -196,42 +211,46 @@
                             }
                         });
                         gpsPath.setAttribute('points', svgString);
-                    }
-                    
-                    // Limpar rota
-                    if (obj.gps_off) {
+                    } else if (obj.gps_off) {
                         gpsPath.setAttribute('points', "");
                         marcador.style.display = 'none';
                     }
 
-                } catch(e) {}
+                } catch(e) {
+                    console.error("Erro JSON:", e);
+                }
             };
         }
 
         // ================= CONTROLES (TOUCH) =================
         
-        // CORRIGIDO: O nome da função estava 'actualizarTransform' (com C) no seu código original
-        function atualizarTransform() {
+        function actualizarTransform() {
             container.style.transform = `translate(${mapX}px, ${mapY}px) scale(${zoom})`;
-            // Corrige tamanho dos marcadores com zoom
+            // Mantém os ícones no tamanho correto invertendo o zoom
             marcador.style.transform = `translate(-50%, -50%) rotate(45deg) scale(${1/zoom})`;
         }
+        
+        // CORREÇÃO: Função auxiliar para chamar o nome certo (tinha um erro de digitação antes)
+        function atualizarTransform() {
+             container.style.transform = `translate(${mapX}px, ${mapY}px) scale(${zoom})`;
+             marcador.style.transform = `translate(-50%, -50%) rotate(45deg) scale(${1/zoom})`;
+        }
 
-        // Toque e Arraste
+        // Eventos de Toque
         viewport.addEventListener('touchstart', (e) => {
             if(e.touches.length === 1) {
                 isDragging = true;
                 startX = e.touches[0].pageX - mapX;
                 startY = e.touches[0].pageY - mapY;
                 
-                // Clique longo para marcar
+                // Clique longo para marcar destino livre
                 longPressTimer = setTimeout(() => {
                     isDragging = false;
                     const touchX = (e.touches[0].pageX - mapX) / zoom;
                     const touchY = (e.touches[0].pageY - mapY) / zoom;
                     const coords = pixelsToGta(touchX, touchY);
                     gpsParaLocal(coords.x, coords.y);
-                }, 500);
+                }, 600);
             } else if(e.touches.length === 2) {
                 isDragging = false; clearTimeout(longPressTimer);
                 pinchDistStart = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
@@ -253,6 +272,7 @@
         }, {passive: false});
         viewport.addEventListener('touchend', () => { isDragging = false; clearTimeout(longPressTimer); });
 
+        // Centralizar ao iniciar
         window.onload = () => {
             mapX = (window.innerWidth/2) - (OFFSET*zoom);
             mapY = (window.innerHeight/2) - (OFFSET*zoom);
