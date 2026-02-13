@@ -117,57 +117,61 @@
             }
         }
 
+        // Variável para evitar redesenhar a mesma rota mil vezes
+        let ultimaRotaRecebida = ""; 
+
         function TentarConectar() {
             if (window.geckoju) {
                 window.geckoju.onData = function(data) {
                     try {
                         const obj = JSON.parse(data);
 
-                        // --- CORREÇÃO DE VARIÁVEIS ---
-                        // Aceita tanto 'x' (Pawn otimizado) quanto 'pX' (Pawn antigo)
+                        // --- 1. ATUALIZAÇÃO LEVE (POSIÇÃO) ---
+                        // Isso roda 20x por segundo sem travar
                         let serverX = (obj.x !== undefined) ? obj.x : obj.pX;
                         let serverY = (obj.y !== undefined) ? obj.y : obj.pY;
                         let serverCam = (obj.ca !== undefined) ? obj.ca : obj.camAngle;
                         let serverPly = (obj.a !== undefined) ? obj.a : obj.pAngle;
 
-                        // 1. ATUALIZAR POSIÇÃO DO MAPA
                         if (serverX !== undefined) {
-                            // Calcula onde o pixel do jogador estaria na imagem
                             let offsetX = (serverX * SCALE);
-                            let offsetY = -(serverY * SCALE); // Y do GTA é invertido
-                            
-                            // Move o MAPA para o lado oposto (para o jogador ficar no centro)
-                            // MAP_CENTER_OFFSET deve ser metade do tamanho da imagem (1250)
-                            targetPos.x = -MAP_CENTER_OFFSET - offsetX;
-                            targetPos.y = -MAP_CENTER_OFFSET - offsetY;
+                            let offsetY = -(serverY * SCALE); 
+                            targetPos.x = -1250 - offsetX; // 1250 é o centro (MAP_SIZE/2)
+                            targetPos.y = -1250 - offsetY;
 
                             if (serverCam !== undefined) targetCamAngle = serverCam;
                             if (serverPly !== undefined) targetPlayerAngle = serverPly;
                         }
 
-                        // 2. ATUALIZAR LINHA DO GPS
+                        // --- 2. ATUALIZAÇÃO PESADA (ROTA) ---
+                        // Só desenha se a rota for NOVA. Se for igual à anterior, ignora.
                         if (obj.string_rota && obj.string_rota.length > 5) {
-                             const pontos = obj.string_rota.split('|');
-                             let polyPoints = "";
-                             pontos.forEach(p => {
-                                 const c = p.split(',');
-                                 if(c.length >= 2) {
-                                     // Converte coordenadas do mundo GTA para pixels na imagem
-                                     let px = MAP_CENTER_OFFSET + (parseFloat(c[0]) * SCALE);
-                                     let py = MAP_CENTER_OFFSET - (parseFloat(c[1]) * SCALE);
-                                     polyPoints += `${px},${py} `;
-                                 }
-                             });
-                             if(gpsLine) gpsLine.setAttribute("points", polyPoints);
-                        } else if (obj.gps_off) {
+                             // TRAVA DE SEGURANÇA: Se a rota for idêntica à última, não faz nada
+                             if (obj.string_rota !== ultimaRotaRecebida) {
+                                 ultimaRotaRecebida = obj.string_rota; // Atualiza a cache
+                                 
+                                 const pontos = obj.string_rota.split('|');
+                                 let polyPoints = "";
+                                 pontos.forEach(p => {
+                                     const c = p.split(',');
+                                     if(c.length >= 2) {
+                                         // Matemática fixa para 2500px / 6000 unidades
+                                         let px = 1250 + (parseFloat(c[0]) * 0.41666); 
+                                         let py = 1250 - (parseFloat(c[1]) * 0.41666);
+                                         polyPoints += `${px},${py} `;
+                                     }
+                                 });
+                                 if(gpsLine) gpsLine.setAttribute("points", polyPoints);
+                             }
+                        } 
+                        else if (obj.gps_off) {
                             if(gpsLine) gpsLine.setAttribute("points", "");
+                            ultimaRotaRecebida = ""; // Reseta a cache
                         }
-                    } catch(e) {
-                        // Ignora erros de JSON quebrado para não travar o script
-                    }
+
+                    } catch(e) {}
                 };
             } else {
-                // Se o Geckoju ainda não carregou, tenta de novo em 0.5s
                 setTimeout(TentarConectar, 500);
             }
         }
