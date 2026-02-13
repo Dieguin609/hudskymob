@@ -74,7 +74,7 @@
             <div id="map-layer">
                 <div class="map-img"></div>
                 
-                <svg id="gps-svg" viewBox="0 0 2500 2500" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;">
+                <svg id="gps-svg" viewBox="0 0 2500 2500" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; overflow:visible;">
                     <polyline id="gps-line" points="" fill="none" stroke="#bf00ff" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
                 </div>
@@ -161,10 +161,10 @@
                                 if(c.length >= 2) {
                                     // Escala: 2500px (imagem) / 6000 unidades (GTA) = 0.41666
                                     // O ponto 0,0 do GTA deve ser o ponto 1250,1250 da imagem
-                                    let px = 1250 + (parseFloat(c[0]) * (2500/6000));
-                                    let py = 1250 - (parseFloat(c[1]) * (2500/6000)); // Y é invertido no GTA
-                                    
-                                    polyPoints += `${px},${py} `;
+                                    // Dentro do forEach dos pontos:
+                                let px = 1250 + (parseFloat(c[0]) * (2500 / 6000));
+                                let py = 1250 - (parseFloat(c[1]) * (2500 / 6000));
+                                polyPoints += px.toFixed(1) + "," + py.toFixed(1) + " ";
                                 }
                                 });
                                 
