@@ -3,77 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mapa Global SkyPixel</title>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <style>
-        /* RESET GERAL */
-        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; user-select: none; -webkit-user-select: none; touch-action: none; }
+        /* RESET E TELA CHEIA */
+        * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; user-select: none; -webkit-user-select: none; }
         
         body {
-            background-color: #000;
+            background-color: #1a1a1a;
             overflow: hidden;
-            font-family: 'Rajdhani', sans-serif;
             width: 100vw; height: 100vh;
+            font-family: 'Rajdhani', sans-serif;
         }
 
-        /* ÁREA DE VISUALIZAÇÃO */
+        /* VIEWPORT (A JANELA DA CÂMERA) */
         #viewport {
             width: 100%; height: 100%;
             position: absolute;
             overflow: hidden;
-            background: #000;
+            background: #0b0b0b;
         }
 
-        /* CONTAINER QUE MEXE */
+        /* O MAPA GIGANTE QUE VAI SER ARRASTADO */
         #map-container {
-            width: 2500px; /* IMG_SIZE */
-            height: 2500px;
+            width: 2500px; height: 2500px;
             position: absolute;
             transform-origin: 0 0;
             will-change: transform;
         }
 
-        #map-img { width: 100%; height: 100%; display: block; filter: none !important; }
+        /* IMAGEM DO MAPA */
+        #map-img {
+            width: 100%; height: 100%;
+            background-image: url('map.png');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+        }
 
-        /* SVG DA ROTA (ROXO) */
+        /* CAMADA DA LINHA DE ROTA (GPS) */
         #gps-svg {
             position: absolute; top: 0; left: 0;
             width: 100%; height: 100%;
             pointer-events: none;
-            z-index: 10;
+            z-index: 5;
         }
-        
-        #gps-path { 
-            fill: none; 
-            stroke: #bf00ff; 
-            stroke-width: 12; 
+        #gps-path {
+            fill: none;
+            stroke: #bf00ff; /* Roxo SkyPixel */
+            stroke-width: 12;
             stroke-linecap: round;
             stroke-linejoin: round;
-            filter: drop-shadow(0px 0px 4px rgba(191, 0, 255, 0.6));
+            filter: drop-shadow(0 0 4px #bf00ff);
         }
 
-        /* MARCADOR DE DESTINO */
+        /* PINO DE DESTINO */
         .waypoint {
-            position: absolute; width: 24px; height: 24px;
-            background: #bf00ff; border: 3px solid #fff; border-radius: 50%;
-            transform: translate(-50%, -50%); pointer-events: none;
-            z-index: 50; box-shadow: 0 0 10px #bf00ff; display: none;
+            position: absolute;
+            width: 32px; height: 32px;
+            background-color: #bf00ff;
+            border: 3px solid #fff;
+            border-radius: 50% 50% 0 50%; /* Formato de gota */
+            transform: translate(-50%, -50%) rotate(45deg);
+            z-index: 50;
+            display: none; /* Começa escondido */
+            box-shadow: 0 0 10px rgba(0,0,0,0.8);
         }
 
-        /* MENU LATERAL (BOTÕES AZUIS) */
+        /* SETA DO JOGADOR (VOCÊ) */
+        #player-arrow {
+            position: absolute;
+            width: 28px; height: 28px;
+            background-image: url('seta.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            z-index: 60;
+            transform: translate(-50%, -50%);
+            transition: top 0.2s linear, left 0.2s linear, transform 0.2s linear;
+        }
+
+        /* --- MENU LATERAL (RECOLOCADO) --- */
         .side-nav {
-            position: absolute; top: 20px; right: 20px;
+            position: absolute; top: 80px; right: 20px;
             display: flex; flex-direction: column; align-items: flex-end;
-            gap: 8px; z-index: 1000; max-height: 90vh; overflow-y: auto;
+            gap: 8px; z-index: 1000; max-height: 80vh; overflow-y: auto;
             pointer-events: auto;
         }
 
         .nav-item {
             background: rgba(0, 122, 255, 0.9);
             color: #fff;
-            padding: 8px 14px;
+            padding: 10px 15px;
             border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.2);
-            font-size: 13px; font-weight: 700; text-transform: uppercase;
+            font-size: 14px; font-weight: 700; text-transform: uppercase;
             display: flex; align-items: center; gap: 10px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             width: fit-content; white-space: nowrap;
@@ -81,26 +104,28 @@
         }
 
         .nav-item:active { transform: scale(0.95); background: #0056b3; }
-        .emoji-icon { font-size: 16px; }
+        .emoji-icon { font-size: 18px; }
 
         /* BOTÃO FECHAR (X) */
         .close-btn {
             position: absolute; top: 20px; left: 20px;
-            width: 45px; height: 45px;
-            background: rgba(0, 0, 0, 0.4);
-            color: rgba(255, 255, 255, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 20px; cursor: pointer; z-index: 2000;
+            width: 50px; height: 50px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+            display: flex; justify-content: center; align-items: center;
+            font-size: 24px; cursor: pointer; z-index: 100;
         }
-        .close-btn:active { background: #ff4444; color: white; }
+        .close-btn:active { background: #ff4444; border-color: #ff4444; }
 
-        /* INSTRUÇÃO DE TOQUE LONGO */
-        .instr-text {
+        /* MENSAGEM DE AJUDA */
+        .help-text {
             position: absolute; bottom: 20px; width: 100%;
-            text-align: center; color: rgba(255,255,255,0.5);
-            font-size: 12px; pointer-events: none; text-shadow: 1px 1px 2px #000;
+            text-align: center; color: rgba(255,255,255,0.6);
+            font-size: 14px; pointer-events: none;
+            text-shadow: 1px 1px 2px black;
+            z-index: 100;
         }
     </style>
 </head>
@@ -110,15 +135,12 @@
 
     <div id="viewport">
         <div id="map-container">
-            <img src="map.png" id="map-img">
-            
+            <div id="map-img"></div>
             <svg id="gps-svg" width="2500" height="2500">
                 <polyline id="gps-path" points="" />
             </svg>
-            
-            <div id="markers-layer">
-                <div id="destino-marcador" class="waypoint"></div>
-            </div>
+            <div id="destino-marcador" class="waypoint"></div>
+            <div id="player-arrow"></div>
         </div>
     </div>
 
@@ -140,7 +162,7 @@
         </div>
     </div>
 
-    <div class="instr-text">Segure o dedo para marcar um destino livre</div>
+    <div class="help-text">Toque longo para marcar destino</div>
 
     <script>
         const IMG_SIZE = 2500;
@@ -148,13 +170,16 @@
         const SCALE = IMG_SIZE / MAP_SIZE;
         const OFFSET = IMG_SIZE / 2;
 
-        let zoom = 1.0, mapX = 0, mapY = 0;
+        let zoom = 1.0;
+        let mapX = 0, mapY = 0;
         let isDragging = false, startX, startY;
         let pinchDistStart = 0, pinchZoomStart = 1;
 
         const container = document.getElementById('map-container');
         const viewport = document.getElementById('viewport');
         const marcador = document.getElementById('destino-marcador');
+        const playerArrow = document.getElementById('player-arrow');
+        const gpsPath = document.getElementById('gps-path');
 
         function gtaToPixels(x, y) {
             return { x: OFFSET + (x * SCALE), y: OFFSET - (y * SCALE) };
@@ -163,58 +188,16 @@
             return { x: (px - OFFSET) / SCALE, y: (OFFSET - py) / SCALE };
         }
 
-        // ==========================================
-        // SISTEMA DE TOQUE E ARRASTE (MOBILE)
-        // ==========================================
-        viewport.addEventListener('touchstart', (e) => {
-            if (e.touches.length === 1) {
-                isDragging = true;
-                startX = e.touches[0].pageX - mapX;
-                startY = e.touches[0].pageY - mapY;
-            } else if (e.touches.length === 2) {
-                isDragging = false;
-                pinchDistStart = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-                pinchZoomStart = zoom;
-            }
-        }, { passive: false });
+        // --- 1. COMUNICAÇÃO COM O SERVIDOR ---
+        function fecharMapa() {
+            if(window.geckoju) window.geckoju.send("fecharMapaGlobal");
+        }
 
-        viewport.addEventListener('touchmove', (e) => {
-            e.preventDefault(); // Impede zoom da página
-            if (isDragging && e.touches.length === 1) {
-                mapX = e.touches[0].pageX - startX;
-                mapY = e.touches[0].pageY - startY;
-            } else if (e.touches.length === 2) {
-                let dist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-                zoom = Math.min(Math.max(0.4, pinchZoomStart * (dist / pinchDistStart)), 4.0);
-            }
-            atualizarTransform();
-        }, { passive: false });
-
-        viewport.addEventListener('touchend', () => { isDragging = false; });
-
-        // CLIQUE LONGO PARA MARCAR NO CHÃO
-        let longPressTimer;
-        viewport.addEventListener('touchstart', (e) => {
-            if(e.touches.length === 1) {
-                longPressTimer = setTimeout(() => {
-                    const touchPxX = (e.touches[0].pageX - mapX) / zoom;
-                    const touchPxY = (e.touches[0].pageY - mapY) / zoom;
-                    const coords = pixelsToGta(touchPxX, touchPxY);
-                    gpsParaLocal(coords.x, coords.y);
-                }, 600); // 600ms segurando = marcar
-            }
-        });
-        viewport.addEventListener('touchend', () => clearTimeout(longPressTimer));
-        viewport.addEventListener('touchmove', () => clearTimeout(longPressTimer));
-
-        // ==========================================
-        // COMUNICAÇÃO COM O SERVIDOR (GECKOJU)
-        // ==========================================
-
+        // Função chamada pelos botões laterais (Centraliza e Marca)
         function gpsParaLocal(x, y) {
             const pos = gtaToPixels(x, y);
             
-            // Foca visualmente
+            // Foca visualmente no local
             zoom = 1.6;
             mapX = (window.innerWidth / 2) - (pos.x * zoom);
             mapY = (window.innerHeight / 2) - (pos.y * zoom);
@@ -225,61 +208,116 @@
             marcador.style.top = pos.y + 'px';
             marcador.style.display = 'block';
 
-            // ENVIA PARA O SERVIDOR (MOBILE)
+            // Envia pro servidor
             if (window.geckoju) {
                 window.geckoju.send(`gps:${x},${y}`);
-            } else {
-                console.log(`[TESTE] Enviando GPS: ${x}, ${y}`);
             }
         }
 
-        function fecharMapa() {
-            if (window.geckoju) {
-                window.geckoju.send("fecharMapaGlobal");
-            } else {
-                document.body.style.display = 'none'; // Teste PC
-            }
-        }
-
-        // RECEBE DADOS DO SERVIDOR
-        if (window.geckoju) {
+        if(window.geckoju) {
             window.geckoju.onData = function(data) {
                 try {
                     const obj = JSON.parse(data);
-                    
-                    // Se o servidor mandou uma rota (linha roxa)
+
+                    // A) ATUALIZAR POSIÇÃO DO JOGADOR
+                    if (obj.x !== undefined && obj.y !== undefined) {
+                        const pos = gtaToPixels(obj.x, obj.y);
+                        playerArrow.style.left = pos.x + 'px';
+                        playerArrow.style.top = pos.y + 'px';
+                        if(obj.a !== undefined) {
+                            playerArrow.style.transform = `translate(-50%, -50%) rotate(${obj.a}deg)`;
+                        }
+                    }
+
+                    // B) ATUALIZAR ROTA
                     if (obj.string_rota) {
-                        atualizarRota(obj.string_rota);
+                        desenharRota(obj.string_rota);
+                    } else if (obj.gps_off) {
+                        gpsPath.setAttribute('points', "");
                     }
                 } catch(e) {}
             };
         }
 
-        function atualizarRota(pathData) {
-            const path = document.getElementById('gps-path');
-            if (!pathData || pathData === "0") {
-                path.setAttribute('points', ""); 
+        function desenharRota(rotaString) {
+            if (!rotaString || rotaString === "0") {
+                gpsPath.setAttribute('points', "");
                 return;
             }
-            const pontos = pathData.split('|');
-            let svgPoints = "";
+            const pontos = rotaString.split('|');
+            let svgString = "";
             pontos.forEach(p => {
                 const c = p.split(',');
-                if (c.length === 2) {
+                if(c.length === 2) {
                     const pos = gtaToPixels(parseFloat(c[0]), parseFloat(c[1]));
-                    svgPoints += `${pos.x},${pos.y} `;
+                    svgString += `${pos.x},${pos.y} `;
                 }
             });
-            path.setAttribute('points', svgPoints);
+            gpsPath.setAttribute('points', svgString);
         }
 
         function atualizarTransform() {
             container.style.transform = `translate(${mapX}px, ${mapY}px) scale(${zoom})`;
-            // Mantém o marcador no tamanho certo invertendo o zoom
-            marcador.style.transform = `translate(-50%, -50%) scale(${1/zoom})`;
+            // Corrige o tamanho do marcador e da seta com o zoom
+            const invZoom = 1/zoom;
+            marcador.style.transform = `translate(-50%, -50%) rotate(45deg) scale(${invZoom})`;
         }
 
-        // Centraliza ao iniciar
+        // --- 2. CONTROLES DE TOQUE ---
+        viewport.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                isDragging = true;
+                startX = e.touches[0].pageX - mapX;
+                startY = e.touches[0].pageY - mapY;
+
+                // Clique Longo para marcar
+                longPressTimer = setTimeout(() => {
+                    isDragging = false;
+                    const touchX = (e.touches[0].pageX - mapX) / zoom;
+                    const touchY = (e.touches[0].pageY - mapY) / zoom;
+                    
+                    const coords = pixelsToGta(touchX, touchY);
+                    
+                    marcador.style.left = touchX + 'px';
+                    marcador.style.top = touchY + 'px';
+                    marcador.style.display = 'block';
+                    
+                    if(window.geckoju) window.geckoju.send(`gps:${coords.x},${coords.y}`);
+                    
+                }, 500);
+            } else if (e.touches.length === 2) {
+                isDragging = false;
+                clearTimeout(longPressTimer);
+                pinchDistStart = Math.hypot(
+                    e.touches[0].pageX - e.touches[1].pageX,
+                    e.touches[0].pageY - e.touches[1].pageY
+                );
+                pinchZoomStart = zoom;
+            }
+        }, { passive: false });
+
+        let longPressTimer;
+        viewport.addEventListener('touchmove', (e) => {
+            clearTimeout(longPressTimer);
+            if (isDragging && e.touches.length === 1) {
+                mapX = e.touches[0].pageX - startX;
+                mapY = e.touches[0].pageY - startY;
+                atualizarTransform();
+            } else if (e.touches.length === 2) {
+                const dist = Math.hypot(
+                    e.touches[0].pageX - e.touches[1].pageX,
+                    e.touches[0].pageY - e.touches[1].pageY
+                );
+                zoom = Math.min(Math.max(0.4, pinchZoomStart * (dist / pinchDistStart)), 4.0);
+                atualizarTransform();
+            }
+        }, { passive: false });
+
+        viewport.addEventListener('touchend', () => {
+            isDragging = false;
+            clearTimeout(longPressTimer);
+        });
+
         window.onload = () => {
             mapX = (window.innerWidth / 2) - (OFFSET * zoom);
             mapY = (window.innerHeight / 2) - (OFFSET * zoom);
