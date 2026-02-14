@@ -88,64 +88,95 @@
     <script>
         const IMG_SIZE = 2500; 
         const MAP_SIZE = 6000; 
-        const SCALE = IMG_SIZE / MAP_SIZE; // 0.416666
-        const OFFSET = IMG_SIZE / 2; // 1250
+        const SCALE = IMG_SIZE / MAP_SIZE;
+        const MAP_CENTER_OFFSET = IMG_SIZE / 2;
 
+        const SMOOTH_SPEED = 0.3; 
+
+        const mapRotator = document.getElementById('map-rotator');
         const mapLayer = document.getElementById('map-layer');
-        const radarRotator = document.getElementById('radar-rotator');
+        const arrowRotator = document.getElementById('arrow-rotator');
         const gpsLine = document.getElementById('gps-line');
+        const radarFrame = document.querySelector('.radar-frame'); // Peguei o elemento do radar
 
-        // IMPORTANTE: Certifique-se que no seu HTML o SVG tem id="gps-svg" 
-        // e a polyline tem id="gps-line"
+        let currentPos = { x: 0, y: 0 };
+        let targetPos = { x: 0, y: 0 };
+        let currentCamAngle = 0, targetCamAngle = 0;
+        let currentPlayerAngle = 0, targetPlayerAngle = 0;
+        let ultimaRotaRecebida = ""; 
 
-        let targetPos = {x: 0, y: 0}, currentPos = {x: 0, y: 0};
-        let targetCam = 0, currentCam = 0;
-        let ultimaRota = "";
+        // --- FUNÇÃO PARA ABRIR O MAPA GRANDE ---
+        function abrirMenu() {
+            if (window.geckoju) {
+                // Mudei de "menu" para "abrir_mapa_global" direto
+                window.geckoju.send("abrir_mapa_global");
+            }
+        }
 
-        function lerp(start, end, amt) { return (1 - amt) * start + amt * end; }
-        
+        // REFORÇO DE CLIQUE: Garante que clicar no radar funcione
+        if(radarFrame) {
+            radarFrame.addEventListener('click', abrirMenu);
+            radarFrame.addEventListener('touchend', abrirMenu);
+        }
+
+        function shortestAngleDist(a0, a1) {
+            var max = 360; var da = (a1 - a0) % max; return 2 * da % max - da;
+        }
+
+        function lerp(start, end, amt) {
+            return (1 - amt) * start + amt * end;
+        }
+
         function TentarConectar() {
             if (window.geckoju) {
                 window.geckoju.onData = function(data) {
                     try {
                         const obj = JSON.parse(data);
 
-                        // 1. ATUALIZA POSIÇÃO (Isso já funcionava, mantive igual)
-                        let x = (obj.x !== undefined) ? obj.x : obj.pX;
-                        let y = (obj.y !== undefined) ? obj.y : obj.pY;
+                        // --- 1. POSIÇÃO E ROTAÇÃO ---
+                        let serverX = (obj.x !== undefined) ? obj.x : obj.pX;
+                        let serverY = (obj.y !== undefined) ? obj.y : obj.pY;
+                        let serverPly = (obj.a !== undefined) ? obj.a : obj.pAngle;
                         
-                        if (x !== undefined) {
-                            // Conversão GTA -> Radar
-                            let pixelX = x * SCALE;
-                            let pixelY = -(y * SCALE); // Invertido
-                            targetPos.x = -OFFSET - pixelX;
-                            targetPos.y = -OFFSET - pixelY;
+                        // CORREÇÃO DA ROTAÇÃO: Se não vier Camera (ca), usa Player (a)
+                        let serverCam = (obj.ca !== undefined) ? obj.ca : (obj.camAngle !== undefined ? obj.camAngle : serverPly);
 
-                            if (obj.ca !== undefined) targetCam = obj.ca;
+                        if (serverX !== undefined) {
+                            let offsetX = (serverX * SCALE);
+                            let offsetY = -(serverY * SCALE); 
+                            targetPos.x = -1250 - offsetX; 
+                            targetPos.y = -1250 - offsetY;
+
+                            if (serverCam !== undefined) targetCamAngle = serverCam;
+                            if (serverPly !== undefined) targetPlayerAngle = serverPly;
                         }
 
-                        // 2. RECEBE E DESENHA A ROTA (AQUI É A CORREÇÃO)
-                        if (obj.string_rota && obj.string_rota !== ultimaRota) {
-                             ultimaRota = obj.string_rota;
-                             
-                             const pontos = obj.string_rota.split('|');
-                             let polyPoints = "";
-                             
-                             pontos.forEach(p => {
-                                 const c = p.split(',');
-                                 if(c.length >= 2) {
-                                     // Matemática: 1250 + (Coord * 0.41666)
-                                     let px = OFFSET + (parseFloat(c[0]) * SCALE);
-                                     let py = OFFSET - (parseFloat(c[1]) * SCALE);
-                                     polyPoints += `${px.toFixed(1)},${py.toFixed(1)} `;
-                                 }
-                             });
-                             
-                             if(gpsLine) gpsLine.setAttribute("points", polyPoints);
+                        // --- 2. ROTA GPS ---
+                        if (obj.string_rota && obj.string_rota.length > 5) {
+                            if (obj.string_rota !== ultimaRotaRecebida) {
+                                ultimaRotaRecebida = obj.string_rota;
+                                
+                                const pontos = obj.string_rota.split('|');
+                                let polyPoints = "";
+                                
+                                pontos.forEach(p => {
+                                    // Limpeza extra para evitar erros
+                                    if(!p) return;
+                                    const c = p.split(',');
+                                    if(c.length >= 2) {
+                                        // Matemática: 1250 + (Valor * 0.4166)
+                                        let px = 1250 + (parseFloat(c[0]) * 0.416666);
+                                        let py = 1250 - (parseFloat(c[1]) * 0.416666);
+                                        polyPoints += `${px.toFixed(1)},${py.toFixed(1)} `;
+                                    }
+                                });
+                                
+                                if(gpsLine) gpsLine.setAttribute("points", polyPoints);
+                            }
                         } 
                         else if (obj.gps_off) {
                             if(gpsLine) gpsLine.setAttribute("points", "");
-                            ultimaRota = "";
+                            ultimaRotaRecebida = "";
                         }
 
                     } catch(e) {}
@@ -156,11 +187,25 @@
         }
 
         function animate() {
-            currentPos.x = lerp(currentPos.x, targetPos.x, 0.2);
-            currentPos.y = lerp(currentPos.y, targetPos.y, 0.2);
+            currentPos.x = lerp(currentPos.x, targetPos.x, SMOOTH_SPEED);
+            currentPos.y = lerp(currentPos.y, targetPos.y, SMOOTH_SPEED);
             
-            if(mapLayer) mapLayer.style.transform = `translate3d(${currentPos.x}px, ${currentPos.y}px, 0)`;
-            if(radarRotator) radarRotator.style.transform = `rotateX(48deg) rotateZ(${targetCam}deg)`; // Simplifiquei a rotação
+            mapLayer.style.transform = `translate3d(${currentPos.x}px, ${currentPos.y}px, 0)`;
+
+            let distCam = shortestAngleDist(currentCamAngle, targetCamAngle);
+            if(Math.abs(distCam) < 120) currentCamAngle += distCam * SMOOTH_SPEED;
+            else currentCamAngle = targetCamAngle;
+            
+            // Gira o mapa
+            mapRotator.style.transform = `rotateX(48deg) rotateZ(${currentCamAngle}deg)`;
+
+            let distPlayer = shortestAngleDist(currentPlayerAngle, targetPlayerAngle);
+            if(Math.abs(distPlayer) < 120) currentPlayerAngle += distPlayer * SMOOTH_SPEED;
+            else currentPlayerAngle = targetPlayerAngle;
+
+            // Mantém a seta apontando para a frente relativa
+            let arrowRotation = currentPlayerAngle - currentCamAngle;
+            arrowRotator.style.transform = `translate(-50%, -50%) rotate(${-arrowRotation}deg)`; 
 
             requestAnimationFrame(animate);
         }
