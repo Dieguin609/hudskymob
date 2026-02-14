@@ -212,6 +212,34 @@
 
         TentarConectar();
         animate();
+        // =============================================================
+    // ÁREA DE TESTE DE ROTA (FIXA NO HTML)
+    // Cole isso no final do seu script para testar o desenho da linha
+    // =============================================================
+    
+    setTimeout(function() {
+        const linhaTeste = document.getElementById('gps-line');
+        
+        if(linhaTeste) {
+            // Defini uma rota manual convertida em pixels:
+            // Ponto 1: Centro do Mapa (1250, 1250)
+            // Ponto 2: Uma diagonal longa para a direita
+            // Ponto 3: Uma descida
+            const rotaFixa = "1250,1250 1600,1600 1600,2000";
+            
+            // Força a linha a aparecer
+            linhaTeste.setAttribute("points", rotaFixa);
+            
+            // Muda a cor para VERDE LIMÃO para você saber que é o teste
+            linhaTeste.setAttribute("stroke", "#00FF00"); 
+            linhaTeste.setAttribute("stroke-width", "30"); // Bem grossa
+            
+            // Tira o fill se tiver
+            linhaTeste.style.fill = "none";
+            
+            console.log(">>> ROTA DE TESTE INJETADA NO HTML <<<");
+        }
+    }, 3000); // Vai aparecer 3 segundos depois que o radar abrir
     </script>
 </body>
 </html>
