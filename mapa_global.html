@@ -125,8 +125,8 @@
         // CONFIGURAÇÕES
         const IMG_SIZE = 2500;
         const MAP_SIZE = 6000;
-        const SCALE = IMG_SIZE / MAP_SIZE;
-        const OFFSET = IMG_SIZE / 2;
+        const SCALE = IMG_SIZE / MAP_SIZE; // 0.41666...
+        const OFFSET = IMG_SIZE / 2; // 1250
 
         let zoom = 1.0, mapX = 0, mapY = 0;
         let isDragging = false, startX, startY, pinchDistStart = 0, pinchZoomStart = 1;
@@ -135,144 +135,126 @@
         const viewport = document.getElementById('viewport');
         const marcador = document.getElementById('destino-marcador');
         const playerArrow = document.getElementById('player-arrow');
-        const gpsPath = document.getElementById('gps-path');
+        const gpsPath = document.getElementById('gps-path'); // A LINHA ROXA
 
-        // FUNÇÕES DE CONVERSÃO
-        function gtaToPixels(x, y) {
-            return { x: OFFSET + (x * SCALE), y: OFFSET - (y * SCALE) };
-        }
-        function pixelsToGta(px, py) {
-            return { x: (px - OFFSET) / SCALE, y: (OFFSET - py) / SCALE };
-        }
-
-        // ================= COMUNICAÇÃO OFICIAL GECKOJU =================
-        
-        function fecharMapa() {
-            if(window.geckoju) {
-                window.geckoju.send("fecharMapaGlobal");
-            } else {
-                console.log("Fechando mapa (Teste PC)");
-                document.body.style.display = 'none';
-            }
-        }
-
-        function gpsParaLocal(x, y) {
-            // 1. Atualiza Visualmente
-            const pos = gtaToPixels(x, y);
-            marcador.style.left = pos.x + 'px';
-            marcador.style.top = pos.y + 'px';
-            marcador.style.display = 'block';
-            
-            // Centraliza
-            zoom = 1.5;
-            mapX = (window.innerWidth/2) - (pos.x * zoom);
-            mapY = (window.innerHeight/2) - (pos.y * zoom);
-            atualizarTransform();
-
-            // 2. Envia para o Servidor (API Mobile)
-            if(window.geckoju) {
-                window.geckoju.send(`gps:${x},${y}`);
-            }
-        }
-
-        // ESCUTA DADOS DO SERVIDOR (API Mobile)
+        // ========================================================
+        // 1. LÓGICA DE DADOS (O QUE RECEBE DO SERVIDOR)
+        // ========================================================
         if(window.geckoju) {
+            // Procure a parte window.geckoju.onData e substitua por isso:
+
             window.geckoju.onData = function(data) {
                 try {
                     const obj = JSON.parse(data);
 
-                    // A) ATUALIZAR POSIÇÃO DO JOGADOR
-                    // Aceita 'pX' (padrão PC) ou 'x' (padrão curto)
+                    // --- ATUALIZAR SETINHA DO PLAYER ---
                     let px = (obj.pX !== undefined) ? obj.pX : obj.x;
                     let py = (obj.pY !== undefined) ? obj.pY : obj.y;
                     let pa = (obj.angle !== undefined) ? obj.angle : obj.a;
 
                     if (px !== undefined && py !== undefined) {
-                        const pos = gtaToPixels(px, py);
+                        let pixelX = OFFSET + (px * SCALE);
+                        let pixelY = OFFSET - (py * SCALE); 
                         
-                        playerArrow.style.display = 'block';
-                        playerArrow.style.left = pos.x + 'px';
-                        playerArrow.style.top = pos.y + 'px';
-                        
-                        if (pa !== undefined) {
-                            playerArrow.style.transform = `translate(-50%, -50%) rotate(${pa}deg)`;
+                        if(playerArrow) {
+                            playerArrow.style.display = 'block';
+                            playerArrow.style.left = pixelX + 'px';
+                            playerArrow.style.top = pixelY + 'px';
+                            if (pa !== undefined) {
+                                // Ajuste para não perder a escala ao girar
+                                playerArrow.style.transform = `translate(-50%, -50%) rotate(${pa}deg)`;
+                            }
                         }
                     }
 
-                    // B) ATUALIZAR ROTA (Linha Roxa)
-                    // Aceita 'rota' ou 'string_rota'
-                    let rotaRaw = obj.rota || obj.string_rota;
+                    // --- ATUALIZAR ROTA (AQUI É O IMPORTANTE) ---
                     if (obj.string_rota) {
-                    const pontos = obj.string_rota.split('|');
-                    let svgPoints = "";
-                    pontos.forEach(p => {
-                        const c = p.split(',');
-                        if(c.length === 2) {
-                            let x = 1250 + (parseFloat(c[0]) * (2500/6000));
-                            let y = 1250 - (parseFloat(c[1]) * (2500/6000));
-                            svgPoints += x.toFixed(1) + "," + y.toFixed(1) + " ";
-                        }
-                    });
-                    // Garanta que o ID da polyline no mapa_global seja 'gps-path'
-                    let el = document.getElementById('gps-path');
-                    if(el) el.setAttribute("points", svgPoints);
-                }
-                    
-                    if (rotaRaw) {
-                        const pontos = rotaRaw.split('|');
+                        const pontos = obj.string_rota.split('|');
                         let svgString = "";
+                        
                         pontos.forEach(p => {
                             const c = p.split(',');
                             if(c.length === 2) {
-                                const pos = gtaToPixels(parseFloat(c[0]), parseFloat(c[1]));
-                                svgString += `${pos.x},${pos.y} `;
+                                // X = OFFSET + (GTA * SCALE)
+                                // Y = OFFSET - (GTA * SCALE)
+                                let rx = 1250 + (parseFloat(c[0]) * 0.416666);
+                                let ry = 1250 - (parseFloat(c[1]) * 0.416666);
+                                svgString += `${rx},${ry} `;
                             }
                         });
-                        gpsPath.setAttribute('points', svgString);
-                    } else if (obj.gps_off) {
-                        gpsPath.setAttribute('points', "");
-                        marcador.style.display = 'none';
+
+                        // Força a atualização do elemento
+                        const linha = document.getElementById('gps-path'); // Garanta que seu SVG tem id="gps-path"
+                        if(linha) {
+                            linha.setAttribute('points', svgString);
+                            // Debug visual (opcional): Deixa a linha vermelha se funcionar
+                            // linha.style.stroke = "#bf00ff"; 
+                        }
+                    } 
+                    else if (obj.gps_off) {
+                        const linha = document.getElementById('gps-path');
+                        if(linha) linha.setAttribute('points', "");
                     }
 
                 } catch(e) {
-                    console.error("Erro JSON:", e);
+                    // Se cair aqui, é porque o JSON do servidor veio quebrado (buffer overflow)
+                    console.error("JSON Error: " + e);
                 }
             };
         }
 
-        // ================= CONTROLES (TOUCH) =================
-        
-        function atualizarTransform() {
-             container.style.transform = `translate(${mapX}px, ${mapY}px) scale(${zoom})`;
-             // Mantém os ícones no tamanho correto invertendo o zoom
-             marcador.style.transform = `translate(-50%, -50%) rotate(45deg) scale(${1/zoom})`;
+        // ========================================================
+        // 2. ENVIO DE DADOS (MARCAR DESTINO)
+        // ========================================================
+        function fecharMapa() {
+            if(window.geckoju) window.geckoju.send("fecharMapaGlobal");
         }
 
-        // Eventos de Toque
+        function gpsParaLocal(x, y) {
+            // Marca visualmente na hora
+            let pixelX = OFFSET + (x * SCALE);
+            let pixelY = OFFSET - (y * SCALE);
+
+            marcador.style.left = pixelX + 'px';
+            marcador.style.top = pixelY + 'px';
+            marcador.style.display = 'block';
+
+            // Envia pro servidor calcular a rota
+            if(window.geckoju) {
+                window.geckoju.send(`gps:${x},${y}`);
+            }
+        }
+        
+        // ========================================================
+        // 3. MOVIMENTO DO MAPA (TOUCH/ZOOM)
+        // ========================================================
+        // ... (MANTENHA O RESTO DO CÓDIGO DE TOUCH AQUI IGUAL ESTAVA) ...
+        function atualizarTransform() {
+             container.style.transform = `translate(${mapX}px, ${mapY}px) scale(${zoom})`;
+             // Mantém ícones legíveis
+             if(marcador) marcador.style.transform = `translate(-50%, -50%) rotate(45deg) scale(${1/zoom})`;
+             if(playerArrow) {
+                 // Recupera a rotação atual da seta para não perder ao dar zoom
+                 let currentRot = playerArrow.style.transform.match(/rotate\((.*?)deg\)/);
+                 let rot = currentRot ? currentRot[1] : 0;
+                 playerArrow.style.transform = `translate(-50%, -50%) rotate(${rot}deg) scale(${1/zoom})`;
+             }
+        }
+
+        // Eventos de Toque (Copie do seu arquivo original ou mantenha se já estiver lá)
         viewport.addEventListener('touchstart', (e) => {
             if(e.touches.length === 1) {
                 isDragging = true;
                 startX = e.touches[0].pageX - mapX;
                 startY = e.touches[0].pageY - mapY;
-                
-                // Clique longo para marcar destino livre
-                longPressTimer = setTimeout(() => {
-                    isDragging = false;
-                    const touchX = (e.touches[0].pageX - mapX) / zoom;
-                    const touchY = (e.touches[0].pageY - mapY) / zoom;
-                    const coords = pixelsToGta(touchX, touchY);
-                    gpsParaLocal(coords.x, coords.y);
-                }, 600);
             } else if(e.touches.length === 2) {
-                isDragging = false; clearTimeout(longPressTimer);
+                isDragging = false; 
                 pinchDistStart = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
                 pinchZoomStart = zoom;
             }
         }, {passive: false});
 
-        let longPressTimer;
         viewport.addEventListener('touchmove', (e) => {
-            clearTimeout(longPressTimer);
             if(isDragging && e.touches.length === 1) {
                 mapX = e.touches[0].pageX - startX; mapY = e.touches[0].pageY - startY;
                 atualizarTransform();
@@ -282,9 +264,10 @@
                 atualizarTransform();
             }
         }, {passive: false});
-        viewport.addEventListener('touchend', () => { isDragging = false; clearTimeout(longPressTimer); });
 
-        // Centralizar ao iniciar
+        viewport.addEventListener('touchend', () => { isDragging = false; });
+        
+        // Centraliza
         window.onload = () => {
             mapX = (window.innerWidth/2) - (OFFSET*zoom);
             mapY = (window.innerHeight/2) - (OFFSET*zoom);
