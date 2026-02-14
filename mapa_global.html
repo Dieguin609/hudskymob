@@ -168,29 +168,26 @@
                     }
 
                     // --- ATUALIZAR ROTA (AQUI É O IMPORTANTE) ---
+                    // Dentro do window.geckoju.onData...
+
                     if (obj.string_rota) {
                         const pontos = obj.string_rota.split('|');
-                        let svgString = "";
-                        
+                        let svgStr = "";
+                        const OFFSET = 1250;
+                        const SCALE = 2500/6000;
+
                         pontos.forEach(p => {
                             const c = p.split(',');
-                            if(c.length === 2) {
-                                // X = OFFSET + (GTA * SCALE)
-                                // Y = OFFSET - (GTA * SCALE)
-                                let rx = 1250 + (parseFloat(c[0]) * 0.416666);
-                                let ry = 1250 - (parseFloat(c[1]) * 0.416666);
-                                svgString += `${rx},${ry} `;
+                            if(c.length >= 2) {
+                                let rx = OFFSET + (parseFloat(c[0]) * SCALE);
+                                let ry = OFFSET - (parseFloat(c[1]) * SCALE);
+                                svgStr += `${rx},${ry} `;
                             }
                         });
-
-                        // Força a atualização do elemento
-                        const linha = document.getElementById('gps-path'); // Garanta que seu SVG tem id="gps-path"
-                        if(linha) {
-                            linha.setAttribute('points', svgString);
-                            // Debug visual (opcional): Deixa a linha vermelha se funcionar
-                            // linha.style.stroke = "#bf00ff"; 
-                        }
-                    } 
+                        
+                        // Garanta que tem <polyline id="gps-path"> no seu HTML
+                        document.getElementById('gps-path').setAttribute('points', svgStr);
+                    }
                     else if (obj.gps_off) {
                         const linha = document.getElementById('gps-path');
                         if(linha) linha.setAttribute('points', "");
