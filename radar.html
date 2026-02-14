@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        /* SEU CSS ORIGINAL - NÃO MEXI EM NADA VISUAL */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { background: transparent !important; overflow: hidden; width: 100%; height: 100%; pointer-events: none; }
 
@@ -18,37 +17,47 @@
             margin: 5px 0 0 15px;
             overflow: hidden;
             perspective: 800px;
-            z-index: 100;
-            /* ADIÇÃO ESSENCIAL: Permite clicar para abrir o menu */
+            z-index: 10;
             pointer-events: auto; 
             cursor: pointer;
         }
         
-        /* Efeito de clique */
         .radar-frame:active { transform: scale(0.95); border-color: #bf00ff; }
 
-        #map-rotator {
-            position: absolute; top: 50%; left: 50%;
-            width: 0; height: 0; transform-style: preserve-3d;
+        #radar-rotator {
+            width: 100%; height: 100%;
+            position: absolute;
+            transform-origin: 50% 50%;
         }
 
         #map-layer {
             position: absolute;
             width: 2500px; height: 2500px; 
-            top: 0; left: 0;
+            background-image: url('map.png'); /* TEM QUE TER O map.png */
+            background-size: 100% 100%;
+            left: 50%; top: 50%;
+            /* Inicia centralizado */
+            transform: translate(-1250px, -1250px);
             will-change: transform;
         }
 
-        .map-img {
-            width: 100%; height: 100%;
-            background-image: url('map.png'); 
-            background-size: 100% 100%; 
-            background-repeat: no-repeat;
+        /* CORREÇÃO 1: SVG COM Z-INDEX ALTO */
+        #gps-svg {
+            position: absolute; top: 0; left: 0;
+            width: 2500px; height: 2500px;
+            z-index: 99; /* Acima do mapa */
+            pointer-events: none;
+            overflow: visible;
+        }
+
+        #gps-line {
+            vector-effect: non-scaling-stroke;
+            filter: drop-shadow(0 0 2px rgba(0,0,0,0.8));
         }
 
         #arrow-rotator {
             position: absolute; top: 50%; left: 50%;
-            width: 0; height: 0; z-index: 20;
+            width: 0; height: 0; z-index: 101; /* Acima de tudo */
         }
 
         .player-marker {
@@ -60,186 +69,137 @@
             transform: translate(-50%, -50%);
         }
 
+        /* CORREÇÃO 2: VIDRO COM Z-INDEX MENOR */
         .glass-effect {
             position: absolute; inset: 0; border-radius: 50%;
             background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
-            z-index: 30; pointer-events: none;
+            z-index: 50; /* Abaixo da seta, mas acima do mapa */
+            pointer-events: none;
             box-shadow: inset 0 0 8px rgba(0,0,0,0.6);
         }
     </style>
 </head>
 <body>
-    <div class="radar-frame" onclick="abrirMenu()" ontouchend="abrirMenu()">
-        <div id="map-rotator">
+    <div class="radar-frame">
+        <div id="radar-rotator">
             <div id="map-layer">
-                <div class="map-img"></div>
                 
-                <svg id="gps-svg" viewBox="0 0 2500 2500" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; overflow:visible;">
-                    <polyline id="gps-line" points="" fill="none" stroke="#bf00ff" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+                <svg id="gps-svg" viewBox="0 0 2500 2500">
+                    <polyline id="gps-line" points="" fill="none" stroke="#bf00ff" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                </div>
+
+            </div>
         </div>
+        
+        <div class="glass-effect"></div>
+        
         <div id="arrow-rotator">
             <div class="player-marker"></div>
         </div>
-        <div class="glass-effect"></div>
     </div>
 
     <script>
+        // CONFIGURAÇÕES IGUAIS AO PC (Script.js)
         const IMG_SIZE = 2500; 
         const MAP_SIZE = 6000; 
-        const SCALE = IMG_SIZE / MAP_SIZE;
-        const MAP_CENTER_OFFSET = IMG_SIZE / 2;
+        const SCALE = IMG_SIZE / MAP_SIZE; // 0.416666
+        const OFFSET = 1250;               // Centro da Imagem
 
-        const SMOOTH_SPEED = 0.3; 
-
-        const mapRotator = document.getElementById('map-rotator');
         const mapLayer = document.getElementById('map-layer');
+        const radarRotator = document.getElementById('radar-rotator');
         const arrowRotator = document.getElementById('arrow-rotator');
         const gpsLine = document.getElementById('gps-line');
-        const radarFrame = document.querySelector('.radar-frame'); // Peguei o elemento do radar
+        const radarFrame = document.querySelector('.radar-frame');
 
-        let currentPos = { x: 0, y: 0 };
-        let targetPos = { x: 0, y: 0 };
-        let currentCamAngle = 0, targetCamAngle = 0;
-        let currentPlayerAngle = 0, targetPlayerAngle = 0;
-        let ultimaRotaRecebida = ""; 
+        let targetX = 0, targetY = 0, curX = 0, curY = 0;
+        let targetAng = 0, curAng = 0;
+        let playerAng = 0;
+        let lastRouteHash = "";
 
-        // --- FUNÇÃO PARA ABRIR O MAPA GRANDE ---
-        function abrirMenu() {
-            if (window.geckoju) {
-                // Mudei de "menu" para "abrir_mapa_global" direto
-                window.geckoju.send("abrir_mapa_global");
-            }
-        }
-
-        // REFORÇO DE CLIQUE: Garante que clicar no radar funcione
+        // Clique para abrir mapa
+        function abrirMenu() { if (window.geckoju) window.geckoju.send("abrir_mapa_global"); }
         if(radarFrame) {
             radarFrame.addEventListener('click', abrirMenu);
-            radarFrame.addEventListener('touchend', abrirMenu);
+            radarFrame.addEventListener('touchend', function(e){ e.preventDefault(); abrirMenu(); });
         }
 
-        function shortestAngleDist(a0, a1) {
-            var max = 360; var da = (a1 - a0) % max; return 2 * da % max - da;
-        }
+        function lerp(start, end, amt) { return (1-amt)*start+amt*end; }
+        function angleDiff(a, b) { let d = (b-a)%360; return d < -180 ? d+360 : (d > 180 ? d-360 : d); }
 
-        function lerp(start, end, amt) {
-            return (1 - amt) * start + amt * end;
-        }
+        function Conectar() {
+            if(!window.geckoju) { setTimeout(Conectar, 200); return; }
 
-        function TentarConectar() {
-            if (window.geckoju) {
-                window.geckoju.onData = function(data) {
-                    try {
-                        const obj = JSON.parse(data);
+            window.geckoju.onData = function(data) {
+                try {
+                    let obj = JSON.parse(data);
 
-                        // --- 1. POSIÇÃO E ROTAÇÃO ---
-                        let serverX = (obj.x !== undefined) ? obj.x : obj.pX;
-                        let serverY = (obj.y !== undefined) ? obj.y : obj.pY;
-                        let serverPly = (obj.a !== undefined) ? obj.a : obj.pAngle;
+                    // 1. POSIÇÃO (X, Y)
+                    if(obj.x !== undefined) {
+                        // CORREÇÃO MATEMÁTICA (Igual PC)
+                        // O mapa move ao contrário do jogador
+                        targetX = -OFFSET - (obj.x * SCALE);
+                        targetY = -OFFSET + (obj.y * SCALE); // Y invertido no GTA
+
+                        if(obj.a !== undefined) playerAng = obj.a;
                         
-                        // CORREÇÃO DA ROTAÇÃO: Se não vier Camera (ca), usa Player (a)
-                        let serverCam = (obj.ca !== undefined) ? obj.ca : (obj.camAngle !== undefined ? obj.camAngle : serverPly);
+                        // Se vier camera, usa. Se não, usa player.
+                        if(obj.ca !== undefined) targetAng = obj.ca;
+                        else targetAng = playerAng;
+                    }
 
-                        if (serverX !== undefined) {
-                            let offsetX = (serverX * SCALE);
-                            let offsetY = -(serverY * SCALE); 
-                            targetPos.x = -1250 - offsetX; 
-                            targetPos.y = -1250 - offsetY;
-
-                            if (serverCam !== undefined) targetCamAngle = serverCam;
-                            if (serverPly !== undefined) targetPlayerAngle = serverPly;
-                        }
-
-                        // --- 2. ROTA GPS ---
-                        if (obj.string_rota && obj.string_rota.length > 5) {
-                            if (obj.string_rota !== ultimaRotaRecebida) {
-                                ultimaRotaRecebida = obj.string_rota;
-                                
-                                const pontos = obj.string_rota.split('|');
-                                let polyPoints = "";
-                                
-                                pontos.forEach(p => {
-                                    // Limpeza extra para evitar erros
-                                    if(!p) return;
-                                    const c = p.split(',');
-                                    if(c.length >= 2) {
-                                        // Matemática: 1250 + (Valor * 0.4166)
-                                        let px = 1250 + (parseFloat(c[0]) * 0.416666);
-                                        let py = 1250 - (parseFloat(c[1]) * 0.416666);
-                                        polyPoints += `${px.toFixed(1)},${py.toFixed(1)} `;
-                                    }
-                                });
-                                
-                                if(gpsLine) gpsLine.setAttribute("points", polyPoints);
+                    // 2. ROTA GPS (Decodificação da String do Servidor)
+                    if(obj.string_rota) {
+                        if(obj.string_rota !== lastRouteHash) {
+                            lastRouteHash = obj.string_rota;
+                            
+                            let pontos = obj.string_rota.split('|');
+                            let strSvg = "";
+                            
+                            for(let i=0; i<pontos.length; i++) {
+                                let c = pontos[i].split(',');
+                                if(c.length >= 2) {
+                                    let gx = parseFloat(c[0]);
+                                    let gy = parseFloat(c[1]);
+                                    
+                                    // A MESMA MATEMÁTICA DO PC PARA A LINHA:
+                                    let px = OFFSET + (gx * SCALE);
+                                    let py = OFFSET - (gy * SCALE);
+                                    
+                                    strSvg += `${px.toFixed(1)},${py.toFixed(1)} `;
+                                }
                             }
-                        } 
-                        else if (obj.gps_off) {
-                            if(gpsLine) gpsLine.setAttribute("points", "");
-                            ultimaRotaRecebida = "";
+                            gpsLine.setAttribute("points", strSvg);
                         }
+                    } 
+                    else if(obj.gps_off) {
+                        gpsLine.setAttribute("points", "");
+                        lastRouteHash = "";
+                    }
 
-                    } catch(e) {}
-                };
-            } else {
-                setTimeout(TentarConectar, 500);
-            }
+                } catch(e) {}
+            };
         }
 
-        function animate() {
-            currentPos.x = lerp(currentPos.x, targetPos.x, SMOOTH_SPEED);
-            currentPos.y = lerp(currentPos.y, targetPos.y, SMOOTH_SPEED);
+        function Render() {
+            // Suavização
+            curX = lerp(curX, targetX, 0.2);
+            curY = lerp(curY, targetY, 0.2);
+            mapLayer.style.transform = `translate3d(${curX}px, ${curY}px, 0)`;
+
+            // Rotação do Mapa
+            let diff = angleDiff(curAng, targetAng);
+            curAng += diff * 0.15;
+            radarRotator.style.transform = `rotateZ(${curAng}deg)`;
             
-            mapLayer.style.transform = `translate3d(${currentPos.x}px, ${currentPos.y}px, 0)`;
+            // Rotação da Seta (Compensação)
+            let arrowDiff = playerAng - curAng;
+            arrowRotator.style.transform = `translate(-50%, -50%) rotate(${-arrowDiff}deg)`;
 
-            let distCam = shortestAngleDist(currentCamAngle, targetCamAngle);
-            if(Math.abs(distCam) < 120) currentCamAngle += distCam * SMOOTH_SPEED;
-            else currentCamAngle = targetCamAngle;
-            
-            // Gira o mapa
-            mapRotator.style.transform = `rotateX(48deg) rotateZ(${currentCamAngle}deg)`;
-
-            let distPlayer = shortestAngleDist(currentPlayerAngle, targetPlayerAngle);
-            if(Math.abs(distPlayer) < 120) currentPlayerAngle += distPlayer * SMOOTH_SPEED;
-            else currentPlayerAngle = targetPlayerAngle;
-
-            // Mantém a seta apontando para a frente relativa
-            let arrowRotation = currentPlayerAngle - currentCamAngle;
-            arrowRotator.style.transform = `translate(-50%, -50%) rotate(${-arrowRotation}deg)`; 
-
-            requestAnimationFrame(animate);
+            requestAnimationFrame(Render);
         }
 
-        TentarConectar();
-        animate();
-        // =============================================================
-    // ÁREA DE TESTE DE ROTA (FIXA NO HTML)
-    // Cole isso no final do seu script para testar o desenho da linha
-    // =============================================================
-    
-    setTimeout(function() {
-        const linhaTeste = document.getElementById('gps-line');
-        
-        if(linhaTeste) {
-            // Defini uma rota manual convertida em pixels:
-            // Ponto 1: Centro do Mapa (1250, 1250)
-            // Ponto 2: Uma diagonal longa para a direita
-            // Ponto 3: Uma descida
-            const rotaFixa = "1250,1250 1600,1600 1600,2000";
-            
-            // Força a linha a aparecer
-            linhaTeste.setAttribute("points", rotaFixa);
-            
-            // Muda a cor para VERDE LIMÃO para você saber que é o teste
-            linhaTeste.setAttribute("stroke", "#00FF00"); 
-            linhaTeste.setAttribute("stroke-width", "30"); // Bem grossa
-            
-            // Tira o fill se tiver
-            linhaTeste.style.fill = "none";
-            
-            console.log(">>> ROTA DE TESTE INJETADA NO HTML <<<");
-        }
-    }, 3000); // Vai aparecer 3 segundos depois que o radar abrir
+        Conectar();
+        Render();
     </script>
 </body>
 </html>
