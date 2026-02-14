@@ -143,79 +143,63 @@
         if(window.geckoju) {
             // Procure a parte window.geckoju.onData e substitua por isso:
 
-            window.geckoju.onData = function(data) {
-                try {
-                    const obj = JSON.parse(data);
-                    const SCALE = 2500 / 6000;
-                    const OFFSET = 1250;
+            // Variáveis globais que você já tem no mapa_global.html
+// mapX, mapY e zoom
 
-                    // --- 1. ATUALIZAR POSIÇÃO E SETINHA ---
-                    // Pegando as chaves exatas que o seu servidor envia no JSON
-                    let px = (obj.pX !== undefined) ? obj.pX : obj.x;
-                    let py = (obj.pY !== undefined) ? obj.pY : obj.y;
-                    let pa = (obj.pAngle !== undefined) ? obj.pAngle : (obj.angle !== undefined ? obj.angle : obj.a);
+        window.geckoju.onData = function(data) {
+            try {
+                const obj = JSON.parse(data);
+                const SCALE = 2500 / 6000;
+                const OFFSET = 1250;
 
-                    if (px !== undefined && py !== undefined) {
-                        let pixelX = OFFSET + (parseFloat(px) * SCALE);
-                        let pixelY = OFFSET - (parseFloat(py) * SCALE); 
+                let px = (obj.pX !== undefined) ? obj.pX : obj.x;
+                let py = (obj.pY !== undefined) ? obj.pY : obj.y;
+                let pa = (obj.pAngle !== undefined) ? obj.pAngle : obj.a;
+
+                if (px !== undefined && py !== undefined) {
+                    let pixelX = OFFSET + (parseFloat(px) * SCALE);
+                    let pixelY = OFFSET - (parseFloat(py) * SCALE); 
+                    
+                    // 1. MOVE A SETINHA (Onde o jogador está no mapa)
+                    if(playerArrow) {
+                        playerArrow.style.display = 'block';
+                        playerArrow.style.left = pixelX + 'px';
+                        playerArrow.style.top = pixelY + 'px';
+                        if (pa !== undefined) {
+                            playerArrow.style.transform = `translate(-50%, -50%) rotate(${pa}deg)`;
+                        }
+                    }
+
+                    // 2. LÓGICA DE PARTIDA (Tratar como o radar)
+                    // Se for a primeira vez que abre, a gente joga o jogador no MEIO da tela
+                    if (obj.first_open) {
+                        // window.innerWidth / 2 é o meio da tela do celular
+                        // (pixelX * zoom) é onde você está no mapa escalado
+                        mapX = (window.innerWidth / 2) - (pixelX * zoom);
+                        mapY = (window.innerHeight / 2) - (pixelY * zoom);
                         
-                        // Move a setinha no mapa
-                        if(playerArrow) {
-                            playerArrow.style.display = 'block';
-                            playerArrow.style.left = pixelX + 'px';
-                            playerArrow.style.top = pixelY + 'px';
-                            if (pa !== undefined) {
-                                playerArrow.style.transform = `translate(-50%, -50%) rotate(${pa}deg)`;
-                            }
-                        }
-
-                        // --- NOVIDADE: CENTRALIZAÇÃO AUTOMÁTICA ---
-                        // Se o servidor mandar "first_open" ou se o mapa acabou de ser criado
-                        if (obj.first_open || (window.mapX === 0 && window.mapY === 0)) {
-                            // Centraliza a visão do celular exatamente onde o player está
-                            // window.zoom é a variável que controla o zoom no seu mapa_global.html
-                            mapX = (window.innerWidth / 2) - (pixelX * zoom);
-                            mapY = (window.innerHeight / 2) - (pixelY * zoom);
-                            
-                            // Chama a função que você já tem no mapa para atualizar a tela
-                            if(typeof atualizarTransform === "function") {
-                                atualizarTransform();
-                            } else {
-                                // Fallback caso o nome da função seja diferente
-                                const container = document.getElementById('map-container');
-                                if(container) container.style.transform = `translate(${mapX}px, ${mapY}px) scale(${zoom})`;
-                            }
-                        }
+                        // Força o mapa a atualizar a posição visual
+                        atualizarTransform(); 
+                        console.log("Mapa centralizado no jogador!");
                     }
-
-                    // --- 2. ATUALIZAR ROTA (GPS) ---
-                    if (obj.string_rota) {
-                        const pontos = obj.string_rota.split('|');
-                        let svgStr = "";
-
-                        pontos.forEach(p => {
-                            const c = p.split(',');
-                            if(c.length >= 2) {
-                                let rx = OFFSET + (parseFloat(c[0]) * SCALE);
-                                let ry = OFFSET - (parseFloat(c[1]) * SCALE);
-                                svgStr += `${rx.toFixed(1)},${ry.toFixed(1)} `;
-                            }
-                        });
-                        
-                        const gpsPath = document.getElementById('gps-path');
-                        if(gpsPath) {
-                            gpsPath.setAttribute('points', svgStr);
-                        }
-                    }
-                    else if (obj.gps_off) {
-                        const linha = document.getElementById('gps-path');
-                        if(linha) linha.setAttribute('points', "");
-                    }
-
-                } catch(e) {
-                    console.error("Erro no JSON ou Processamento: " + e);
                 }
-            };
+
+                // --- ROTA GPS (Já estava ok, mantivemos) ---
+                if (obj.string_rota) {
+                    const pontos = obj.string_rota.split('|');
+                    let svgStr = "";
+                    pontos.forEach(p => {
+                        const c = p.split(',');
+                        if(c.length >= 2) {
+                            let rx = OFFSET + (parseFloat(c[0]) * SCALE);
+                            let ry = OFFSET - (parseFloat(c[1]) * SCALE);
+                            svgStr += `${rx.toFixed(1)},${ry.toFixed(1)} `;
+                        }
+                    });
+                    document.getElementById('gps-path').setAttribute('points', svgStr);
+                }
+            } catch(e) { console.log("Erro: " + e); }
+        };
         }
 
         // ========================================================
