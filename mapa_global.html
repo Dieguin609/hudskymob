@@ -37,7 +37,7 @@
         position: absolute;
         top: 0; left: 0;
         width: 2500px; height: 2500px;
-        z-index: 100; /* Garante que fica por cima do map-img */
+        z-index: 1000; /* Garante que fica por cima do map-img */
         pointer-events: none;
     }
         #gps-path {
@@ -52,7 +52,7 @@
             width: 24px; height: 24px;
             background-image: url('seta.png'); 
             background-size: contain; background-repeat: no-repeat; background-position: center;
-            z-index: 100;
+            z-index: 9999;
             transform: translate(-50%, -50%);
             display: none; /* Começa invisível até receber dados */
             transition: top 0.1s linear, left 0.1s linear, transform 0.1s linear;
@@ -146,47 +146,66 @@
             window.geckoju.onData = function(data) {
                 try {
                     const obj = JSON.parse(data);
+                    const SCALE = 2500 / 6000;
+                    const OFFSET = 1250;
 
-                    // --- ATUALIZAR SETINHA DO PLAYER ---
+                    // --- 1. ATUALIZAR POSIÇÃO E SETINHA ---
+                    // Pegando as chaves exatas que o seu servidor envia no JSON
                     let px = (obj.pX !== undefined) ? obj.pX : obj.x;
                     let py = (obj.pY !== undefined) ? obj.pY : obj.y;
-                    let pa = (obj.angle !== undefined) ? obj.angle : obj.a;
+                    let pa = (obj.pAngle !== undefined) ? obj.pAngle : (obj.angle !== undefined ? obj.angle : obj.a);
 
                     if (px !== undefined && py !== undefined) {
-                        let pixelX = OFFSET + (px * SCALE);
-                        let pixelY = OFFSET - (py * SCALE); 
+                        let pixelX = OFFSET + (parseFloat(px) * SCALE);
+                        let pixelY = OFFSET - (parseFloat(py) * SCALE); 
                         
+                        // Move a setinha no mapa
                         if(playerArrow) {
                             playerArrow.style.display = 'block';
                             playerArrow.style.left = pixelX + 'px';
                             playerArrow.style.top = pixelY + 'px';
                             if (pa !== undefined) {
-                                // Ajuste para não perder a escala ao girar
                                 playerArrow.style.transform = `translate(-50%, -50%) rotate(${pa}deg)`;
+                            }
+                        }
+
+                        // --- NOVIDADE: CENTRALIZAÇÃO AUTOMÁTICA ---
+                        // Se o servidor mandar "first_open" ou se o mapa acabou de ser criado
+                        if (obj.first_open || (window.mapX === 0 && window.mapY === 0)) {
+                            // Centraliza a visão do celular exatamente onde o player está
+                            // window.zoom é a variável que controla o zoom no seu mapa_global.html
+                            mapX = (window.innerWidth / 2) - (pixelX * zoom);
+                            mapY = (window.innerHeight / 2) - (pixelY * zoom);
+                            
+                            // Chama a função que você já tem no mapa para atualizar a tela
+                            if(typeof atualizarTransform === "function") {
+                                atualizarTransform();
+                            } else {
+                                // Fallback caso o nome da função seja diferente
+                                const container = document.getElementById('map-container');
+                                if(container) container.style.transform = `translate(${mapX}px, ${mapY}px) scale(${zoom})`;
                             }
                         }
                     }
 
-                    // --- ATUALIZAR ROTA (AQUI É O IMPORTANTE) ---
-                    // Dentro do window.geckoju.onData...
-
+                    // --- 2. ATUALIZAR ROTA (GPS) ---
                     if (obj.string_rota) {
                         const pontos = obj.string_rota.split('|');
                         let svgStr = "";
-                        const OFFSET = 1250;
-                        const SCALE = 2500/6000;
 
                         pontos.forEach(p => {
                             const c = p.split(',');
                             if(c.length >= 2) {
                                 let rx = OFFSET + (parseFloat(c[0]) * SCALE);
                                 let ry = OFFSET - (parseFloat(c[1]) * SCALE);
-                                svgStr += `${rx},${ry} `;
+                                svgStr += `${rx.toFixed(1)},${ry.toFixed(1)} `;
                             }
                         });
                         
-                        // Garanta que tem <polyline id="gps-path"> no seu HTML
-                        document.getElementById('gps-path').setAttribute('points', svgStr);
+                        const gpsPath = document.getElementById('gps-path');
+                        if(gpsPath) {
+                            gpsPath.setAttribute('points', svgStr);
+                        }
                     }
                     else if (obj.gps_off) {
                         const linha = document.getElementById('gps-path');
@@ -194,8 +213,7 @@
                     }
 
                 } catch(e) {
-                    // Se cair aqui, é porque o JSON do servidor veio quebrado (buffer overflow)
-                    console.error("JSON Error: " + e);
+                    console.error("Erro no JSON ou Processamento: " + e);
                 }
             };
         }
