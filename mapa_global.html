@@ -4,274 +4,158 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mapa Global SkyPixel</title>
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <style>
-        /* ================= ESTILOS ================= */
-        * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; user-select: none; -webkit-user-select: none; }
-        
-        body {
-            background-color: #1a1a1a;
-            overflow: hidden;
-            width: 100vw; height: 100vh;
-            font-family: 'Rajdhani', sans-serif;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; user-select: none; }
+        body { background-color: #000; overflow: hidden; width: 100vw; height: 100vh; }
 
-        #viewport {
-            width: 100%; height: 100%;
-            position: absolute; overflow: hidden; background: #0b0b0b;
-        }
+        /* Viewport para arrastar o mapa com o dedo */
+        #viewport { width: 100%; height: 100%; position: absolute; overflow: hidden; }
 
+        /* Container do Mapa (Igual o tamanho do seu radar: 2500px) */
         #map-container {
             width: 2500px; height: 2500px;
-            position: absolute; transform-origin: 0 0; will-change: transform;
+            position: absolute; transform-origin: 0 0;
+            will-change: transform;
         }
 
         #map-img {
             width: 100%; height: 100%;
-            background-image: url('map.png'); 
+            background-image: url('map.png');
             background-size: 100% 100%;
         }
 
-        /* ROTA GPS (ROXO) */
+        /* SVG DA ROTA - COPIADO DO RADAR */
         #gps-svg {
-        position: absolute;
-        top: 0; left: 0;
-        width: 2500px; height: 2500px;
-        z-index: 1000; /* Garante que fica por cima do map-img */
-        pointer-events: none;
-    }
-        #gps-path {
-            fill: none; stroke: #bf00ff; stroke-width: 15;
-            stroke-linecap: round; stroke-linejoin: round;
-            filter: drop-shadow(0 0 4px #bf00ff);
+            position: absolute; top: 0; left: 0;
+            width: 2500px; height: 2500px;
+            z-index: 10; pointer-events: none;
+            overflow: visible;
         }
 
-        /* JOGADOR (SETA) */
-        #player-arrow {
-            position: absolute;
-            width: 24px; height: 24px;
-            background-image: url('seta.png'); 
-            background-size: contain; background-repeat: no-repeat; background-position: center;
-            z-index: 9999;
-            transform: translate(-50%, -50%);
-            display: none; /* Começa invisível até receber dados */
-            transition: top 0.1s linear, left 0.1s linear, transform 0.1s linear;
+        /* SETA DO JOGADOR */
+        #player-marker {
+            position: absolute; width: 30px; height: 30px;
+            background-image: url('seta.png');
+            background-size: contain; background-repeat: no-repeat;
+            z-index: 20; transform: translate(-50%, -50%);
+            display: none; 
         }
 
-        /* PINO DE DESTINO */
-        .waypoint {
-            position: absolute; width: 32px; height: 32px;
-            background-color: #bf00ff; border: 3px solid #fff; border-radius: 50% 50% 0 50%;
-            transform: translate(-50%, -50%) rotate(45deg);
-            z-index: 50; display: none; box-shadow: 0 0 10px rgba(0,0,0,0.8);
-        }
-
-        /* BOTÃO FECHAR */
-        .close-btn {
-            position: absolute; top: 20px; left: 20px;
-            width: 50px; height: 50px; background: rgba(0,0,0,0.7); color: white;
-            border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);
-            display: flex; justify-content: center; align-items: center;
-            font-size: 24px; cursor: pointer; z-index: 200;
-        }
-        
-        /* MENU LATERAL */
-        .side-nav {
-            position: absolute; top: 80px; right: 20px;
-            display: flex; flex-direction: column; align-items: flex-end;
-            gap: 10px; z-index: 200; pointer-events: auto;
-        }
-        .nav-item {
-            background: rgba(0, 122, 255, 0.9); color: #fff; padding: 10px 15px;
-            border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.2);
-            font-size: 14px; font-weight: 700; text-transform: uppercase;
-            display: flex; align-items: center; gap: 8px; cursor: pointer;
-        }
-        .instr-text {
-            position: absolute; bottom: 20px; width: 100%;
-            text-align: center; color: rgba(255,255,255,0.5);
-            font-size: 12px; pointer-events: none; text-shadow: 1px 1px 2px #000;
+        .btn-fechar {
+            position: absolute; top: 20px; right: 20px;
+            padding: 15px 25px; background: rgba(255, 0, 0, 0.8);
+            color: white; font-weight: bold; border-radius: 8px; z-index: 100;
         }
     </style>
 </head>
 <body>
 
-    <div class="close-btn" onclick="fecharMapa()">✕</div>
-
     <div id="viewport">
         <div id="map-container">
             <div id="map-img"></div>
             
-            <svg id="gps-svg" width="2500" height="2500">
-                <polyline id="gps-path" points="" />
+            <svg id="gps-svg" viewBox="0 0 2500 2500">
+                <polyline id="gps-path" points="" fill="none" stroke="#bf00ff" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
-            
-            <div id="destino-marcador" class="waypoint"></div>
-            <div id="player-arrow"></div>
+
+            <div id="player-marker"></div>
         </div>
     </div>
 
-    <div class="side-nav">
-        <div class="nav-item" onclick="gpsParaLocal(1481, -1750)">🏛️ Prefeitura</div>
-        <div class="nav-item" onclick="gpsParaLocal(1242, -1694)">🏥 Hospital</div>
-        <div class="nav-item" onclick="gpsParaLocal(1543, -1675)">🚔 Delegacia</div>
-        <div class="nav-item" onclick="gpsParaLocal(-2024, 156)">🔧 Mecânica</div>
-        <div class="nav-item" onclick="gpsParaLocal(2100, -1800)">🍕 Pizzaria</div>
-    </div>
-
-    <div class="instr-text">Segure o dedo para marcar um destino livre</div>
+    <div class="btn-fechar" onclick="fecharMapa()">FECHAR (X)</div>
 
     <script>
-        // CONFIGURAÇÕES
-        const IMG_SIZE = 2500;
-        const MAP_SIZE = 6000;
-        const SCALE = IMG_SIZE / MAP_SIZE; // 0.41666...
-        const OFFSET = IMG_SIZE / 2; // 1250
+        // --- CONSTANTES DO SEU RADAR ---
+        const SCALE = 2500 / 6000;
+        const OFFSET = 1250;
 
-        let zoom = 1.0, mapX = 0, mapY = 0;
-        let isDragging = false, startX, startY, pinchDistStart = 0, pinchZoomStart = 1;
+        let mapX = -1250, mapY = -1250, zoom = 0.5;
+        let isDragging = false, startX, startY;
 
         const container = document.getElementById('map-container');
-        const viewport = document.getElementById('viewport');
-        const marcador = document.getElementById('destino-marcador');
-        const playerArrow = document.getElementById('player-arrow');
-        const gpsPath = document.getElementById('gps-path'); // A LINHA ROXA
+        const marker = document.getElementById('player-marker');
+        const gpsPath = document.getElementById('gps-path');
 
-        // ========================================================
-        // 1. LÓGICA DE DADOS (O QUE RECEBE DO SERVIDOR)
-        // ========================================================
-        if(window.geckoju) {
-            // Procure a parte window.geckoju.onData e substitua por isso:
-
-            // Variáveis globais que você já tem no mapa_global.html
-// mapX, mapY e zoom
-
-        window.geckoju.onData = function(data) {
-            try {
-                const obj = JSON.parse(data);
-                const SCALE = 2500 / 6000;
-                const OFFSET = 1250;
-
-                let px = (obj.pX !== undefined) ? obj.pX : obj.x;
-                let py = (obj.pY !== undefined) ? obj.pY : obj.y;
-                let pa = (obj.pAngle !== undefined) ? obj.pAngle : obj.a;
-
-                if (px !== undefined && py !== undefined) {
-                    let pixelX = OFFSET + (parseFloat(px) * SCALE);
-                    let pixelY = OFFSET - (parseFloat(py) * SCALE); 
-                    
-                    // 1. MOVE A SETINHA (Onde o jogador está no mapa)
-                    if(playerArrow) {
-                        playerArrow.style.display = 'block';
-                        playerArrow.style.left = pixelX + 'px';
-                        playerArrow.style.top = pixelY + 'px';
-                        if (pa !== undefined) {
-                            playerArrow.style.transform = `translate(-50%, -50%) rotate(${pa}deg)`;
-                        }
-                    }
-
-                    // 2. LÓGICA DE PARTIDA (Tratar como o radar)
-                    // Se for a primeira vez que abre, a gente joga o jogador no MEIO da tela
-                    if (obj.first_open) {
-                        // window.innerWidth / 2 é o meio da tela do celular
-                        // (pixelX * zoom) é onde você está no mapa escalado
-                        mapX = (window.innerWidth / 2) - (pixelX * zoom);
-                        mapY = (window.innerHeight / 2) - (pixelY * zoom);
-                        
-                        // Força o mapa a atualizar a posição visual
-                        atualizarTransform(); 
-                        console.log("Mapa centralizado no jogador!");
-                    }
-                }
-
-                // --- ROTA GPS (Já estava ok, mantivemos) ---
-                if (obj.string_rota) {
-                    const pontos = obj.string_rota.split('|');
-                    let svgStr = "";
-                    pontos.forEach(p => {
-                        const c = p.split(',');
-                        if(c.length >= 2) {
-                            let rx = OFFSET + (parseFloat(c[0]) * SCALE);
-                            let ry = OFFSET - (parseFloat(c[1]) * SCALE);
-                            svgStr += `${rx.toFixed(1)},${ry.toFixed(1)} `;
-                        }
-                    });
-                    document.getElementById('gps-path').setAttribute('points', svgStr);
-                }
-            } catch(e) { console.log("Erro: " + e); }
-        };
+        function atualizarTransform() {
+            container.style.transform = `translate(${mapX}px, ${mapY}px) scale(${zoom})`;
         }
 
-        // ========================================================
-        // 2. ENVIO DE DADOS (MARCAR DESTINO)
-        // ========================================================
         function fecharMapa() {
             if(window.geckoju) window.geckoju.send("fecharMapaGlobal");
         }
 
-        function gpsParaLocal(x, y) {
-            // Marca visualmente na hora
-            let pixelX = OFFSET + (x * SCALE);
-            let pixelY = OFFSET - (y * SCALE);
+        // --- LÓGICA DE DADOS IGUAL AO RADAR ---
+        function Conectar() {
+            if(!window.geckoju) { setTimeout(Conectar, 200); return; }
 
-            marcador.style.left = pixelX + 'px';
-            marcador.style.top = pixelY + 'px';
-            marcador.style.display = 'block';
+            window.geckoju.onData = function(data) {
+                try {
+                    const obj = JSON.parse(data);
 
-            // Envia pro servidor calcular a rota
-            if(window.geckoju) {
-                window.geckoju.send(`gps:${x},${y}`);
-            }
+                    // 1. POSIÇÃO DA SETA
+                    let px_raw = (obj.x !== undefined) ? obj.x : obj.pX;
+                    let py_raw = (obj.y !== undefined) ? obj.y : obj.pY;
+                    let pa = (obj.a !== undefined) ? obj.a : obj.pAngle;
+
+                    if (px_raw !== undefined && py_raw !== undefined) {
+                        // MATEMÁTICA DO RADAR: 1250 + (COORD * SCALE)
+                        let px = OFFSET + (px_raw * SCALE);
+                        let py = OFFSET - (py_raw * SCALE);
+                        
+                        marker.style.display = 'block';
+                        marker.style.left = px + 'px';
+                        marker.style.top = py + 'px';
+
+                        if(pa !== undefined) {
+                            marker.style.transform = `translate(-50%, -50%) rotate(${pa}deg)`;
+                        }
+
+                        // Centraliza o mapa no player ao abrir
+                        if(obj.first_open) {
+                            mapX = (window.innerWidth / 2) - (px * zoom);
+                            mapY = (window.innerHeight / 2) - (py * zoom);
+                            atualizarTransform();
+                        }
+                    }
+
+                    // 2. ROTA GPS (Decodificação idêntica ao Radar)
+                    if(obj.string_rota) {
+                        let pontos = obj.string_rota.split('|');
+                        let svgStr = "";
+                        pontos.forEach(p => {
+                            let c = p.split(',');
+                            if(c.length >= 2) {
+                                let rx = OFFSET + (parseFloat(c[0]) * SCALE);
+                                let ry = OFFSET - (parseFloat(c[1]) * SCALE);
+                                svgStr += `${rx.toFixed(1)},${ry.toFixed(1)} `;
+                            }
+                        });
+                        gpsPath.setAttribute('points', svgStr);
+                    } else if(obj.gps_off) {
+                        gpsPath.setAttribute('points', "");
+                    }
+
+                } catch(e) {}
+            };
         }
-        
-        // ========================================================
-        // 3. MOVIMENTO DO MAPA (TOUCH/ZOOM)
-        // ========================================================
-        // ... (MANTENHA O RESTO DO CÓDIGO DE TOUCH AQUI IGUAL ESTAVA) ...
-        function atualizarTransform() {
-             container.style.transform = `translate(${mapX}px, ${mapY}px) scale(${zoom})`;
-             // Mantém ícones legíveis
-             if(marcador) marcador.style.transform = `translate(-50%, -50%) rotate(45deg) scale(${1/zoom})`;
-             if(playerArrow) {
-                 // Recupera a rotação atual da seta para não perder ao dar zoom
-                 let currentRot = playerArrow.style.transform.match(/rotate\((.*?)deg\)/);
-                 let rot = currentRot ? currentRot[1] : 0;
-                 playerArrow.style.transform = `translate(-50%, -50%) rotate(${rot}deg) scale(${1/zoom})`;
-             }
-        }
 
-        // Eventos de Toque (Copie do seu arquivo original ou mantenha se já estiver lá)
-        viewport.addEventListener('touchstart', (e) => {
-            if(e.touches.length === 1) {
-                isDragging = true;
-                startX = e.touches[0].pageX - mapX;
-                startY = e.touches[0].pageY - mapY;
-            } else if(e.touches.length === 2) {
-                isDragging = false; 
-                pinchDistStart = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-                pinchZoomStart = zoom;
-            }
-        }, {passive: false});
-
-        viewport.addEventListener('touchmove', (e) => {
-            if(isDragging && e.touches.length === 1) {
-                mapX = e.touches[0].pageX - startX; mapY = e.touches[0].pageY - startY;
-                atualizarTransform();
-            } else if (e.touches.length === 2) {
-                const dist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-                zoom = Math.min(Math.max(0.4, pinchZoomStart * (dist / pinchDistStart)), 4.0);
-                atualizarTransform();
-            }
-        }, {passive: false});
-
-        viewport.addEventListener('touchend', () => { isDragging = false; });
-        
-        // Centraliza
-        window.onload = () => {
-            mapX = (window.innerWidth/2) - (OFFSET*zoom);
-            mapY = (window.innerHeight/2) - (OFFSET*zoom);
+        // --- CONTROLES DE ARRASTE ---
+        const viewport = document.getElementById('viewport');
+        viewport.addEventListener('touchstart', e => {
+            isDragging = true;
+            startX = e.touches[0].pageX - mapX;
+            startY = e.touches[0].pageY - mapY;
+        });
+        viewport.addEventListener('touchmove', e => {
+            if(!isDragging) return;
+            mapX = e.touches[0].pageX - startX;
+            mapY = e.touches[0].pageY - startY;
             atualizarTransform();
-        };
+        });
+        viewport.addEventListener('touchend', () => isDragging = false);
+
+        Conectar();
+        atualizarTransform();
     </script>
 </body>
 </html>
