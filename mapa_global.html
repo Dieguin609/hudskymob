@@ -8,16 +8,13 @@
         * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; user-select: none; }
         body { background-color: #000; overflow: hidden; width: 100vw; height: 100vh; }
 
-        /* Viewport para o sistema de arraste */
         #viewport { width: 100%; height: 100%; position: absolute; overflow: hidden; }
 
-        /* Container do Mapa - Igual à lógica do map-layer do radar */
         #map-container {
             width: 2500px; height: 2500px;
-            position: absolute; 
-            transform-origin: 0 0;
+            position: absolute; transform-origin: 0 0;
             will-change: transform;
-            display: none; /* Começa escondido igual o radar */
+            display: none; /* Começa invisível até conectar */
         }
 
         #map-img {
@@ -51,6 +48,7 @@
             padding: 12px 20px; background: #bf00ff; color: white;
             font-weight: bold; border-radius: 50px; z-index: 100;
             display: none; border: 2px solid white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
     </style>
 </head>
@@ -67,105 +65,148 @@
     </div>
 
     <div class="btn-fechar" onclick="fecharMapa()">X</div>
-    <div id="recenter-btn" onclick="ativarSeguir()">VOLTAR AO GPS</div>
+    <div id="recenter-btn" onclick="ativarSeguir()">CENTRALIZAR</div>
 
     <script>
+        // --- CONFIGURAÇÕES IGUAIS AO RADAR ---
         const SCALE = 2500 / 6000;
         const OFFSET = 1250;
-        const SMOOTH = 0.2; 
+        const SMOOTH_SPEED = 0.2; // Velocidade da suavização (Lerp)
 
-        let mapX = 0, mapY = 0, targetX = 0, targetY = 0;
+        // Variáveis de Estado
+        let mapX = 0, mapY = 0;
+        let targetX = 0, targetY = 0;
         let zoom = 0.8;
+        
         let isDragging = false, startX, startY;
-        let autoFollow = true; 
+        let autoFollow = true; // Começa seguindo o player
         let loaded = false;
         
-        // Variável para saber se foi um clique rápido ou arraste
+        // Variáveis para diferenciar Clique de Arraste
         let touchStartTime = 0;
         let hasMoved = false;
 
+        // Elementos
         const container = document.getElementById('map-container');
         const marker = document.getElementById('player-marker');
         const gpsPath = document.getElementById('gps-path');
         const recenterBtn = document.getElementById('recenter-btn');
 
-        function lerp(start, end, amt) { return (1 - amt) * start + amt * end; }
-        function fecharMapa() { if(window.geckoju) window.geckoju.send("fecharMapaGlobal"); }
-        function ativarSeguir() { autoFollow = true; recenterBtn.style.display = 'none'; }
+        // Função Lerp (Suavização)
+        function lerp(start, end, amt) {
+            return (1 - amt) * start + amt * end;
+        }
 
-        // --- FUNÇÃO NOVA: CLICK TO GPS ---
+        function fecharMapa() {
+            if(window.geckoju) window.geckoju.send("fecharMapaGlobal");
+        }
+
+        function ativarSeguir() {
+            autoFollow = true;
+            recenterBtn.style.display = 'none';
+        }
+
+        // --- FUNÇÃO DE MARCAR NO GPS (TEXTO SIMPLES) ---
         function MarcarDestino(screenX, screenY) {
             let rect = container.getBoundingClientRect();
+            // Converte posição da tela para pixels dentro do mapa (considerando zoom)
             let clickX = (screenX - rect.left) / zoom;
             let clickY = (screenY - rect.top) / zoom;
 
-            // Converte pixels para GTA
+            // Converte pixels do mapa para coordenadas GTA
             let gtaX = (clickX - OFFSET) / SCALE;
             let gtaY = (OFFSET - clickY) / SCALE; 
 
-            // --- AQUI ESTÁ A CORREÇÃO ---
-            // Em vez de JSON complicado, enviamos texto simples separado por barra |
-            // O toFixed(2) garante que vá apenas 2 casas decimais (ex: 120.50)
             if(window.geckoju) {
+                // Manda texto simples para o sscanf ler
                 let msg = `gps_destino|${gtaX.toFixed(2)}|${gtaY.toFixed(2)}`;
                 window.geckoju.send(msg);
             }
         }
 
-        window.geckoju.onData = function(data) {
-            try {
-                const obj = JSON.parse(data);
-                
-                // --- ATUALIZA POSIÇÃO ---
-                let rx = (obj.x !== undefined) ? obj.x : obj.pX;
-                let ry = (obj.y !== undefined) ? obj.y : obj.pY;
+        // --- CONEXÃO SEGURA (Isso que faltava!) ---
+        function Conectar() {
+            if(!window.geckoju) {
+                // Se o plugin não carregou, tenta de novo em 100ms
+                setTimeout(Conectar, 100);
+                return;
+            }
 
-                if (rx !== undefined) {
-                    if(!loaded) { container.style.display = 'block'; loaded = true; }
-                    
-                    let px = OFFSET + (rx * SCALE);
-                    let py = OFFSET - (ry * SCALE);
-                    
-                    marker.style.left = px + 'px';
-                    marker.style.top = py + 'px';
-                    if(obj.a !== undefined) marker.style.transform = `translate(-50%, -50%) rotate(${obj.a}deg)`;
+            window.geckoju.onData = function(data) {
+                try {
+                    const obj = JSON.parse(data);
 
-                    if(autoFollow || obj.first_open) {
-                        targetX = (window.innerWidth / 2) - (px * zoom);
-                        targetY = (window.innerHeight / 2) - (py * zoom);
-                        if(obj.first_open) { mapX = targetX; mapY = targetY; }
-                    }
-                }
+                    // 1. LEITURA DE POSIÇÃO
+                    let rx = (obj.x !== undefined) ? obj.x : obj.pX;
+                    let ry = (obj.y !== undefined) ? obj.y : obj.pY;
+                    let ra = (obj.a !== undefined) ? obj.a : obj.pAngle;
 
-                // --- DESENHA A ROTA (Se o Pawn mandar) ---
-                if(obj.string_rota) {
-                    let pontos = obj.string_rota.split('|');
-                    let svgStr = "";
-                    pontos.forEach(p => {
-                        let c = p.split(',');
-                        if(c.length >= 2) {
-                            let rx = OFFSET + (parseFloat(c[0]) * SCALE);
-                            let ry = OFFSET - (parseFloat(c[1]) * SCALE);
-                            svgStr += `${rx.toFixed(1)},${ry.toFixed(1)} `;
+                    if (rx !== undefined && ry !== undefined) {
+                        // Faz o mapa aparecer na primeira vez
+                        if(!loaded) {
+                            container.style.display = 'block';
+                            loaded = true;
                         }
-                    });
-                    gpsPath.setAttribute('points', svgStr);
-                } else if(obj.gps_off) {
-                    gpsPath.setAttribute('points', "");
-                }
 
-            } catch(e) {}
-        };
+                        // Converte GTA -> Pixels
+                        let px = OFFSET + (rx * SCALE);
+                        let py = OFFSET - (ry * SCALE);
+                        
+                        // Move a setinha
+                        marker.style.left = px + 'px';
+                        marker.style.top = py + 'px';
+                        if(ra !== undefined) {
+                            marker.style.transform = `translate(-50%, -50%) rotate(${ra}deg)`;
+                        }
 
+                        // LÓGICA DE SEGUIR O JOGADOR (ALMA DO RADAR)
+                        if(autoFollow || obj.first_open) {
+                            // Define o alvo (Target) para o centro da tela
+                            targetX = (window.innerWidth / 2) - (px * zoom);
+                            targetY = (window.innerHeight / 2) - (py * zoom);
+                            
+                            // Se for a primeira vez, pula direto sem suavizar
+                            if(obj.first_open) {
+                                mapX = targetX;
+                                mapY = targetY;
+                            }
+                        }
+                    }
+
+                    // 2. DESENHO DA ROTA
+                    if(obj.string_rota) {
+                        let pontos = obj.string_rota.split('|');
+                        let svgStr = "";
+                        pontos.forEach(p => {
+                            let c = p.split(',');
+                            if(c.length >= 2) {
+                                let rpx = OFFSET + (parseFloat(c[0]) * SCALE);
+                                let rpy = OFFSET - (parseFloat(c[1]) * SCALE);
+                                svgStr += `${rpx.toFixed(1)},${rpy.toFixed(1)} `;
+                            }
+                        });
+                        gpsPath.setAttribute('points', svgStr);
+                    } else if(obj.gps_off) {
+                        gpsPath.setAttribute('points', "");
+                    }
+
+                } catch(e) { }
+            };
+        }
+
+        // --- LOOP DE ANIMAÇÃO (Igual ao do Radar) ---
         function animate() {
             if (autoFollow) {
-                mapX = lerp(mapX, targetX, SMOOTH);
-                mapY = lerp(mapY, targetY, SMOOTH);
+                // Move suavemente do ponto atual (mapX) para o destino (targetX)
+                mapX = lerp(mapX, targetX, SMOOTH_SPEED);
+                mapY = lerp(mapY, targetY, SMOOTH_SPEED);
             }
+            // Aplica o movimento no CSS
             container.style.transform = `translate(${mapX}px, ${mapY}px) scale(${zoom})`;
             requestAnimationFrame(animate);
         }
 
+        // --- CONTROLES DE TOQUE (Clique e Arraste) ---
         const viewport = document.getElementById('viewport');
         
         viewport.addEventListener('touchstart', e => {
@@ -173,13 +214,15 @@
             hasMoved = false;
             touchStartTime = Date.now();
             
+            // Pega onde o dedo encostou em relação ao mapa
             startX = e.touches[0].pageX - mapX; 
             startY = e.touches[0].pageY - mapY;
         });
 
         viewport.addEventListener('touchmove', e => {
             if(!isDragging) return;
-            // Se moveu mais que 5 pixels, considera arraste
+            
+            // Se moveu, ativa a flag e desliga o seguir automático
             hasMoved = true;
             autoFollow = false; 
             recenterBtn.style.display = 'block';
@@ -192,15 +235,15 @@
             isDragging = false; 
             let timeDiff = Date.now() - touchStartTime;
 
-            // Se o toque foi rápido (menos de 200ms) e não arrastou o mapa
+            // Se foi um toque rápido (< 200ms) e não arrastou: É CLIQUE!
             if (timeDiff < 200 && !hasMoved) {
-                // É UM CLIQUE! MARCAR DESTINO
-                // Pegamos a posição do toque que acabou de acontecer (changedTouches)
                 let touch = e.changedTouches[0];
                 MarcarDestino(touch.pageX, touch.pageY);
             }
         });
 
+        // INICIA O SISTEMA
+        Conectar(); // <--- ISSO AQUI QUE FALTAVA
         animate();
     </script>
 </body>
