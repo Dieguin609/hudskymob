@@ -95,21 +95,20 @@
 
         // --- FUNÇÃO NOVA: CLICK TO GPS ---
         function MarcarDestino(screenX, screenY) {
-            // 1. Converte posição da tela para posição dentro do mapa (com Zoom)
             let rect = container.getBoundingClientRect();
             let clickX = (screenX - rect.left) / zoom;
             let clickY = (screenY - rect.top) / zoom;
 
-            // 2. Converte Pixels do Mapa para Coordenadas do GTA (Inverso do Radar)
+            // Converte pixels para GTA
             let gtaX = (clickX - OFFSET) / SCALE;
-            let gtaY = (OFFSET - clickY) / SCALE; // Inverte o Y porque no mapa sobe e no pixel desce
+            let gtaY = (OFFSET - clickY) / SCALE; 
 
-            // 3. Envia para o Pawn calcular a rota
-            // console.log(`Tentando ir para: ${gtaX}, ${gtaY}`);
+            // --- AQUI ESTÁ A CORREÇÃO ---
+            // Em vez de JSON complicado, enviamos texto simples separado por barra |
+            // O toFixed(2) garante que vá apenas 2 casas decimais (ex: 120.50)
             if(window.geckoju) {
-                // Envia como JSON simples
-                let json = `{"x": ${gtaX.toFixed(2)}, "y": ${gtaY.toFixed(2)}}`;
-                window.geckoju.send("marcar_destino_gps", json);
+                let msg = `gps_destino|${gtaX.toFixed(2)}|${gtaY.toFixed(2)}`;
+                window.geckoju.send(msg);
             }
         }
 
