@@ -68,163 +68,184 @@
     <div id="recenter-btn" onclick="ativarSeguir()">CENTRALIZAR</div>
 
     <script>
-        const SCALE = 2500 / 6000;
-        const OFFSET = 1250;
-        const SMOOTH_SPEED = 0.2;
+        // --- VARIÁVEIS GLOBAIS ---
+            const SCALE = 2500 / 6000;
+            const OFFSET = 1250;
+            const SMOOTH_SPEED = 0.2;
 
-        let mapX = 0, mapY = 0;
-        let targetX = 0, targetY = 0;
-        let zoom = 0.8; // Zoom inicial
-        
-        let isDragging = false, startX, startY;
-        let autoFollow = true;
-        let loaded = false;
-        
-        // Variáveis de Toque e Zoom
-        let touchStartTime = 0;
-        let hasMoved = false;
-        let initialPinchDist = 0;
-        let initialZoom = 0.8;
+            let mapX = 0, mapY = 0;
+            let targetX = 0, targetY = 0;
+            let zoom = 0.8;
+            
+            let isDragging = false, startX, startY;
+            let autoFollow = true;
+            let loaded = false;
+            
+            // Variáveis de Toque
+            let touchStartTime = 0;
+            let hasMoved = false;
+            let pinchDistStart = 0;
+            let pinchZoomStart = 0;
 
-        const container = document.getElementById('map-container');
-        const marker = document.getElementById('player-marker');
-        const gpsPath = document.getElementById('gps-path');
-        const recenterBtn = document.getElementById('recenter-btn');
+            // --- NOVA VARIÁVEL PARA JUNTAR A ROTA ---
+            let rotaBuffer = ""; 
 
-        function lerp(start, end, amt) { return (1 - amt) * start + amt * end; }
-        function fecharMapa() { if(window.geckoju) window.geckoju.send("fecharMapaGlobal"); }
-        function ativarSeguir() { autoFollow = true; recenterBtn.style.display = 'none'; }
+            const container = document.getElementById('map-container');
+            const marker = document.getElementById('player-marker');
+            const gpsPath = document.getElementById('gps-path');
+            const recenterBtn = document.getElementById('recenter-btn');
 
-        function MarcarDestino(screenX, screenY) {
-            let rect = container.getBoundingClientRect();
-            let clickX = (screenX - rect.left) / zoom;
-            let clickY = (screenY - rect.top) / zoom;
-            let gtaX = (clickX - OFFSET) / SCALE;
-            let gtaY = (OFFSET - clickY) / SCALE; 
+            function lerp(start, end, amt) { return (1 - amt) * start + amt * end; }
+            function fecharMapa() { if(window.geckoju) window.geckoju.send("fecharMapaGlobal"); }
+            function ativarSeguir() { autoFollow = true; recenterBtn.style.display = 'none'; }
 
-            if(window.geckoju) {
-                let msg = `gps_destino|${gtaX.toFixed(2)}|${gtaY.toFixed(2)}`;
-                window.geckoju.send(msg);
-            }
-        }
+            function MarcarDestino(screenX, screenY) {
+                let rect = container.getBoundingClientRect();
+                let clickX = (screenX - rect.left) / zoom;
+                let clickY = (screenY - rect.top) / zoom;
+                let gtaX = (clickX - OFFSET) / SCALE;
+                let gtaY = (OFFSET - clickY) / SCALE; 
 
-        function Conectar() {
-            if(!window.geckoju) { setTimeout(Conectar, 100); return; }
-            window.geckoju.onData = function(data) {
-                try {
-                    const obj = JSON.parse(data);
-                    
-                    let rx = (obj.x !== undefined) ? obj.x : obj.pX;
-                    let ry = (obj.y !== undefined) ? obj.y : obj.pY;
-                    let ra = (obj.a !== undefined) ? obj.a : obj.pAngle;
-
-                    if (rx !== undefined && ry !== undefined) {
-                        if(!loaded) { container.style.display = 'block'; loaded = true; }
-
-                        let px = OFFSET + (rx * SCALE);
-                        let py = OFFSET - (ry * SCALE);
-                        
-                        marker.style.left = px + 'px';
-                        marker.style.top = py + 'px';
-                        if(ra !== undefined) marker.style.transform = `translate(-50%, -50%) rotate(${ra}deg)`;
-
-                        if(autoFollow || obj.first_open) {
-                            targetX = (window.innerWidth / 2) - (px * zoom);
-                            targetY = (window.innerHeight / 2) - (py * zoom);
-                            if(obj.first_open) { mapX = targetX; mapY = targetY; }
-                        }
-                    }
-
-                    if(obj.string_rota) {
-                        let pontos = obj.string_rota.split('|');
-                        let svgStr = "";
-                        pontos.forEach(p => {
-                            let c = p.split(',');
-                            if(c.length >= 2) {
-                                let rpx = OFFSET + (parseFloat(c[0]) * SCALE);
-                                let rpy = OFFSET - (parseFloat(c[1]) * SCALE);
-                                svgStr += `${rpx.toFixed(1)},${rpy.toFixed(1)} `;
-                            }
-                        });
-                        gpsPath.setAttribute('points', svgStr);
-                    } else if(obj.gps_off) {
-                        gpsPath.setAttribute('points', "");
-                    }
-                } catch(e) { }
-            };
-        }
-
-        function animate() {
-            if (autoFollow) {
-                mapX = lerp(mapX, targetX, SMOOTH_SPEED);
-                mapY = lerp(mapY, targetY, SMOOTH_SPEED);
-            }
-            container.style.transform = `translate(${mapX}px, ${mapY}px) scale(${zoom})`;
-            requestAnimationFrame(animate);
-        }
-
-        // --- SISTEMA DE TOQUE E ZOOM ---
-        const viewport = document.getElementById('viewport');
-        
-        viewport.addEventListener('touchstart', e => {
-            // Se tiver 2 dedos, é ZOOM
-            if (e.touches.length === 2) {
-                isDragging = false; // Cancela arraste
-                autoFollow = false; // Para de seguir
-                
-                // Calcula distância entre os dois dedos
-                let dist = Math.hypot(
-                    e.touches[0].pageX - e.touches[1].pageX,
-                    e.touches[0].pageY - e.touches[1].pageY
-                );
-                initialPinchDist = dist;
-                initialZoom = zoom;
-            } 
-            // Se tiver 1 dedo, é ARRASTE
-            else if (e.touches.length === 1) {
-                isDragging = true; 
-                hasMoved = false;
-                touchStartTime = Date.now();
-                startX = e.touches[0].pageX - mapX; 
-                startY = e.touches[0].pageY - mapY;
-            }
-        });
-
-        viewport.addEventListener('touchmove', e => {
-            // Lógica do ZOOM
-            if (e.touches.length === 2) {
-                let dist = Math.hypot(
-                    e.touches[0].pageX - e.touches[1].pageX,
-                    e.touches[0].pageY - e.touches[1].pageY
-                );
-                // Calcula novo zoom baseado na diferença da distância
-                let diff = dist / initialPinchDist;
-                zoom = Math.min(Math.max(0.3, initialZoom * diff), 3.0); // Limita entre 0.3x e 3.0x
-                recenterBtn.style.display = 'block';
-            }
-            // Lógica do ARRASTE
-            else if(isDragging && e.touches.length === 1) {
-                hasMoved = true;
-                autoFollow = false; 
-                recenterBtn.style.display = 'block';
-                mapX = e.touches[0].pageX - startX; 
-                mapY = e.touches[0].pageY - startY;
-            }
-        });
-
-        viewport.addEventListener('touchend', (e) => { 
-            isDragging = false; 
-            if (e.touches.length === 0 && !hasMoved) {
-                let timeDiff = Date.now() - touchStartTime;
-                if (timeDiff < 200) {
-                    let touch = e.changedTouches[0];
-                    MarcarDestino(touch.pageX, touch.pageY);
+                if(window.geckoju) {
+                    let msg = `gps_destino|${gtaX.toFixed(2)}|${gtaY.toFixed(2)}`;
+                    window.geckoju.send(msg);
                 }
             }
-        });
 
-        Conectar();
-        animate();
+            function Conectar() {
+                if(!window.geckoju) { setTimeout(Conectar, 100); return; }
+                window.geckoju.onData = function(data) {
+                    try {
+                        const obj = JSON.parse(data);
+                        
+                        // 1. POSIÇÃO DO PLAYER (Mantém igual)
+                        let rx = (obj.x !== undefined) ? obj.x : obj.pX;
+                        let ry = (obj.y !== undefined) ? obj.y : obj.pY;
+                        let ra = (obj.a !== undefined) ? obj.a : obj.pAngle;
+
+                        if (rx !== undefined && ry !== undefined) {
+                            if(!loaded) { container.style.display = 'block'; loaded = true; }
+                            let px = OFFSET + (rx * SCALE);
+                            let py = OFFSET - (ry * SCALE);
+                            marker.style.left = px + 'px';
+                            marker.style.top = py + 'px';
+                            if(ra !== undefined) marker.style.transform = `translate(-50%, -50%) rotate(${ra}deg)`;
+
+                            if(autoFollow || obj.first_open) {
+                                targetX = (window.innerWidth / 2) - (px * zoom);
+                                targetY = (window.innerHeight / 2) - (py * zoom);
+                                if(obj.first_open) { mapX = targetX; mapY = targetY; }
+                            }
+                        }
+
+                        // --- NOVA LÓGICA DE ROTA FATIADA ---
+                        
+                        // INÍCIO: Limpa a rota anterior
+                        if(obj.rota_inicio) {
+                            rotaBuffer = ""; 
+                            gpsPath.setAttribute('points', "");
+                        }
+
+                        // MEIO: Vai colando os pedacinhos que chegam
+                        if(obj.rota_chunk) {
+                            rotaBuffer += obj.rota_chunk;
+                        }
+
+                        // FIM: Desenha tudo de uma vez
+                        if(obj.rota_fim) {
+                            let pontos = rotaBuffer.split('|');
+                            let svgStr = "";
+                            pontos.forEach(p => {
+                                let c = p.split(',');
+                                if(c.length >= 2) {
+                                    let rpx = OFFSET + (parseFloat(c[0]) * SCALE);
+                                    let rpy = OFFSET - (parseFloat(c[1]) * SCALE);
+                                    svgStr += `${rpx.toFixed(1)},${rpy.toFixed(1)} `;
+                                }
+                            });
+                            gpsPath.setAttribute('points', svgStr);
+                        } 
+                        
+                        // DESLIGAR GPS
+                        else if(obj.gps_off) {
+                            gpsPath.setAttribute('points', "");
+                            rotaBuffer = "";
+                        }
+
+                    } catch(e) { }
+                };
+            }
+
+            function animate() {
+                if (autoFollow) {
+                    mapX = lerp(mapX, targetX, SMOOTH_SPEED);
+                    mapY = lerp(mapY, targetY, SMOOTH_SPEED);
+                }
+                container.style.transform = `translate(${mapX}px, ${mapY}px) scale(${zoom})`;
+                requestAnimationFrame(animate);
+            }
+
+            // --- CONTROLES DE TOQUE (PINÇA E ARRASTE) ---
+            const viewport = document.getElementById('viewport');
+            
+            viewport.addEventListener('touchstart', e => {
+                if (e.touches.length === 2) {
+                    isDragging = false; 
+                    autoFollow = false; 
+                    // Calcula distância inicial dos dedos
+                    pinchDistStart = Math.hypot(
+                        e.touches[0].pageX - e.touches[1].pageX,
+                        e.touches[0].pageY - e.touches[1].pageY
+                    );
+                    pinchZoomStart = zoom;
+                } 
+                else if (e.touches.length === 1) {
+                    isDragging = true; 
+                    hasMoved = false;
+                    touchStartTime = Date.now();
+                    startX = e.touches[0].pageX - mapX; 
+                    startY = e.touches[0].pageY - mapY;
+                }
+            });
+
+            viewport.addEventListener('touchmove', e => {
+                if (e.touches.length === 2) {
+                    let dist = Math.hypot(
+                        e.touches[0].pageX - e.touches[1].pageX,
+                        e.touches[0].pageY - e.touches[1].pageY
+                    );
+                    // Aplica Zoom
+                    zoom = Math.min(Math.max(0.3, pinchZoomStart * (dist / pinchDistStart)), 4.0);
+                    recenterBtn.style.display = 'block';
+                    atualizarTransform(); // Atualiza na hora pra ficar liso
+                }
+                else if(isDragging && e.touches.length === 1) {
+                    hasMoved = true;
+                    autoFollow = false; 
+                    recenterBtn.style.display = 'block';
+                    mapX = e.touches[0].pageX - startX; 
+                    mapY = e.touches[0].pageY - startY;
+                }
+            });
+
+            viewport.addEventListener('touchend', (e) => { 
+                isDragging = false; 
+                if (e.touches.length === 0 && !hasMoved) {
+                    let timeDiff = Date.now() - touchStartTime;
+                    if (timeDiff < 200) {
+                        let touch = e.changedTouches[0];
+                        MarcarDestino(touch.pageX, touch.pageY);
+                    }
+                }
+            });
+            
+            // Função auxiliar pra atualizar o zoom no move
+            function atualizarTransform() {
+                container.style.transform = `translate(${mapX}px, ${mapY}px) scale(${zoom})`;
+            }
+
+            Conectar();
+            animate();
     </script>
 </body>
 </html>
