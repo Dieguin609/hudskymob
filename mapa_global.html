@@ -82,7 +82,6 @@
         let autoFollow = true;
         let loaded = false;
         
-        // Variáveis de Toque/Zoom
         let touchStartTime = 0;
         let hasMoved = false;
         let pinchDistStart = 0;
@@ -104,22 +103,20 @@
             let gtaX = (clickX - OFFSET) / SCALE;
             let gtaY = (OFFSET - clickY) / SCALE; 
 
-            // Envia comando simples pro Pawn
             if(window.geckoju) {
-                window.geckoju.send(`gps_destino|${gtaX.toFixed(2)}|${gtaY.toFixed(2)}`);
+                // Manda com apenas 1 casa decimal pra economizar banda de upload
+                window.geckoju.send(`gps_destino|${gtaX.toFixed(1)}|${gtaY.toFixed(1)}`);
             }
         }
 
-        // --- NOVA LÓGICA DE CONEXÃO E JSON ---
         function Conectar() {
             if(!window.geckoju) { setTimeout(Conectar, 100); return; }
             
             window.geckoju.onData = function(data) {
                 try {
-                    // O Pawn manda JSON, nós lemos JSON.
                     const obj = JSON.parse(data);
                     
-                    // 1. ATUALIZAÇÃO DO PLAYER (Padrão)
+                    // 1. POSIÇÃO DO PLAYER
                     let rx = (obj.x !== undefined) ? obj.x : obj.pX;
                     let ry = (obj.y !== undefined) ? obj.y : obj.pY;
                     
@@ -138,37 +135,38 @@
                         }
                     }
 
-                    // 2. SISTEMA DE ROTA VIA JSON (AQUI MUDOU TUDO)
+                    // 2. SISTEMA DE ROTA SUPER COMPACTO
                     
-                    // Limpar Rota
-                    if(obj.gps_clear) {
+                    // Limpar (Start)
+                    if(obj.gps_start) {
                         gpsPath.setAttribute('points', "");
                     }
 
-                    // Receber Pacote de Pontos (Array)
-                    if(obj.gps_chunk && Array.isArray(obj.gps_chunk)) {
-                        // Pega o desenho atual da linha
+                    // Receber Tripa de Números: [x, y, x, y, x, y...]
+                    if(obj.rn && Array.isArray(obj.rn)) {
                         let currentSvg = gpsPath.getAttribute('points') || "";
                         
-                        // Adiciona os novos pontos na linha
-                        obj.gps_chunk.forEach(p => {
-                            let rpx = OFFSET + (p.x * SCALE);
-                            let rpy = OFFSET - (p.y * SCALE);
+                        // Loop pulando de 2 em 2 (porque vem X e Y sequencial)
+                        for(let i = 0; i < obj.rn.length; i += 2) {
+                            let rawX = obj.rn[i];
+                            let rawY = obj.rn[i+1];
+                            
+                            let rpx = OFFSET + (rawX * SCALE);
+                            let rpy = OFFSET - (rawY * SCALE);
+                            
+                            // Adiciona ao SVG
                             currentSvg += `${rpx.toFixed(1)},${rpy.toFixed(1)} `;
-                        });
+                        }
                         
-                        // Atualiza o desenho
                         gpsPath.setAttribute('points', currentSvg);
                     }
                     
-                    // Desligar GPS
+                    // Desligar
                     if(obj.gps_off) {
                         gpsPath.setAttribute('points', "");
                     }
 
-                } catch(e) {
-                    // Se der erro no JSON, ignoramos pra não travar a tela
-                }
+                } catch(e) {}
             };
         }
 
@@ -181,7 +179,6 @@
             requestAnimationFrame(animate);
         }
 
-        // --- CONTROLES (Mantive o Zoom e Arraste funcionando) ---
         const viewport = document.getElementById('viewport');
         viewport.addEventListener('touchstart', e => {
             if (e.touches.length === 2) {
