@@ -36,16 +36,14 @@
             background-image: url('map.png'); /* TEM QUE TER O map.png */
             background-size: 100% 100%;
             left: 50%; top: 50%;
-            /* Inicia centralizado */
             transform: translate(-1250px, -1250px);
             will-change: transform;
         }
 
-        /* CORREÇÃO 1: SVG COM Z-INDEX ALTO */
         #gps-svg {
             position: absolute; top: 0; left: 0;
             width: 2500px; height: 2500px;
-            z-index: 99; /* Acima do mapa */
+            z-index: 99; 
             pointer-events: none;
             overflow: visible;
         }
@@ -57,7 +55,7 @@
 
         #arrow-rotator {
             position: absolute; top: 50%; left: 50%;
-            width: 0; height: 0; z-index: 101; /* Acima de tudo */
+            width: 0; height: 0; z-index: 101; 
         }
 
         .player-marker {
@@ -69,11 +67,10 @@
             transform: translate(-50%, -50%);
         }
 
-        /* CORREÇÃO 2: VIDRO COM Z-INDEX MENOR */
         .glass-effect {
             position: absolute; inset: 0; border-radius: 50%;
             background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
-            z-index: 50; /* Abaixo da seta, mas acima do mapa */
+            z-index: 50; 
             pointer-events: none;
             box-shadow: inset 0 0 8px rgba(0,0,0,0.6);
         }
@@ -83,27 +80,22 @@
     <div class="radar-frame">
         <div id="radar-rotator">
             <div id="map-layer">
-                
                 <svg id="gps-svg" viewBox="0 0 2500 2500">
                     <polyline id="gps-line" points="" fill="none" stroke="#bf00ff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-
             </div>
         </div>
-        
         <div class="glass-effect"></div>
-        
         <div id="arrow-rotator">
             <div class="player-marker"></div>
         </div>
     </div>
 
     <script>
-        // CONFIGURAÇÕES IGUAIS AO PC (Script.js)
         const IMG_SIZE = 2500; 
         const MAP_SIZE = 6000; 
-        const SCALE = IMG_SIZE / MAP_SIZE; // 0.416666
-        const OFFSET = 1250;               // Centro da Imagem
+        const SCALE = IMG_SIZE / MAP_SIZE; 
+        const OFFSET = 1250;               
 
         const mapLayer = document.getElementById('map-layer');
         const radarRotator = document.getElementById('radar-rotator');
@@ -112,10 +104,12 @@
         const radarFrame = document.querySelector('.radar-frame');
 
         let targetX = 0, targetY = 0, curX = 0, curY = 0;
-        let targetAng = 0, curAng = 0;
-        let playerAng = 0;
+        let targetAng = 0, curAng = 0, playerAng = 0;
+        
+        // --- VARIÁVEIS DA INTELIGÊNCIA DO GPS ---
+        let routePoints = []; 
+        let currentGtaX = 0, currentGtaY = 0;
 
-        // Clique para abrir mapa
         function abrirMenu() { if (window.geckoju) window.geckoju.send("abrir_mapa_global"); }
         if(radarFrame) {
             radarFrame.addEventListener('click', abrirMenu);
@@ -132,70 +126,95 @@
                 try {
                     let obj = JSON.parse(data);
 
-                    // 1. POSIÇÃO (X, Y) MANTIDA EXATAMENTE COMO VOCÊ FEZ
                     if(obj.x !== undefined) {
-                        // CORREÇÃO MATEMÁTICA (Igual PC)
-                        // O mapa move ao contrário do jogador
+                        currentGtaX = obj.x;
+                        currentGtaY = obj.y;
+
                         targetX = -OFFSET - (obj.x * SCALE);
-                        targetY = -OFFSET + (obj.y * SCALE); // Y invertido no GTA
+                        targetY = -OFFSET + (obj.y * SCALE); 
 
                         if(obj.a !== undefined) playerAng = obj.a;
-                        
-                        // Se vier camera, usa. Se não, usa player.
                         if(obj.ca !== undefined) targetAng = obj.ca;
                         else targetAng = playerAng;
                     }
 
-                    // ==========================================
-                    // 2. NOVA LÓGICA DO GPS FATIADO APLICADA AQUI
-                    // ==========================================
-                    
-                    // Limpar Rota quando iniciar nova
                     if(obj.gps_start) {
+                        routePoints = [];
                         gpsLine.setAttribute('points', "");
                     }
 
-                    // Receber pacotes de rota
+                    // Recebe e GUARDA os pontos no Array
                     if(obj.rn && Array.isArray(obj.rn)) {
-                        let currentSvg = gpsLine.getAttribute('points') || "";
-                        
                         for(let i = 0; i < obj.rn.length; i += 2) {
                             if(obj.rn[i] === undefined || obj.rn[i+1] === undefined) break; 
-                            
-                            let gx = obj.rn[i];
-                            let gy = obj.rn[i+1];
-                            
-                            // A MESMA MATEMÁTICA DO PC PARA A LINHA:
-                            let px = OFFSET + (gx * SCALE);
-                            let py = OFFSET - (gy * SCALE);
-                            
-                            currentSvg += `${px.toFixed(1)},${py.toFixed(1)} `;
+                            routePoints.push({ x: obj.rn[i], y: obj.rn[i+1] });
                         }
-                        gpsLine.setAttribute("points", currentSvg);
                     } 
                     
-                    // Desligar o GPS
                     if(obj.gps_off) {
+                        routePoints = [];
                         gpsLine.setAttribute("points", "");
                     }
-                    // ==========================================
 
                 } catch(e) {}
             };
         }
 
+        // ==========================================
+        //  INTELIGÊNCIA DE NAVEGAÇÃO (Roda 2x por segundo)
+        // ==========================================
+        setInterval(() => {
+            if (routePoints.length === 0) return;
+
+            // Analisa apenas os próximos 15 pontos pra não bugar em viadutos/curvas
+            let searchLimit = Math.min(15, routePoints.length);
+            let minDist = Infinity;
+            let closestIdx = 0;
+
+            // Acha qual é o ponto da linha que tá mais perto de você
+            for(let i = 0; i < searchLimit; i++) {
+                let dx = routePoints[i].x - currentGtaX;
+                let dy = routePoints[i].y - currentGtaY;
+                let dist = dx*dx + dy*dy; // Distância (ao quadrado)
+                
+                if (dist < minDist) {
+                    minDist = dist;
+                    closestIdx = i;
+                }
+            }
+
+            // SE VOCÊ ERRAR A RUA (> 2500 = aprox 50 metros de erro)
+            if (minDist > 2500) {
+                // Pede pro Pawn recalcular
+                if(window.geckoju) window.geckoju.send("recalcular_gps");
+                routePoints = []; // Limpa pra não floodar
+                gpsLine.setAttribute('points', "");
+            } 
+            // SE VOCÊ TÁ NA RUA CERTA: "Come" a linha que ficou pra trás
+            else if (closestIdx > 0) {
+                routePoints.splice(0, closestIdx);
+            }
+
+            // Atualiza o desenho no radar com o que sobrou
+            let currentSvg = "";
+            for(let i = 0; i < routePoints.length; i++) {
+                let rpx = OFFSET + (routePoints[i].x * SCALE);
+                let rpy = OFFSET - (routePoints[i].y * SCALE);
+                currentSvg += `${rpx.toFixed(1)},${rpy.toFixed(1)} `;
+            }
+            gpsLine.setAttribute('points', currentSvg);
+
+        }, 500);
+
         function Render() {
-            // Suavização
             curX = lerp(curX, targetX, 0.2);
             curY = lerp(curY, targetY, 0.2);
             mapLayer.style.transform = `translate3d(${curX}px, ${curY}px, 0)`;
 
-            // Rotação do Mapa
             let diff = angleDiff(curAng, targetAng);
             curAng += diff * 0.15;
             radarRotator.style.transform = `rotateZ(${curAng}deg)`;
             
-            // Rotação da Seta (Compensação)
             let arrowDiff = playerAng - curAng;
             arrowRotator.style.transform = `translate(-50%, -50%) rotate(${-arrowDiff}deg)`;
 
