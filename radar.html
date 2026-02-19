@@ -99,73 +99,81 @@
     </div>
 
     <script>
-        // --- CONFIGURAÇÕES DO RADAR (Ajuste se seu mapa estiver desalinhado) ---
-        const SCALE = 2500 / 6000;
-        const OFFSET = 1250;
-        
-        // Elementos
-        const mapLayer = document.getElementById('map-layer'); // Onde a imagem do mapa fica
-        const gpsLine = document.getElementById('gps-line');   // A linha SVG dentro do map-layer
+        // CONFIGURAÇÕES IGUAIS AO PC (Script.js)
+        const IMG_SIZE = 2500; 
+        const MAP_SIZE = 6000; 
+        const SCALE = IMG_SIZE / MAP_SIZE; // 0.416666
+        const OFFSET = 1250;               // Centro da Imagem
+
+        const mapLayer = document.getElementById('map-layer');
         const radarRotator = document.getElementById('radar-rotator');
         const arrowRotator = document.getElementById('arrow-rotator');
+        const gpsLine = document.getElementById('gps-line');
+        const radarFrame = document.querySelector('.radar-frame');
 
-        // Variáveis
-        let curX = 0, curY = 0, targetX = 0, targetY = 0;
-        let curAng = 0, targetAng = 0, playerAng = 0;
+        let targetX = 0, targetY = 0, curX = 0, curY = 0;
+        let targetAng = 0, curAng = 0;
+        let playerAng = 0;
+        let lastRouteHash = "";
 
-        function lerp(start, end, amt) { return (1 - amt) * start + amt * end; }
-        function angleDiff(a, b) { let d = b - a; while (d < -180) d += 360; while (d > 180) d -= 360; return d; }
+        // Clique para abrir mapa
+        function abrirMenu() { if (window.geckoju) window.geckoju.send("abrir_mapa_global"); }
+        if(radarFrame) {
+            radarFrame.addEventListener('click', abrirMenu);
+            radarFrame.addEventListener('touchend', function(e){ e.preventDefault(); abrirMenu(); });
+        }
+
+        function lerp(start, end, amt) { return (1-amt)*start+amt*end; }
+        function angleDiff(a, b) { let d = (b-a)%360; return d < -180 ? d+360 : (d > 180 ? d-360 : d); }
 
         function Conectar() {
-            if(!window.geckoju) { setTimeout(Conectar, 100); return; }
+            if(!window.geckoju) { setTimeout(Conectar, 200); return; }
 
             window.geckoju.onData = function(data) {
                 try {
-                    const obj = JSON.parse(data);
+                    let obj = JSON.parse(data);
 
-                    // 1. MOVIMENTAÇÃO (Padrão)
-                    if (obj.x !== undefined) {
-                        // Converte GTA para Pixels
-                        // No radar, movemos o MAPA, então é negativo
-                        let px = -(OFFSET + (obj.x * SCALE)); 
-                        let py = -(OFFSET - (obj.y * SCALE));
+                    // 1. POSIÇÃO (X, Y)
+                    if(obj.x !== undefined) {
+                        // CORREÇÃO MATEMÁTICA (Igual PC)
+                        // O mapa move ao contrário do jogador
+                        targetX = -OFFSET - (obj.x * SCALE);
+                        targetY = -OFFSET + (obj.y * SCALE); // Y invertido no GTA
 
-                        targetX = px + 67.5; // +67.5 é metade do radar (135px) para centralizar
-                        targetY = py + 67.5;
+                        if(obj.a !== undefined) playerAng = obj.a;
                         
-                        if(obj.a !== undefined) targetAng = obj.a;
-                        if(obj.pAngle !== undefined) playerAng = obj.pAngle;
+                        // Se vier camera, usa. Se não, usa player.
+                        if(obj.ca !== undefined) targetAng = obj.ca;
+                        else targetAng = playerAng;
                     }
 
-                    // 2. DESENHO DA ROTA (O FIX QUE FALTAVA)
-                    
-                    // Limpar Rota
-                    if(obj.gps_start) {
-                        gpsLine.setAttribute('points', "");
-                    }
-
-                    // Receber pedaços da rota (Tripa de Números)
-                    if(obj.rn && Array.isArray(obj.rn)) {
-                        let currentSvg = gpsLine.getAttribute('points') || "";
-                        
-                        // Loop pulando de 2 em 2 (X, Y, X, Y...)
-                        for(let i = 0; i < obj.rn.length; i += 2) {
-                            let rawX = obj.rn[i];
-                            let rawY = obj.rn[i+1];
+                    // 2. ROTA GPS (Decodificação da String do Servidor)
+                    if(obj.string_rota) {
+                        if(obj.string_rota !== lastRouteHash) {
+                            lastRouteHash = obj.string_rota;
                             
-                            // Converte coordenadas GTA para Pixels do SVG
-                            // Como a linha está DENTRO do map-layer, usamos coordenadas absolutas da imagem
-                            let rpx = OFFSET + (rawX * SCALE);
-                            let rpy = OFFSET - (rawY * SCALE);
+                            let pontos = obj.string_rota.split('|');
+                            let strSvg = "";
                             
-                            currentSvg += `${rpx.toFixed(1)},${rpy.toFixed(1)} `;
+                            for(let i=0; i<pontos.length; i++) {
+                                let c = pontos[i].split(',');
+                                if(c.length >= 2) {
+                                    let gx = parseFloat(c[0]);
+                                    let gy = parseFloat(c[1]);
+                                    
+                                    // A MESMA MATEMÁTICA DO PC PARA A LINHA:
+                                    let px = OFFSET + (gx * SCALE);
+                                    let py = OFFSET - (gy * SCALE);
+                                    
+                                    strSvg += `${px.toFixed(1)},${py.toFixed(1)} `;
+                                }
+                            }
+                            gpsLine.setAttribute("points", strSvg);
                         }
-                        gpsLine.setAttribute('points', currentSvg);
-                    }
-
-                    // Desligar
-                    if(obj.gps_off) {
-                        gpsLine.setAttribute('points', "");
+                    } 
+                    else if(obj.gps_off) {
+                        gpsLine.setAttribute("points", "");
+                        lastRouteHash = "";
                     }
 
                 } catch(e) {}
@@ -173,18 +181,17 @@
         }
 
         function Render() {
-            // Movimento Suave
-            curX = lerp(curX, targetX, 0.15);
-            curY = lerp(curY, targetY, 0.15);
+            // Suavização
+            curX = lerp(curX, targetX, 0.2);
+            curY = lerp(curY, targetY, 0.2);
             mapLayer.style.transform = `translate3d(${curX}px, ${curY}px, 0)`;
 
-            // Rotação do Mapa (Waze Style)
+            // Rotação do Mapa
             let diff = angleDiff(curAng, targetAng);
-            curAng += diff * 0.1;
+            curAng += diff * 0.15;
             radarRotator.style.transform = `rotateZ(${curAng}deg)`;
             
-            // Rotação da Seta
-            // No modo "mapa gira", a seta fica parada ou compensa levemente
+            // Rotação da Seta (Compensação)
             let arrowDiff = playerAng - curAng;
             arrowRotator.style.transform = `translate(-50%, -50%) rotate(${-arrowDiff}deg)`;
 
