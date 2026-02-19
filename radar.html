@@ -18,69 +18,107 @@
             overflow: hidden;
             perspective: 800px;
             z-index: 10;
+            pointer-events: auto; 
+            cursor: pointer;
         }
+        
+        .radar-frame:active { transform: scale(0.95); border-color: #bf00ff; }
 
         #radar-rotator {
             width: 100%; height: 100%;
-            position: absolute; top: 0; left: 0;
+            position: absolute;
             transform-origin: 50% 50%;
-            will-change: transform;
         }
 
         #map-layer {
-            width: 2500px; height: 2500px;
             position: absolute;
-            background-image: url('map.png');
+            width: 2500px; height: 2500px; 
+            background-image: url('map.png'); /* TEM QUE TER O map.png */
             background-size: 100% 100%;
-            transform-origin: 0 0;
+            left: 50%; top: 50%;
+            /* Inicia centralizado */
+            transform: translate(-1250px, -1250px);
             will-change: transform;
         }
 
+        /* CORREÇÃO 1: SVG COM Z-INDEX ALTO */
         #gps-svg {
             position: absolute; top: 0; left: 0;
             width: 2500px; height: 2500px;
+            z-index: 99; /* Acima do mapa */
             pointer-events: none;
             overflow: visible;
         }
 
+        #gps-line {
+            vector-effect: non-scaling-stroke;
+            filter: drop-shadow(0 0 2px rgba(0,0,0,0.8));
+        }
+
         #arrow-rotator {
-            position: absolute;
-            top: 50%; left: 50%;
-            width: 20px; height: 20px;
+            position: absolute; top: 50%; left: 50%;
+            width: 0; height: 0; z-index: 101; /* Acima de tudo */
+        }
+
+        .player-marker {
+            position: absolute; top: 0; left: 0;
+            width: 18px; height: 18px;
             background-image: url('seta.png');
             background-size: contain; background-repeat: no-repeat;
-            z-index: 20;
-            will-change: transform;
+            background-position: center;
+            transform: translate(-50%, -50%);
+        }
+
+        /* CORREÇÃO 2: VIDRO COM Z-INDEX MENOR */
+        .glass-effect {
+            position: absolute; inset: 0; border-radius: 50%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+            z-index: 50; /* Abaixo da seta, mas acima do mapa */
+            pointer-events: none;
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.6);
         }
     </style>
 </head>
 <body>
-
-    <div class="radar-frame">
+    <div class="radar-frame" onclick="abrirMapaGlobal()">
         <div id="radar-rotator">
             <div id="map-layer">
+                
                 <svg id="gps-svg" viewBox="0 0 2500 2500">
-                    <polyline id="gps-line" points="" fill="none" stroke="#bf00ff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 3px #bf00ff);"/>
+                    <polyline id="gps-line" points="" fill="none" stroke="#bf00ff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
+
             </div>
         </div>
-        <div id="arrow-rotator"></div>
+        
+        <div class="glass-effect"></div>
+        
+        <div id="arrow-rotator">
+            <div class="player-marker"></div>
+        </div>
     </div>
 
     <script>
+        // --- CONFIGURAÇÕES DO RADAR (Ajuste se seu mapa estiver desalinhado) ---
         const SCALE = 2500 / 6000;
         const OFFSET = 1250;
         
-        const mapLayer = document.getElementById('map-layer');
-        const gpsLine = document.getElementById('gps-line');
+        // Elementos
+        const mapLayer = document.getElementById('map-layer'); 
+        const gpsLine = document.getElementById('gps-line');   
         const radarRotator = document.getElementById('radar-rotator');
         const arrowRotator = document.getElementById('arrow-rotator');
 
+        // Variáveis
         let curX = 0, curY = 0, targetX = 0, targetY = 0;
         let curAng = 0, targetAng = 0, playerAng = 0;
 
         function lerp(start, end, amt) { return (1 - amt) * start + amt * end; }
         function angleDiff(a, b) { let d = b - a; while (d < -180) d += 360; while (d > 180) d -= 360; return d; }
+
+        function abrirMapaGlobal() {
+            if(window.geckoju) window.geckoju.send("abrirMapaGlobal");
+        }
 
         function Conectar() {
             if(!window.geckoju) { setTimeout(Conectar, 100); return; }
@@ -89,45 +127,65 @@
                 try {
                     const obj = JSON.parse(data);
 
+                    // 1. MOVIMENTAÇÃO (Padrão do seu Radar)
                     if (obj.x !== undefined) {
                         let px = -(OFFSET + (obj.x * SCALE)); 
                         let py = -(OFFSET - (obj.y * SCALE));
 
-                        targetX = px + 67.5; // Centraliza no radar de 135px
+                        targetX = px + 67.5; 
                         targetY = py + 67.5;
                         
                         if(obj.a !== undefined) targetAng = obj.a;
                         if(obj.pAngle !== undefined) playerAng = obj.pAngle;
                     }
 
-                    if(obj.gps_start) gpsLine.setAttribute('points', "");
+                    // 2. DESENHO DA ROTA (SISTEMA COMPACTO FATIADO)
+                    
+                    // Limpar Rota
+                    if(obj.gps_start) {
+                        gpsLine.setAttribute('points', "");
+                    }
 
+                    // Receber pedaços da rota
                     if(obj.rn && Array.isArray(obj.rn)) {
                         let currentSvg = gpsLine.getAttribute('points') || "";
+                        
+                        // Loop pulando de 2 em 2 (X, Y)
                         for(let i = 0; i < obj.rn.length; i += 2) {
-                            if(obj.rn[i] === undefined || obj.rn[i+1] === undefined) break; // Segurança
-                            let rpx = OFFSET + (obj.rn[i] * SCALE);
-                            let rpy = OFFSET - (obj.rn[i+1] * SCALE);
+                            if(obj.rn[i] === undefined || obj.rn[i+1] === undefined) break; // Trava contra crash
+
+                            let rawX = obj.rn[i];
+                            let rawY = obj.rn[i+1];
+                            
+                            let rpx = OFFSET + (rawX * SCALE);
+                            let rpy = OFFSET - (rawY * SCALE);
+                            
                             currentSvg += `${rpx.toFixed(1)},${rpy.toFixed(1)} `;
                         }
                         gpsLine.setAttribute('points', currentSvg);
                     }
 
-                    if(obj.gps_off) gpsLine.setAttribute('points', "");
+                    // Desligar o GPS
+                    if(obj.gps_off) {
+                        gpsLine.setAttribute('points', "");
+                    }
 
                 } catch(e) {}
             };
         }
 
         function Render() {
-            curX = lerp(curX, targetX, 0.2);
-            curY = lerp(curY, targetY, 0.2);
+            // Movimento Suave
+            curX = lerp(curX, targetX, 0.15);
+            curY = lerp(curY, targetY, 0.15);
             mapLayer.style.transform = `translate3d(${curX}px, ${curY}px, 0)`;
 
+            // Rotação do Mapa
             let diff = angleDiff(curAng, targetAng);
-            curAng += diff * 0.15;
+            curAng += diff * 0.1;
             radarRotator.style.transform = `rotateZ(${curAng}deg)`;
             
+            // Rotação da Seta
             let arrowDiff = playerAng - curAng;
             arrowRotator.style.transform = `translate(-50%, -50%) rotate(${-arrowDiff}deg)`;
 
