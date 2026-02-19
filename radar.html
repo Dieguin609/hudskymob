@@ -85,7 +85,7 @@
             <div id="map-layer">
                 
                 <svg id="gps-svg" viewBox="0 0 2500 2500">
-                    <polyline id="gps-line" points="" fill="none" stroke="#bf00ff" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+                    <polyline id="gps-line" points="" fill="none" stroke="#bf00ff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
 
             </div>
@@ -114,7 +114,6 @@
         let targetX = 0, targetY = 0, curX = 0, curY = 0;
         let targetAng = 0, curAng = 0;
         let playerAng = 0;
-        let lastRouteHash = "";
 
         // Clique para abrir mapa
         function abrirMenu() { if (window.geckoju) window.geckoju.send("abrir_mapa_global"); }
@@ -133,7 +132,7 @@
                 try {
                     let obj = JSON.parse(data);
 
-                    // 1. POSIÇÃO (X, Y)
+                    // 1. POSIÇÃO (X, Y) MANTIDA EXATAMENTE COMO VOCÊ FEZ
                     if(obj.x !== undefined) {
                         // CORREÇÃO MATEMÁTICA (Igual PC)
                         // O mapa move ao contrário do jogador
@@ -147,34 +146,39 @@
                         else targetAng = playerAng;
                     }
 
-                    // 2. ROTA GPS (Decodificação da String do Servidor)
-                    if(obj.string_rota) {
-                        if(obj.string_rota !== lastRouteHash) {
-                            lastRouteHash = obj.string_rota;
-                            
-                            let pontos = obj.string_rota.split('|');
-                            let strSvg = "";
-                            
-                            for(let i=0; i<pontos.length; i++) {
-                                let c = pontos[i].split(',');
-                                if(c.length >= 2) {
-                                    let gx = parseFloat(c[0]);
-                                    let gy = parseFloat(c[1]);
-                                    
-                                    // A MESMA MATEMÁTICA DO PC PARA A LINHA:
-                                    let px = OFFSET + (gx * SCALE);
-                                    let py = OFFSET - (gy * SCALE);
-                                    
-                                    strSvg += `${px.toFixed(1)},${py.toFixed(1)} `;
-                                }
-                            }
-                            gpsLine.setAttribute("points", strSvg);
-                        }
-                    } 
-                    else if(obj.gps_off) {
-                        gpsLine.setAttribute("points", "");
-                        lastRouteHash = "";
+                    // ==========================================
+                    // 2. NOVA LÓGICA DO GPS FATIADO APLICADA AQUI
+                    // ==========================================
+                    
+                    // Limpar Rota quando iniciar nova
+                    if(obj.gps_start) {
+                        gpsLine.setAttribute('points', "");
                     }
+
+                    // Receber pacotes de rota
+                    if(obj.rn && Array.isArray(obj.rn)) {
+                        let currentSvg = gpsLine.getAttribute('points') || "";
+                        
+                        for(let i = 0; i < obj.rn.length; i += 2) {
+                            if(obj.rn[i] === undefined || obj.rn[i+1] === undefined) break; 
+                            
+                            let gx = obj.rn[i];
+                            let gy = obj.rn[i+1];
+                            
+                            // A MESMA MATEMÁTICA DO PC PARA A LINHA:
+                            let px = OFFSET + (gx * SCALE);
+                            let py = OFFSET - (gy * SCALE);
+                            
+                            currentSvg += `${px.toFixed(1)},${py.toFixed(1)} `;
+                        }
+                        gpsLine.setAttribute("points", currentSvg);
+                    } 
+                    
+                    // Desligar o GPS
+                    if(obj.gps_off) {
+                        gpsLine.setAttribute("points", "");
+                    }
+                    // ==========================================
 
                 } catch(e) {}
             };
