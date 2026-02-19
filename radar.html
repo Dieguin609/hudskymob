@@ -7,87 +7,91 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { background: transparent !important; overflow: hidden; width: 100%; height: 100%; pointer-events: none; }
 
+        /* FRAME PRINCIPAL DO RADAR */
         .radar-frame {
             position: relative;
-            width: 135px; height: 135px;
+            width: 140px; height: 140px;
             border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.9);
+            border: 3px solid rgba(255, 255, 255, 0.85);
             background: #1a1a1a; 
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
-            margin: 5px 0 0 15px;
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.9);
+            margin: 10px 0 0 20px;
             overflow: hidden;
-            perspective: 800px;
             z-index: 10;
+            
+            /* LIBERA O CLIQUE */
             pointer-events: auto; 
             cursor: pointer;
+            transition: transform 0.1s ease, border-color 0.2s ease;
         }
         
-        .radar-frame:active { transform: scale(0.95); border-color: #bf00ff; }
+        /* EFEITO DE CLICAR (PISCA ROXO E AFUNDA) */
+        .radar-frame:active { 
+            transform: scale(0.92); 
+            border-color: #bf00ff; 
+        }
 
         #radar-rotator {
             width: 100%; height: 100%;
             position: absolute;
             transform-origin: 50% 50%;
+            will-change: transform;
         }
 
         #map-layer {
             position: absolute;
             width: 2500px; height: 2500px; 
-            background-image: url('map.png'); /* TEM QUE TER O map.png */
+            background-image: url('map.png'); /* SEU MAPA AQUI */
             background-size: 100% 100%;
             left: 50%; top: 50%;
-            /* Inicia centralizado */
             transform: translate(-1250px, -1250px);
             will-change: transform;
         }
 
-        /* CORREÇÃO 1: SVG COM Z-INDEX ALTO */
+        /* CAMADA DA LINHA DO GPS */
         #gps-svg {
             position: absolute; top: 0; left: 0;
             width: 2500px; height: 2500px;
-            z-index: 99; /* Acima do mapa */
-            pointer-events: none;
+            z-index: 99; 
+            pointer-events: none; /* Não bloqueia clique */
             overflow: visible;
-        }
-
-        #gps-line {
-            vector-effect: non-scaling-stroke;
-            filter: drop-shadow(0 0 2px rgba(0,0,0,0.8));
         }
 
         #arrow-rotator {
             position: absolute; top: 50%; left: 50%;
-            width: 0; height: 0; z-index: 101; /* Acima de tudo */
+            width: 0; height: 0; z-index: 101; 
+            will-change: transform;
         }
 
         .player-marker {
             position: absolute; top: 0; left: 0;
-            width: 18px; height: 18px;
-            background-image: url('seta.png');
+            width: 22px; height: 22px;
+            background-image: url('seta.png'); /* SUA SETA AQUI */
             background-size: contain; background-repeat: no-repeat;
             background-position: center;
             transform: translate(-50%, -50%);
+            filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.8));
         }
 
-        /* CORREÇÃO 2: VIDRO COM Z-INDEX MENOR */
+        /* VIDRO DO RADAR (BRILHO) */
         .glass-effect {
             position: absolute; inset: 0; border-radius: 50%;
-            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
-            z-index: 50; /* Abaixo da seta, mas acima do mapa */
-            pointer-events: none;
-            box-shadow: inset 0 0 8px rgba(0,0,0,0.6);
+            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%);
+            z-index: 100; /* Fica acima do mapa, mas abaixo da seta */
+            pointer-events: none; /* ISSO IMPEDE O VIDRO DE BLOQUEAR SEU CLIQUE */
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
         }
     </style>
 </head>
 <body>
-    <div class="radar-frame" onclick="abrirMapaGlobal()">
+    
+    <div class="radar-frame" onclick="abrirMapa()">
+        
         <div id="radar-rotator">
             <div id="map-layer">
-                
                 <svg id="gps-svg" viewBox="0 0 2500 2500">
-                    <polyline id="gps-line" points="" fill="none" stroke="#bf00ff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <polyline id="gps-line" points="" fill="none" stroke="#bf00ff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 3px #bf00ff); vector-effect: non-scaling-stroke;"/>
                 </svg>
-
             </div>
         </div>
         
@@ -96,28 +100,30 @@
         <div id="arrow-rotator">
             <div class="player-marker"></div>
         </div>
+        
     </div>
 
     <script>
-        // --- CONFIGURAÇÕES DO RADAR (Ajuste se seu mapa estiver desalinhado) ---
+        // --- CONSTANTES DE ESCALA DO MAPA DO GTA SA ---
         const SCALE = 2500 / 6000;
         const OFFSET = 1250;
         
-        // Elementos
         const mapLayer = document.getElementById('map-layer'); 
         const gpsLine = document.getElementById('gps-line');   
         const radarRotator = document.getElementById('radar-rotator');
         const arrowRotator = document.getElementById('arrow-rotator');
 
-        // Variáveis
         let curX = 0, curY = 0, targetX = 0, targetY = 0;
-        let curAng = 0, targetAng = 0, playerAng = 0;
+        let curCamAng = 0, targetCamAng = 0; // Ângulos da Câmera (Tela)
+        let playerAng = 0; // Ângulo do Corpo do Boneco
 
         function lerp(start, end, amt) { return (1 - amt) * start + amt * end; }
         function angleDiff(a, b) { let d = b - a; while (d < -180) d += 360; while (d > 180) d -= 360; return d; }
 
-        function abrirMapaGlobal() {
-            if(window.geckoju) window.geckoju.send("abrirMapaGlobal");
+        // --- FUNÇÃO DO CLIQUE DO RADAR ---
+        function abrirMapa() {
+            // Manda a string "abrir_mapa" pro seu OnGeckojuEvent no Pawn
+            if(window.geckoju) window.geckoju.send("abrir_mapa");
         }
 
         function Conectar() {
@@ -127,67 +133,66 @@
                 try {
                     const obj = JSON.parse(data);
 
-                    // 1. MOVIMENTAÇÃO (Padrão do seu Radar)
+                    // 1. ATUALIZA POSIÇÃO E ÂNGULOS
                     if (obj.x !== undefined) {
+                        // Calcula posição X e Y
                         let px = -(OFFSET + (obj.x * SCALE)); 
                         let py = -(OFFSET - (obj.y * SCALE));
 
-                        targetX = px + 67.5; 
-                        targetY = py + 67.5;
+                        // 70 é a metade do radar (140px / 2) para centralizar cravado
+                        targetX = px + 70; 
+                        targetY = py + 70;
                         
-                        if(obj.a !== undefined) targetAng = obj.a;
+                        // LÓGICA ESTILO GTA SA:
+                        // Tenta pegar o ângulo da câmera se o plugin mandar (cAngle, cam_a)
+                        // Se não tiver, usa o 'a' como câmera.
+                        if(obj.cAngle !== undefined) targetCamAng = obj.cAngle;
+                        else if(obj.cam_a !== undefined) targetCamAng = obj.cam_a;
+                        else if(obj.a !== undefined) targetCamAng = obj.a;
+
+                        // Pega o ângulo do boneco (pAngle)
                         if(obj.pAngle !== undefined) playerAng = obj.pAngle;
+                        else if(obj.a !== undefined) playerAng = obj.a;
                     }
 
-                    // 2. DESENHO DA ROTA (SISTEMA COMPACTO FATIADO)
-                    
-                    // Limpar Rota
-                    if(obj.gps_start) {
-                        gpsLine.setAttribute('points', "");
-                    }
+                    // 2. SISTEMA DA ROTA ROXA (GPS FATIADO)
+                    if(obj.gps_start) gpsLine.setAttribute('points', "");
 
-                    // Receber pedaços da rota
                     if(obj.rn && Array.isArray(obj.rn)) {
                         let currentSvg = gpsLine.getAttribute('points') || "";
-                        
-                        // Loop pulando de 2 em 2 (X, Y)
                         for(let i = 0; i < obj.rn.length; i += 2) {
-                            if(obj.rn[i] === undefined || obj.rn[i+1] === undefined) break; // Trava contra crash
-
-                            let rawX = obj.rn[i];
-                            let rawY = obj.rn[i+1];
+                            if(obj.rn[i] === undefined || obj.rn[i+1] === undefined) break; // Segurança anti-crash
                             
-                            let rpx = OFFSET + (rawX * SCALE);
-                            let rpy = OFFSET - (rawY * SCALE);
+                            let rpx = OFFSET + (obj.rn[i] * SCALE);
+                            let rpy = OFFSET - (obj.rn[i+1] * SCALE);
                             
                             currentSvg += `${rpx.toFixed(1)},${rpy.toFixed(1)} `;
                         }
                         gpsLine.setAttribute('points', currentSvg);
                     }
 
-                    // Desligar o GPS
-                    if(obj.gps_off) {
-                        gpsLine.setAttribute('points', "");
-                    }
+                    if(obj.gps_off) gpsLine.setAttribute('points', "");
 
                 } catch(e) {}
             };
         }
 
         function Render() {
-            // Movimento Suave
-            curX = lerp(curX, targetX, 0.15);
-            curY = lerp(curY, targetY, 0.15);
+            // Suaviza o movimento do mapa
+            curX = lerp(curX, targetX, 0.2);
+            curY = lerp(curY, targetY, 0.2);
             mapLayer.style.transform = `translate3d(${curX}px, ${curY}px, 0)`;
 
-            // Rotação do Mapa
-            let diff = angleDiff(curAng, targetAng);
-            curAng += diff * 0.1;
-            radarRotator.style.transform = `rotateZ(${curAng}deg)`;
+            // --- A MÁGICA DA ROTAÇÃO (ESTILO GTA SA) ---
             
-            // Rotação da Seta
-            let arrowDiff = playerAng - curAng;
-            arrowRotator.style.transform = `translate(-50%, -50%) rotate(${-arrowDiff}deg)`;
+            // 1. O MAPA RODA JUNTO COM A TELA/CÂMERA
+            let diff = angleDiff(curCamAng, targetCamAng);
+            curCamAng += diff * 0.15;
+            radarRotator.style.transform = `rotateZ(${curCamAng}deg)`;
+            
+            // 2. A SETA APONTA PARA ONDE O PEITO DO BONECO TÁ VIRADO (Relativo à tela)
+            let arrowMath = curCamAng - playerAng;
+            arrowRotator.style.transform = `translate(-50%, -50%) rotate(${arrowMath}deg)`;
 
             requestAnimationFrame(Render);
         }
