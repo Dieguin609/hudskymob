@@ -138,14 +138,41 @@
     <div id="recenter-btn" onclick="ativarSeguir()">Localização Atual</div>
 
     <div id="legend-container">
-        <div class="legend-block"><span class="blip-icon">⚖️</span> Prefeitura</div>
-        <div class="legend-block"><span class="blip-icon">🚓</span> Dep. Polícia (LSPD)</div>
-        <div class="legend-block"><span class="blip-icon">🏥</span> Hospital</div>
-        <div class="legend-block"><span class="blip-icon">🚗</span> Concessionária</div>
-        <div class="legend-block"><span class="blip-icon">👕</span> Loja</div>
-        <div class="legend-block"><span class="blip-icon">🏪</span> Mercado 24/7</div>
-        <div class="legend-block"><span class="blip-icon">⛽</span> Posto</div>
-        <div class="legend-block"><span class="blip-icon">🏦</span> Banco Central</div>
+        <div class="legend-block" onclick="marcarPelaLegenda(1476.84, -1740.43)">
+            <span class="blip-icon">⚖️</span> Prefeitura
+        </div>
+        
+        <div class="legend-block" onclick="marcarPelaLegenda(1259.48, -1266.82)">
+            <span class="blip-icon">📱</span> Loja Samsung
+        </div>
+
+        <div class="legend-block" onclick="marcarPelaLegenda(1530.00, -1670.00)">
+            <span class="blip-icon">🚓</span> Dep. Polícia (LSPD)
+        </div>
+        
+        <div class="legend-block" onclick="marcarPelaLegenda(1172.00, -1323.00)">
+            <span class="blip-icon">🏥</span> Hospital
+        </div>
+        
+        <div class="legend-block" onclick="marcarPelaLegenda(555.00, -1274.00)">
+            <span class="blip-icon">🚗</span> Concessionária
+        </div>
+        
+        <div class="legend-block" onclick="marcarPelaLegenda(460.00, -1500.00)">
+            <span class="blip-icon">👕</span> Loja de Roupas
+        </div>
+        
+        <div class="legend-block" onclick="marcarPelaLegenda(1315.00, -898.00)">
+            <span class="blip-icon">🏪</span> Mercado 24/7
+        </div>
+        
+        <div class="legend-block" onclick="marcarPelaLegenda(1004.00, -940.00)">
+            <span class="blip-icon">⛽</span> Posto
+        </div>
+        
+        <div class="legend-block" onclick="marcarPelaLegenda(594.00, -1249.00)">
+            <span class="blip-icon">🏦</span> Banco Central
+        </div>
     </div>
 
     <script>
@@ -168,12 +195,31 @@
         function ativarSeguir() { autoFollow = true; recenterBtn.style.display = 'none'; }
 
         function MarcarDestino(screenX, screenY) {
+            // 1. Pega as dimensões e posição atual do mapa na tela
             let rect = container.getBoundingClientRect();
+            
+            // 2. Calcula exatamente onde o dedo/mouse clicou, ignorando o zoom
             let clickX = (screenX - rect.left) / zoom;
             let clickY = (screenY - rect.top) / zoom;
+            
+            // 3. Converte os pixels da tela para as coordenadas reais do jogo
             let gtaX = (clickX - OFFSET) / SCALE;
             let gtaY = (OFFSET - clickY) / SCALE; 
-            if(window.geckoju) window.geckoju.send(`gps_destino|${gtaX.toFixed(1)}|${gtaY.toFixed(1)}`);
+            
+            // 4. Manda pro seu servidor SAMP (PAWN) fazer a mágica da rota
+            if(window.geckoju) {
+                window.geckoju.send(`gps_destino|${gtaX.toFixed(1)}|${gtaY.toFixed(1)}`);
+            }
+            
+            // --- NOVIDADES ABAIXO ---
+            
+            // 5. Destrava a câmera para o jogador poder olhar o mapa à vontade
+            autoFollow = false;
+            
+            // 6. Mostra o botão "Localização Atual" para ele voltar a focar no player
+            if(recenterBtn) {
+                recenterBtn.style.display = 'block';
+            }
         }
 
         function Conectar() {
