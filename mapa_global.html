@@ -103,13 +103,29 @@
             backdrop-filter: blur(5px); cursor: pointer; text-transform: uppercase;
         }
         #recenter-btn:active { transform: scale(0.95); }
+        /* Adicione dentro da tag <style> */
+        .blip {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            transform: translate(-50%, -50%);
+            z-index: 15;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-shadow: 0 0 3px #000;
+        }
     </style>
 </head>
 <body>
 
     <div id="viewport">
         <div id="map-container">
-            <div id="map-img"></div>
+            <div id="map-img">
+                <div class="blip" style="left: 1774px; top: 721px;">📱</div> 
+                <div class="blip" style="left: 1865px; top: 918px;">⚖️</div>
+            </div>
             <svg id="gps-svg" viewBox="0 0 2500 2500">
                 <polyline id="gps-path" points="" fill="none" stroke="#bf00ff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 5px #bf00ff); vector-effect: non-scaling-stroke;"/>
             </svg>
