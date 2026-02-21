@@ -103,29 +103,13 @@
             backdrop-filter: blur(5px); cursor: pointer; text-transform: uppercase;
         }
         #recenter-btn:active { transform: scale(0.95); }
-        /* Adicione dentro da tag <style> */
-        .blip {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            transform: translate(-50%, -50%);
-            z-index: 15;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-shadow: 0 0 3px #000;
-        }
     </style>
 </head>
 <body>
 
     <div id="viewport">
         <div id="map-container">
-            <div id="map-img">
-                <div class="blip" style="left: 1774px; top: 721px;">📱</div> 
-                <div class="blip" style="left: 1865px; top: 918px;">⚖️</div>
-            </div>
+            <div id="map-img"></div>
             <svg id="gps-svg" viewBox="0 0 2500 2500">
                 <polyline id="gps-path" points="" fill="none" stroke="#bf00ff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 5px #bf00ff); vector-effect: non-scaling-stroke;"/>
             </svg>
@@ -138,24 +122,32 @@
     <div id="recenter-btn" onclick="ativarSeguir()">Localização Atual</div>
 
     <div id="legend-container">
-        <div class="legend-block" onclick="marcarPelaLegenda(event, 1476.84, -1740.43)">
+        <div class="legend-block" data-x="1476.84" data-y="-1740.43">
             <span class="blip-icon">⚖️</span> Prefeitura
         </div>
-        
-        <div class="legend-block" onclick="marcarPelaLegenda(event, 1259.48, -1266.82)">
+        <div class="legend-block" data-x="1259.48" data-y="-1266.82">
             <span class="blip-icon">📱</span> Loja Samsung
         </div>
-
-        <div class="legend-block" onclick="marcarPelaLegenda(event, 1530.00, -1670.00)">
+        <div class="legend-block" data-x="1530.00" data-y="-1670.00">
             <span class="blip-icon">🚓</span> Dep. Polícia (LSPD)
         </div>
-        
-        <div class="legend-block" onclick="marcarPelaLegenda(event, 1172.00, -1323.00)">
+        <div class="legend-block" data-x="1172.00" data-y="-1323.00">
             <span class="blip-icon">🏥</span> Hospital
         </div>
-        
-        <div class="legend-block" onclick="marcarPelaLegenda(event, 555.00, -1274.00)">
+        <div class="legend-block" data-x="555.00" data-y="-1274.00">
             <span class="blip-icon">🚗</span> Concessionária
+        </div>
+        <div class="legend-block" data-x="460.00" data-y="-1500.00">
+            <span class="blip-icon">👕</span> Loja de Roupas
+        </div>
+        <div class="legend-block" data-x="1315.00" data-y="-898.00">
+            <span class="blip-icon">🏪</span> Mercado 24/7
+        </div>
+        <div class="legend-block" data-x="1004.00" data-y="-940.00">
+            <span class="blip-icon">⛽</span> Posto
+        </div>
+        <div class="legend-block" data-x="594.00" data-y="-1249.00">
+            <span class="blip-icon">🏦</span> Banco Central
         </div>
     </div>
 
@@ -173,57 +165,53 @@
         const marker = document.getElementById('player-marker');
         const gpsPath = document.getElementById('gps-path');
         const recenterBtn = document.getElementById('recenter-btn');
+        const waypoint = document.getElementById('waypoint'); // <-- Pegando o pino vermelho (se existir)
 
         function lerp(start, end, amt) { return (1 - amt) * start + amt * end; }
         function fecharMapa() { if(window.geckoju) window.geckoju.send("fecharMapaGlobal"); }
         function ativarSeguir() { autoFollow = true; recenterBtn.style.display = 'none'; }
 
-        // Atualizada para aceitar clique na tela OU clique na legenda
-        function MarcarDestino(x, y, isGtaCoords = false) {
-            let clickX, clickY, gtaX, gtaY;
-
-            if (isGtaCoords) {
-                // Se veio da Legenda: Recebemos as coordenadas do GTA direto
-                gtaX = x;
-                gtaY = y;
-                // Converte para pixels para sabermos onde desenhar o pino
-                clickX = OFFSET + (gtaX * SCALE);
-                clickY = OFFSET - (gtaY * SCALE);
-            } else {
-                // Se veio do Mapa: Recebemos o clique da tela
-                let rect = container.getBoundingClientRect();
-                clickX = (x - rect.left) / zoom;
-                clickY = (y - rect.top) / zoom;
-                // Converte para coordenadas do GTA para mandar pro servidor
-                gtaX = (clickX - OFFSET) / SCALE;
-                gtaY = (OFFSET - clickY) / SCALE; 
-            }
-
-            // 1. Manda pro seu servidor SAMP (PAWN) fazer a rota
-            if(window.geckoju) {
-                window.geckoju.send(`gps_destino|${gtaX.toFixed(1)}|${gtaY.toFixed(1)}`);
-            }
+        // --- MARCAR CLICANDO DIRETO NO MAPA ---
+        function MarcarDestino(screenX, screenY) {
+            let rect = container.getBoundingClientRect();
+            let clickX = (screenX - rect.left) / zoom;
+            let clickY = (screenY - rect.top) / zoom;
+            let gtaX = (clickX - OFFSET) / SCALE;
+            let gtaY = (OFFSET - clickY) / SCALE; 
             
-            // 2. Move o pino/waypoint vermelho para o local
-            let waypoint = document.getElementById('waypoint');
+            if(window.geckoju) window.geckoju.send(`gps_destino|${gtaX.toFixed(1)}|${gtaY.toFixed(1)}`);
+            
+            // Coloca o pino visual no local do clique
             if(waypoint) {
                 waypoint.style.display = 'block';
                 waypoint.style.left = clickX + 'px';
                 waypoint.style.top = clickY + 'px';
             }
-            
-            // 3. Destrava a câmera para não puxar de volta pro personagem
-            autoFollow = false;
-            
-            // 4. Mostra o botão de recentralizar
-            if(typeof recenterBtn !== 'undefined' && recenterBtn) {
-                recenterBtn.style.display = 'block';
-            }
-
-            // Retorna os valores em pixels caso a gente precise arrastar a câmera
-            return { pixelX: clickX, pixelY: clickY };
         }
 
+        // --- MARCAR CLICANDO NA LEGENDA ---
+        window.MarcarPelaLegenda = function(gtaX, gtaY) {
+            if(window.geckoju) window.geckoju.send(`gps_destino|${gtaX.toFixed(1)}|${gtaY.toFixed(1)}`);
+            
+            // Converte a coordenada GTA para Pixels do mapa
+            let pixelX = OFFSET + (gtaX * SCALE);
+            let pixelY = OFFSET - (gtaY * SCALE);
+            
+            // Coloca o pino visual no local da legenda
+            if(waypoint) {
+                waypoint.style.display = 'block';
+                waypoint.style.left = pixelX + 'px';
+                waypoint.style.top = pixelY + 'px';
+            }
+            
+            // Destrava a câmera e arrasta suavemente pro local
+            autoFollow = false;
+            recenterBtn.style.display = 'block';
+            targetX = (window.innerWidth / 2) - (pixelX * zoom);
+            targetY = (window.innerHeight / 2) - (pixelY * zoom);
+        };
+
+        // --- GECKOJU RECEPTOR DE DADOS ---
         function Conectar() {
             if(!window.geckoju) { setTimeout(Conectar, 100); return; }
             window.geckoju.onData = function(data) {
@@ -262,13 +250,21 @@
                         gpsPath.setAttribute('points', currentSvg);
                     }
                     
-                    if(obj.gps_off) gpsPath.setAttribute('points', "");
+                    if(obj.gps_off) {
+                        gpsPath.setAttribute('points', "");
+                        if(waypoint) waypoint.style.display = 'none'; // Some com o pino se a rota desligar
+                    }
                 } catch(e) {}
             };
         }
 
+        // --- ANIMAÇÃO E MOVIMENTO DE CÂMERA ---
         function animate() {
             if (autoFollow) {
+                mapX = lerp(mapX, targetX, SMOOTH_SPEED);
+                mapY = lerp(mapY, targetY, SMOOTH_SPEED);
+            } else {
+                // Interpolação pra câmera arrastar até a legenda quando clicar
                 mapX = lerp(mapX, targetX, SMOOTH_SPEED);
                 mapY = lerp(mapY, targetY, SMOOTH_SPEED);
             }
@@ -276,6 +272,7 @@
             requestAnimationFrame(animate);
         }
 
+        // --- EVENTOS DE TOUCH / ARRASTAR MAPA ---
         const viewport = document.getElementById('viewport');
         
         viewport.addEventListener('touchstart', e => {
@@ -298,6 +295,8 @@
             } else if(isDragging && e.touches.length === 1) {
                 hasMoved = true; autoFollow = false; recenterBtn.style.display = 'block';
                 mapX = e.touches[0].pageX - startX; mapY = e.touches[0].pageY - startY;
+                // Atualiza o targetX e targetY pro lerp() não ficar puxando o mapa de volta
+                targetX = mapX; targetY = mapY; 
             }
         });
 
@@ -308,23 +307,18 @@
                 MarcarDestino(touch.pageX, touch.pageY);
             }
         });
-        // Aplica a função em TODOS os botões da legenda
+
+        // --- ATIVAR CLIQUES DA LEGENDA ---
         document.querySelectorAll('.legend-block').forEach(function(botao) {
-            botao.addEventListener('click', function(event) {
-                event.stopPropagation(); // Trava o vazamento de clique
-                
+            botao.onclick = function(event) {
+                event.stopPropagation(); // Trava pra não marcar o mapa no fundo
                 let gtaX = parseFloat(this.getAttribute('data-x'));
                 let gtaY = parseFloat(this.getAttribute('data-y'));
-                
-                // Chama a MarcarDestino avisando que é coordenada do GTA (true)
-                let posicao = MarcarDestino(gtaX, gtaY, true);
-                
-                // Arrasta a câmera do mapa visualmente pro local que foi marcado
-                targetX = (window.innerWidth / 2) - (posicao.pixelX * zoom);
-                targetY = (window.innerHeight / 2) - (posicao.pixelY * zoom);
-            });
+                window.MarcarPelaLegenda(gtaX, gtaY);
+            };
         });
 
+        // Inicia
         Conectar();
         animate();
     </script>
