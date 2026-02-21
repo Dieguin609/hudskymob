@@ -178,25 +178,33 @@
         function fecharMapa() { if(window.geckoju) window.geckoju.send("fecharMapaGlobal"); }
         function ativarSeguir() { autoFollow = true; recenterBtn.style.display = 'none'; }
 
-        function MarcarDestino(screenX, screenY) {
-            let rect = container.getBoundingClientRect();
-            
-            // 1. Calcula exatamente onde o dedo/mouse clicou no mapa
-            let clickX = (screenX - rect.left) / zoom;
-            let clickY = (screenY - rect.top) / zoom;
-            
-            // 2. Converte para as coordenadas reais do jogo
-            let gtaX = (clickX - OFFSET) / SCALE;
-            let gtaY = (OFFSET - clickY) / SCALE; 
-            
-            // 3. Manda pro seu servidor SAMP (PAWN) fazer a rota
+        // Atualizada para aceitar clique na tela OU clique na legenda
+        function MarcarDestino(x, y, isGtaCoords = false) {
+            let clickX, clickY, gtaX, gtaY;
+
+            if (isGtaCoords) {
+                // Se veio da Legenda: Recebemos as coordenadas do GTA direto
+                gtaX = x;
+                gtaY = y;
+                // Converte para pixels para sabermos onde desenhar o pino
+                clickX = OFFSET + (gtaX * SCALE);
+                clickY = OFFSET - (gtaY * SCALE);
+            } else {
+                // Se veio do Mapa: Recebemos o clique da tela
+                let rect = container.getBoundingClientRect();
+                clickX = (x - rect.left) / zoom;
+                clickY = (y - rect.top) / zoom;
+                // Converte para coordenadas do GTA para mandar pro servidor
+                gtaX = (clickX - OFFSET) / SCALE;
+                gtaY = (OFFSET - clickY) / SCALE; 
+            }
+
+            // 1. Manda pro seu servidor SAMP (PAWN) fazer a rota
             if(window.geckoju) {
                 window.geckoju.send(`gps_destino|${gtaX.toFixed(1)}|${gtaY.toFixed(1)}`);
             }
             
-            // --- NOVIDADES: PIN VISUAL E CONTROLE DE CÂMERA ---
-            
-            // 4. Move o pino/waypoint vermelho para o local clicado
+            // 2. Move o pino/waypoint vermelho para o local
             let waypoint = document.getElementById('waypoint');
             if(waypoint) {
                 waypoint.style.display = 'block';
@@ -204,13 +212,16 @@
                 waypoint.style.top = clickY + 'px';
             }
             
-            // 5. Destrava a câmera para não puxar de volta pro personagem na mesma hora
+            // 3. Destrava a câmera para não puxar de volta pro personagem
             autoFollow = false;
             
-            // 6. Mostra o botão de recentralizar (caso você tenha no código)
+            // 4. Mostra o botão de recentralizar
             if(typeof recenterBtn !== 'undefined' && recenterBtn) {
                 recenterBtn.style.display = 'block';
             }
+
+            // Retorna os valores em pixels caso a gente precise arrastar a câmera
+            return { pixelX: clickX, pixelY: clickY };
         }
 
         function Conectar() {
@@ -296,6 +307,22 @@
                 let touch = e.changedTouches[0];
                 MarcarDestino(touch.pageX, touch.pageY);
             }
+        });
+        // Aplica a função em TODOS os botões da legenda
+        document.querySelectorAll('.legend-block').forEach(function(botao) {
+            botao.addEventListener('click', function(event) {
+                event.stopPropagation(); // Trava o vazamento de clique
+                
+                let gtaX = parseFloat(this.getAttribute('data-x'));
+                let gtaY = parseFloat(this.getAttribute('data-y'));
+                
+                // Chama a MarcarDestino avisando que é coordenada do GTA (true)
+                let posicao = MarcarDestino(gtaX, gtaY, true);
+                
+                // Arrasta a câmera do mapa visualmente pro local que foi marcado
+                targetX = (window.innerWidth / 2) - (posicao.pixelX * zoom);
+                targetY = (window.innerHeight / 2) - (posicao.pixelY * zoom);
+            });
         });
 
         Conectar();
