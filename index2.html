@@ -2,158 +2,161 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         html, body { 
             background: transparent !important; 
             overflow: hidden;
-            font-family: Arial, sans-serif;
-            color: white;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            /* 2. TRAVA DE DEDO NA TELA AQUI */
+            touch-action: none; 
+            user-select: none;
         }
 
         .hud-top-right {
             position: absolute;
-            top: 5px;
-            right: 10px;
+            top: 10px;
+            right: 15px;
             display: flex;
             flex-direction: column;
             align-items: flex-end;
-            gap: -5px; /* Espaçamento menor entre blocos */
+            gap: 6px;
         }
 
-        /* 1. Discord (PNG) */
-        .discord-icon {
-            width: 22px; /* Ícone pequeno */
-            height: auto;
-            margin-bottom: 7px;
-        }
-        .discord-link {
-        /* Ajuste este valor para diminuir o tamanho do texto */
-        font-size: 10px; 
-        
-        /* Mantém o texto em negrito para não perder a leitura */
-        font-weight: bold; 
-        
-        /* Garante que o texto fique branco e visível */
-        color: rgba(255, 255, 255, 0.9);
-        
-        /* Sombra para ajudar na leitura em lugares claros do mapa */
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-        
-        /* Evita que o link pule de linha */
-        white-space: nowrap; 
-    }
-
-    .discord-container {
-        display: flex;
-        align-items: center;
-        /* Diminua o gap se o texto ainda parecer longe do ícone */
-        gap: 5px; 
-        justify-content: flex-end;
-    }
-
-        /* 2. Bloco de Status (Data/Hora na frente do seu Cristal) */
-        .status-wrapper {
+        /* 1. DINHEIRO, BANCO E ID EM LINHA RETA */
+        .top-row {
             display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: -12px;
-        }
-
-        .date-time-container {
-            text-align: right;
-            line-height: 1;
-        }
-        .time { font-size: 14px; font-weight: bold; }
-        .divider { width: 100%; height: 1px; background: rgba(255,255,255,0.4); margin: 2px 0; }
-        .date { font-size: 10px; color: rgba(255,255,255,0.6); }
-
-        /* Espaço para as imagens que você vai baixar */
-        .crystal-img { width: 68px; height: 58px; }
-
-        /* 3. Saldos Fininhos (Estilo FiveM Slim) */
-        .money-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            margin-top: -10px;
-        }
-
-        .row-money {
-            display: flex;
-            gap: 4px;
+            flex-direction: row; 
+            gap: 6px; 
             justify-content: flex-end;
         }
 
-        .btn-slim {
-            background: rgba(0, 0, 0, 0.45); /* Semitransparente */
-            padding: 2px 8px;
-            border-radius: 10px; /* Mais fino */
+        /* CAIXAS LISAS: AMARELO FORTE, SEM BORDA, TEXTO BRANCO */
+        .hud-bar {
+            background: #FFCC00; 
+            border: none; /* ZERO BORDA */
+            outline: none;
+            padding: 3px 8px; 
+            border-radius: 4px; 
             display: flex;
             align-items: center;
-            gap: 5px;
-            min-width: 70px;
-            border: 0.5px solid rgba(255,255,255,0.05);
+            gap: 5px; 
         }
 
-        .btn-slim img { width: 14px; height: 14px; } /* Ícones dos saldos */
-        .val { font-size: 11px; font-weight: bold; white-space: nowrap; }
+        .hud-bar img { 
+            width: 13px; 
+            height: 13px; 
+            filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.5)); /* Destaca o ícone */
+        }
+
+        /* TEXTO BRANCO COM SOMBRA PRA LER NO AMARELO */
+        .val { 
+            font-size: 11.5px; 
+            font-weight: 900; 
+            color: #FFFFFF; /* TEXTO BRANCO AQUI KRL */
+            white-space: nowrap; 
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8); /* Sombra preta na letra pra não sumir no amarelo */
+        }
+
+        .label-id {
+            font-size: 11px; 
+            font-weight: 900;
+            color: #FFFFFF; /* TEXTO BRANCO AQUI TAMBÉM */
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        /* 2. BLOCO DA IMAGEM E HORÁRIO */
+        .status-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-right: 2px;
+        }
+
+        /* Deixei o relógio branco pra combinar com o resto! */
+        .time { 
+            font-size: 10px; 
+            font-weight: 900; 
+            color: #FFFFFF; 
+            text-shadow: 1px 1px 3px black; 
+            /* 2. MOVER O RELÓGIO (A MÁGICA É AQUI) */
+            position: relative;
+            
+            top: -8px;   /* MOVER PARA BAIXO (se quiser mover pra CIMA, coloque negativo, ex: -5px) */
+            right: -45px; /* MOVER PARA A ESQUERDA (afasta da imagem). Para ir pra direita, use left: 5px; */
+        }
+
+        .crystal-img { 
+            width: 55px; 
+            height: 45px; 
+            object-fit: contain; 
+        }
+
+        /* 3. CRIPTOMOEDA DEBAIXO DA IMAGEM */
+        .crypto-row {
+            display: flex;
+            justify-content: flex-end;
+            margin-right: 2px;
+        }
+
+        .bar-crypto {
+            padding: 3px 10px;
+        }
+
     </style>
 </head>
 <body>
     <div class="hud-top-right">
-        <div class="discord-container">
-        <span class="discord-link">discord.gg/p2R6EAXPNF</span>
-        <img src="discord.png" class="discord-icon" alt="">
-    </div>
+        
+        <div class="top-row">
+            <div class="hud-bar">
+                <img src="cash_icon.png" alt="">
+                <span class="val" id="cash">$1.200</span>
+            </div>
+
+            <div class="hud-bar">
+                <img src="bank_icon.png" alt="">
+                <span class="val" id="bank">40.000</span>
+            </div>
+
+            <div class="hud-bar">
+                <span class="label-id">ID:</span>
+                <span class="val" id="player_id">0</span>
+            </div>
+        </div>
 
         <div class="status-wrapper">
-            <div class="date-time-container">
-                <div class="time" id="time">12:33</div>
-                <div class="divider"></div>
-                <div class="date" id="date">10/02/2026</div>
-            </div>
+            <span class="time" id="time">12:33</span>
             <img src="cristal.png" class="crystal-img" alt="">
         </div>
 
-        <div class="money-grid">
-            <div class="row-money">
-                <div class="btn-slim">
-                    <img src="bank_icon.png" alt="">
-                    <span class="val" id="bank">40.000,00</span>
-                </div>
-                <div class="btn-slim">
-                    <img src="cash_icon.png" alt="">
-                    <span class="val" id="cash">$1.200,00</span>
-                </div>
-            </div>
-            <div class="row-money">
-                <div class="btn-slim">
-                    <img src="vip_icon.png" alt="">
-                    <span class="val" id="coins">0</span>
-                </div>
+        <div class="crypto-row">
+            <div class="hud-bar bar-crypto">
+                <img src="vip_icon.png" alt="">
+                <span class="val" id="coins">0</span>
             </div>
         </div>
+
     </div>
 
     <script>
         function updateTime() {
             const now = new Date();
             document.getElementById('time').innerText = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-            const d = now.getDate().toString().padStart(2, '0') + "/" + (now.getMonth()+1).toString().padStart(2, '0') + "/" + now.getFullYear();
-            document.getElementById('date').innerText = d;
         }
         setInterval(updateTime, 1000);
         updateTime();
 
+        // Integração com o Jogo
         if (window.geckoju) {
             window.geckoju.onData = function(data) {
                 try {
                     const obj = JSON.parse(data);
                     if (obj.cash !== undefined) document.getElementById('cash').innerText = "$" + obj.cash.toLocaleString('pt-BR');
                     if (obj.bank !== undefined) document.getElementById('bank').innerText = obj.bank.toLocaleString('pt-BR');
+                    if (obj.id !== undefined) document.getElementById('player_id').innerText = obj.id;
                     if (obj.coins !== undefined) document.getElementById('coins').innerText = obj.coins;
                 } catch(e) {}
             };
