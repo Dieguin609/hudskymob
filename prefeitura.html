@@ -319,6 +319,11 @@
     </div>
 
     <script>
+        window.onload = function() {
+            if(window.geckoju) {
+                window.geckoju.send("carregar_dados_pref");
+            }
+        };
         // Setar dados no painel esquerdo
         function setDadosCidadao(nome, cpf) {
             document.getElementById('player-nome').innerText = nome;
