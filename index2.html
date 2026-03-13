@@ -106,9 +106,78 @@
             padding: 3px 10px;
         }
 
+
+        /* =========================================
+           SISTEMA DE NOTIFICAÇÃO (AJUSTADO)
+           ========================================= */
+        #notify-container {
+            position: absolute;
+            top: 35px; /* <-- Descemos um pouquinho (antes era 10px) */
+            right: 15px; 
+            z-index: 9999; 
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none; 
+        }
+
+        .notify-box {
+            background: #111111; 
+            color: white;
+            padding: 8px 12px; /* <-- Diminuímos o tamanho da caixinha (antes era 12px 16px) */
+            border-radius: 5px;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 11.5px; /* <-- Fonte menor (antes era 13px) */
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px; /* <-- Diminuímos o espaço entre o emoji e o texto */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.8);
+            position: relative; 
+            overflow: hidden; 
+            animation: slideIn 0.3s ease-out, fadeOut 0.3s ease-in 4.7s forwards;
+        }
+
+        /* O "Cordãozinho" (Barrinha animada lá embaixo) */
+        .notify-box::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            width: 100%;
+            animation: shrinkBar 4.7s linear forwards; 
+        }
+
+        .notify-box.success::after { background: #00FF00; } 
+        .notify-box.error::after { background: #FF3333; } 
+        .notify-box.info::after { background: #FFCC00; } 
+
+        .notify-icon { font-size: 14px; } /* <-- Emoji menor (antes era 16px) */
+
+        @keyframes shrinkBar {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+        @keyframes slideIn {
+            from { transform: translateX(120%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; transform: translateY(-15px); }
+        }
+
     </style>
 </head>
 <body>
+
+    <audio id="audio-success" src="acerto.mp3" preload="auto"></audio>
+    <audio id="audio-error" src="erro.mp3" preload="auto"></audio>
+
+    <div id="notify-container"></div>
+
+
     <div class="hud-top-right">
         
         <div class="top-row">
@@ -149,6 +218,47 @@
         }
         setInterval(updateTime, 1000);
         updateTime();
+
+        // ==========================================
+        // FUNÇÃO DE CRIAR NOTIFICAÇÃO
+        // ==========================================
+        function showNotification(type, message) {
+            const container = document.getElementById('notify-container');
+            const notify = document.createElement('div');
+            notify.className = `notify-box ${type}`;
+            
+            let icon = '💬';
+            let somId = 'audio-success'; 
+
+            if(type === 'error') { 
+                icon = '⚠️'; 
+                somId = 'audio-error'; 
+            }
+            if(type === 'success') { 
+                icon = '✅'; 
+            }
+
+            notify.innerHTML = `<span class="notify-icon">${icon}</span> <span>${message}</span>`;
+            container.appendChild(notify);
+            
+            const audio = document.getElementById(somId);
+            if(audio) {
+                audio.currentTime = 0;
+                audio.play().catch(e => console.log("O navegador bloqueou o som", e));
+            }
+
+            setTimeout(() => {
+                if(notify.parentElement) notify.remove();
+            }, 5000);
+        }
+
+        // <-- MENSAGEM INICIAL ATUALIZADA AQUI -->
+        window.onload = function() {
+            setTimeout(() => {
+                showNotification('success', 'Bem-vindo ao Eixo Central!');
+            }, 1000);
+        };
+
 
         // Integração com o Jogo
         if (window.geckoju) {
