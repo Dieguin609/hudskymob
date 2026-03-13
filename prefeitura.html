@@ -319,18 +319,38 @@
     </div>
 
     <script>
-        window.onload = function() {
-            if(window.geckoju) {
-                window.geckoju.send("carregar_dados_pref");
+        // 1. FORÇANDO A FUNÇÃO A SER GLOBAL (Garante que o Pawn vai achar ela)
+        window.setDadosCidadao = function(nome, cpf) {
+            try {
+                // Seleciona os elementos
+                var campoNome = document.getElementById('player-nome');
+                var campoCpf = document.getElementById('player-cpf');
+                
+                // Se eles existirem na tela, injeta os valores
+                if(campoNome && campoCpf) {
+                    campoNome.innerText = nome;
+                    campoCpf.innerText = cpf;
+                    campoNome.style.color = "#00FF00"; // Vai ficar verde pra provar que atualizou!
+                }
+            } catch(e) {
+                console.log("Erro ao injetar dados: " + e);
             }
         };
-        // Setar dados no painel esquerdo
-        function setDadosCidadao(nome, cpf) {
-            document.getElementById('player-nome').innerText = nome;
-            document.getElementById('player-cpf').innerText = cpf;
-        }
 
-        // Navegação entre as telas internas
+        // 2. O HTML AVISA O SERVIDOR SÓ QUANDO ESTIVER 100% PRONTO
+        window.onload = function() {
+            if(window.geckoju) {
+                // O HTML pede os dados para o servidor
+                window.geckoju.send("carregar_dados_pref");
+            } else {
+                // MODO DEBUG: Se você abrir no PC (fora do jogo), ele simula a injeção após 1 segundo
+                setTimeout(function() {
+                    window.setDadosCidadao("Diguin Teste", "123.456.789-00");
+                }, 1000);
+            }
+        };
+
+        // Resto das funções normais...
         function abrirTela(telaId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(telaId).classList.add('active');
@@ -340,34 +360,19 @@
             abrirTela('screen-home');
         }
 
-        // RG (Clica e só manda o comando sem mudar de tela)
         function enviarComandoDireto(acao) {
-            if(window.geckoju) {
-                window.geckoju.send(acao);
-            } else {
-                console.log("Comando direto: " + acao);
-            }
+            if(window.geckoju) window.geckoju.send(acao);
         }
 
-        // Submeter formulários (Envia e já fecha o navegador pra notificação aparecer)
         function enviarFormularioEFechar(acao) {
             if(window.geckoju) {
                 window.geckoju.send(acao);
-                window.geckoju.close(); // Fecha o UI inteiro
-            } else {
-                console.log("Formulário enviado. Comando: " + acao);
-                alert("Simulando: O menu fecharia agora e a notificação apareceria no HUD.");
-                voltarHome();
+                window.geckoju.close();
             }
         }
 
-        // Fechar pelo X
         function fechar() {
-            if(window.geckoju) {
-                window.geckoju.send("fechar_prefeitura");
-            } else {
-                console.log("Menu fechado.");
-            }
+            if(window.geckoju) window.geckoju.send("fechar_prefeitura");
         }
     </script>
 
