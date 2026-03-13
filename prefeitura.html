@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Prefeitura - Eixo Central</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        body {
+            background: transparent;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; overflow: hidden;
+            touch-action: none; user-select: none;
+        }
+
+        .painel-app {
+            width: 850px;
+            height: 500px;
+            background: rgba(15, 15, 18, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+            display: flex;
+            transform: scale(0.75);
+            transform-origin: center;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 260px;
+            background: rgba(10, 10, 12, 0.8);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 30px 20px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .profile-icon {
+            width: 90px; height: 90px; background: #1a1a1a;
+            border-radius: 50%; border: 3px solid #008040;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 20px; box-shadow: 0 0 15px rgba(0, 128, 64, 0.3);
+            overflow: hidden;
+        }
+        .profile-icon img { width: 60%; opacity: 0.8; }
+
+        .sidebar h2 { color: white; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 30px; }
+
+        .info-box {
+            width: 100%; background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px; padding: 15px;
+            display: flex; flex-direction: column; gap: 12px;
+        }
+        .info-item { display: flex; flex-direction: column; gap: 3px; }
+        .info-item span { color: #888; font-size: 11px; text-transform: uppercase; font-weight: bold; }
+        .info-item strong { color: #fff; font-size: 14px; }
+
+        /* CONTEÚDO PRINCIPAL E TELAS */
+        .main-content { flex: 1; position: relative; overflow: hidden; }
+        
+        .screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            padding: 30px; display: none; flex-direction: column;
+            animation: fadeIn 0.3s ease-out;
+        }
+        .screen.active { display: flex; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* CABEÇALHOS DAS TELAS */
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 25px; padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .header-title { display: flex; align-items: center; gap: 15px; }
+        .brasao { width: 45px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+        .header-text h1 { color: #fff; font-size: 22px; }
+        .header-text p { color: #aaa; font-size: 12px; }
+
+        .btn-fechar {
+            background: rgba(255, 255, 255, 0.05); color: #ccc; border: 1px solid rgba(255,255,255,0.1);
+            width: 35px; height: 35px; border-radius: 8px; font-weight: bold; cursor: pointer;
+            transition: 0.2s; display: flex; align-items: center; justify-content: center;
+        }
+        .btn-fechar:hover { background: #ff3333; color: white; border-color: #ff3333; }
+        .btn-voltar-icon:hover { background: #444; color: white; border-color: #666; }
+
+        /* TELA HOME: GRID CARDS */
+        .grid-cards {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;
+            overflow-y: auto; padding-right: 5px;
+        }
+        .grid-cards::-webkit-scrollbar { width: 4px; }
+        .grid-cards::-webkit-scrollbar-thumb { background: #008040; border-radius: 4px; }
+
+        .card {
+            background: linear-gradient(145deg, rgba(30, 30, 35, 0.6) 0%, rgba(20, 20, 23, 0.6) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.04); border-radius: 10px;
+            padding: 20px; display: flex; flex-direction: column; align-items: center; text-align: center;
+            transition: all 0.2s ease; cursor: pointer; position: relative; overflow: hidden;
+        }
+        .card:hover { transform: translateY(-5px); border-color: rgba(0, 128, 64, 0.5); box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
+        .card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: #008040; transform: scaleX(0); transition: 0.3s; transform-origin: left; }
+        .card:hover::before { transform: scaleX(1); }
+        .card img { height: 45px; object-fit: contain; margin-bottom: 15px; opacity: 0.9; }
+        .img-bolsa { height: 35px !important; }
+        .card h3 { color: #fff; font-size: 14px; margin-bottom: 6px; }
+        .card p { color: #888; font-size: 10.5px; line-height: 1.4; }
+
+        /* ESTILOS DE FORMULÁRIO (PARA AS NOVAS TELAS) */
+        .form-container { overflow-y: auto; padding-right: 10px; flex: 1; }
+        .form-container::-webkit-scrollbar { width: 4px; }
+        .form-container::-webkit-scrollbar-thumb { background: #008040; border-radius: 4px; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; color: #aaa; font-size: 11px; text-transform: uppercase; margin-bottom: 5px; font-weight: bold; }
+        .form-input {
+            width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);
+            color: white; padding: 12px; border-radius: 6px; outline: none; transition: 0.3s;
+        }
+        .form-input:focus { border-color: #008040; background: rgba(0,0,0,0.6); }
+
+        .form-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-enviar { flex: 2; background: #008040; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
+        .btn-enviar:hover { background: #00a552; }
+        .btn-voltar { flex: 1; background: #333; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
+        .btn-voltar:hover { background: #444; }
+
+        /* LISTA DE IMÓVEIS */
+        .imovel-item {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px;
+            border-left: 3px solid #008040; margin-bottom: 10px;
+        }
+        .imovel-info h4 { color: white; font-size: 14px; margin-bottom: 3px; }
+        .imovel-info p { color: #aaa; font-size: 11px; }
+
+    </style>
+</head>
+<body>
+
+    <div class="painel-app">
+        
+        <div class="sidebar">
+            <div class="profile-icon">
+                <img src="user.png" alt="User">
+            </div>
+            <h2>Cidadão</h2>
+            
+            <div class="info-box">
+                <div class="info-item"><span>Nome Completo</span><strong id="player-nome">Carregando...</strong></div>
+                <div class="info-item"><span>CPF / Passaporte</span><strong id="player-cpf">Aguardando...</strong></div>
+                <div class="info-item"><span>Situação</span><strong style="color: #00FF00;">Regular</strong></div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            
+            <div id="screen-home" class="screen active">
+                <div class="header">
+                    <div class="header-title">
+                        <img src="moc.png" class="brasao">
+                        <div class="header-text">
+                            <h1>Prefeitura Montes Claros</h1>
+                            <p>Selecione o serviço desejado abaixo</p>
+                        </div>
+                    </div>
+                    <button class="btn-fechar" onclick="fechar()">X</button>
+                </div>
+
+                <div class="grid-cards">
+                    <div class="card" onclick="enviarComandoDireto('pref_rg')">
+                        <img src="rg.png" alt="RG">
+                        <h3>Identidade (RG)</h3>
+                        <p>Emita sua via do Registro Geral. Documento obrigatório.</p>
+                    </div>
+
+                    <div class="card" onclick="abrirTela('screen-bolsa')">
+                        <img src="bolsa.png" class="img-bolsa">
+                        <h3>Bolsa Família</h3>
+                        <p>Cadastre-se no programa social de auxílio financeiro.</p>
+                    </div>
+
+                    <div class="card" onclick="abrirTela('screen-clt')">
+                        <img src="clt.png" alt="CLT">
+                        <h3>Carteira de Trabalho</h3>
+                        <p>Assine sua CLT para ter acesso aos empregos da cidade.</p>
+                    </div>
+
+                    <div class="card" onclick="abrirTela('screen-militar')">
+                        <img src="exercito.png" alt="Exército">
+                        <h3>Junta Militar</h3>
+                        <p>Emita sua dispensa ou aliste-se no Exército Brasileiro.</p>
+                    </div>
+
+                    <div class="card" onclick="abrirTela('screen-imoveis')">
+                        <img src="casa.webp" alt="Casa">
+                        <h3>Imóveis e IPTU</h3>
+                        <p>Pague impostos e gerencie a documentação da sua casa.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="screen-bolsa" class="screen">
+                <div class="header">
+                    <div class="header-title">
+                        <img src="bolsa.png" class="brasao" style="width: 70px;">
+                        <div class="header-text">
+                            <h1>Bolsa Família</h1>
+                            <p>Governo Federal - Cadastro Social</p>
+                        </div>
+                    </div>
+                    <button class="btn-fechar btn-voltar-icon" onclick="voltarHome()">⬅</button>
+                </div>
+                <div class="form-container">
+                    <div class="form-group">
+                        <label>CPF do Beneficiário</label>
+                        <input type="text" class="form-input" placeholder="Digite seu CPF">
+                    </div>
+                    <div class="form-group">
+                        <label>Nº do Comprovante de Renda</label>
+                        <input type="text" class="form-input" placeholder="Ex: Holerite ou Declaração">
+                    </div>
+                    <div class="form-group">
+                        <label>Membros Residentes na Família</label>
+                        <input type="number" class="form-input" min="3" value="3" placeholder="Mínimo de 3">
+                    </div>
+                    <div class="form-group">
+                        <label>Nº Fatura Conta de Luz (CEMIG)</label>
+                        <input type="text" class="form-input" placeholder="ID da fatura atual">
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn-voltar" onclick="voltarHome()">Voltar</button>
+                        <button class="btn-enviar" onclick="enviarFormularioEFechar('bolsa_inscrever')">Se Inscrever</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="screen-clt" class="screen">
+                <div class="header">
+                    <div class="header-title">
+                        <img src="clt.png" class="brasao">
+                        <div class="header-text">
+                            <h1>Ministério do Trabalho</h1>
+                            <p>Emissão de Carteira Assinada</p>
+                        </div>
+                    </div>
+                    <button class="btn-fechar btn-voltar-icon" onclick="voltarHome()">⬅</button>
+                </div>
+                <div class="form-container">
+                    <div class="form-group">
+                        <label>Seu CPF</label>
+                        <input type="text" class="form-input" placeholder="000.000.000-00">
+                    </div>
+                    <div class="form-group">
+                        <label>Comprovante de Residência (Conta de Luz)</label>
+                        <input type="text" class="form-input" placeholder="Nº da fatura ou contrato de casa">
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn-voltar" onclick="voltarHome()">Voltar</button>
+                        <button class="btn-enviar" onclick="enviarFormularioEFechar('clt_emitir')">Emitir Carteira</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="screen-militar" class="screen">
+                <div class="header">
+                    <div class="header-title">
+                        <img src="exercito.png" class="brasao">
+                        <div class="header-text">
+                            <h1>Junta Militar</h1>
+                            <p>Alistamento Obrigatório</p>
+                        </div>
+                    </div>
+                    <button class="btn-fechar btn-voltar-icon" onclick="voltarHome()">⬅</button>
+                </div>
+                <div class="form-container">
+                    <div class="form-group">
+                        <label>Informe seu CPF</label>
+                        <input type="text" class="form-input" placeholder="Obrigatório para o alistamento">
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn-voltar" onclick="voltarHome()">Voltar</button>
+                        <button class="btn-enviar" style="background: #4a5d23;" onclick="enviarFormularioEFechar('militar_alistar')">Alistar-se</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="screen-imoveis" class="screen">
+                <div class="header">
+                    <div class="header-title">
+                        <img src="casa.png" class="brasao">
+                        <div class="header-text">
+                            <h1>Meus Imóveis</h1>
+                            <p>Gestão de propriedades e taxas</p>
+                        </div>
+                    </div>
+                    <button class="btn-fechar btn-voltar-icon" onclick="voltarHome()">⬅</button>
+                </div>
+                <div class="form-container">
+                    
+                    <div class="imovel-item">
+                        <div class="imovel-info">
+                            <h4>Nenhum imóvel registrado</h4>
+                            <p>Você ainda não possui casas na cidade.</p>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn-voltar" onclick="voltarHome()">Voltar ao Início</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Setar dados no painel esquerdo
+        function setDadosCidadao(nome, cpf) {
+            document.getElementById('player-nome').innerText = nome;
+            document.getElementById('player-cpf').innerText = cpf;
+        }
+
+        // Navegação entre as telas internas
+        function abrirTela(telaId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(telaId).classList.add('active');
+        }
+
+        function voltarHome() {
+            abrirTela('screen-home');
+        }
+
+        // RG (Clica e só manda o comando sem mudar de tela)
+        function enviarComandoDireto(acao) {
+            if(window.geckoju) {
+                window.geckoju.send(acao);
+            } else {
+                console.log("Comando direto: " + acao);
+            }
+        }
+
+        // Submeter formulários (Envia e já fecha o navegador pra notificação aparecer)
+        function enviarFormularioEFechar(acao) {
+            if(window.geckoju) {
+                window.geckoju.send(acao);
+                window.geckoju.close(); // Fecha o UI inteiro
+            } else {
+                console.log("Formulário enviado. Comando: " + acao);
+                alert("Simulando: O menu fecharia agora e a notificação apareceria no HUD.");
+                voltarHome();
+            }
+        }
+
+        // Fechar pelo X
+        function fechar() {
+            if(window.geckoju) {
+                window.geckoju.send("fechar_prefeitura");
+            } else {
+                console.log("Menu fechado.");
+            }
+        }
+    </script>
+
+</body>
+</html>
