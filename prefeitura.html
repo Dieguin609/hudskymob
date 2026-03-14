@@ -252,16 +252,21 @@
                 </div>
                 <div class="form-container">
                     <div class="form-group">
-                        <label>Seu CPF</label>
-                        <input type="text" class="form-input" placeholder="000.000.000-00">
+                        <label>Informe seu CPF</label>
+                        <input type="text" id="input-clt-cpf" class="form-input" placeholder="000.000.000-00">
                     </div>
-                    <div class="form-group">
-                        <label>Comprovante de Residência (Conta de Luz)</label>
-                        <input type="text" class="form-input" placeholder="Nº da fatura ou contrato de casa">
+
+                    <div id="clt-info-status" style="margin-top: 10px; color: #00FF00; font-weight: bold; font-size: 14px; display: none;">
+                        CARTEIRA ASSINADA Nº: <span id="clt-numero-texto">000000</span>
                     </div>
+
+                    <div style="background: rgba(255, 165, 0, 0.1); border: 1px dashed orange; padding: 10px; border-radius: 6px; margin-top: 15px; color: orange; font-size: 11px;">
+                        Para acessar o documento da carteira de trabalho, abra o <b>inventário</b>, vá no botão <b>documentos</b> e selecione <b>carteira de trabalho</b>.
+                    </div>
+
                     <div class="form-actions">
                         <button class="btn-voltar" onclick="voltarHome()">Voltar</button>
-                        <button class="btn-enviar" onclick="enviarFormularioEFechar('clt_emitir')">Emitir Carteira</button>
+                        <button class="btn-enviar" id="btn-clt-enviar" onclick="assinarCLT()">Emitir Carteira</button>
                     </div>
                 </div>
             </div>
@@ -319,15 +324,16 @@
     </div>
 
     <script>
-        window.setDadosCidadao = function(nome, cpf) {
+        window.setDadosCidadao = function(nome, cpf, clt) {
             try {
-                var campoNome = document.getElementById('player-nome');
-                var campoCpf = document.getElementById('player-cpf');
+                document.getElementById('player-nome').innerText = nome;
+                document.getElementById('player-cpf').innerText = cpf;
                 
-                if(campoNome && campoCpf) {
-                    campoNome.innerText = nome;
-                    campoCpf.innerText = cpf;
-                    campoNome.style.color = "#00FF00"; // Fica verde quando o servidor mandar
+                // MOSTRAR CLT SE JÁ EXISTIR
+                if(clt && clt !== "Nao Assinada" && clt !== "Nenhum") {
+                    document.getElementById('clt-numero-texto').innerText = clt;
+                    document.getElementById('clt-info-status').style.display = "block";
+                    document.getElementById('btn-clt-enviar').style.display = "none";
                 }
             } catch(e) {}
         };
@@ -350,6 +356,12 @@
             if(window.geckoju) { window.geckoju.send(acao); window.geckoju.close(); }
         }
         function fechar() { if(window.geckoju) window.geckoju.send("fechar_prefeitura"); }
+        function assinarCLT() {
+            var cpfValue = document.getElementById('input-clt-cpf').value;
+            if(window.geckoju) {
+                window.geckoju.send("clt_emitir", cpfValue);
+            }
+        }
     </script>
 </body>
 </html>
