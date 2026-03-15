@@ -6,13 +6,13 @@
     <style>
         :root {
             --primary: #3498db; 
-            --bg-dark: rgba(10, 10, 10, 0.98);
+            --bg-dark: rgba(10, 10, 10, 0.95);
             --card-bg: rgba(20, 20, 20, 1);
         }
 
         body {
             font-family: 'Segoe UI', sans-serif;
-            background: #000; 
+            background: transparent; /* FUNDO REMOVIDO PARA MOSTRAR O JOGO */
             color: white;
             display: flex;
             justify-content: center;
@@ -23,18 +23,21 @@
         }
 
         .container {
-            width: 900px; 
-            height: 520px; 
+            width: 880px; /* Um pouco mais largo que a prefeitura */
+            height: 480px; /* Altura reduzida para caber bem na tela */
             background: var(--bg-dark);
-            border-radius: 15px;
-            border: 1px solid rgba(52, 152, 219, 0.2);
+            border-radius: 12px;
+            border: 1px solid rgba(52, 152, 219, 0.3);
             display: flex;
             flex-direction: column;
-            box-shadow: 0 0 50px rgba(0,0,0,1);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px); /* Efeito de vidro igual da prefeitura */
+            transform: scale(0.85); /* Deixa proporcional no mobile */
+            transform-origin: center;
         }
 
         .header {
-            padding: 20px 30px;
+            padding: 15px 25px; /* Reduzido para ganhar espaço */
             background: rgba(52, 152, 219, 0.05);
             border-bottom: 4px solid var(--primary);
             display: flex;
@@ -43,11 +46,11 @@
         }
 
         .header h1 { margin: 0; font-size: 20px; text-transform: uppercase; font-weight: 900; }
-        .user-stats { font-size: 13px; color: var(--primary); font-weight: bold; }
+        .user-stats { font-size: 15px; color: var(--primary); font-weight: bold; display: flex; align-items: center;}
 
         .job-slider {
             flex: 1;
-            padding: 30px 20px;
+            padding: 25px 20px;
             display: flex;
             flex-direction: row; 
             gap: 20px;
@@ -57,13 +60,13 @@
         }
 
         .job-totem {
-            min-width: 260px; 
-            max-width: 260px;
+            min-width: 250px; /* Ligeiramente mais fino pra caber melhor */
+            max-width: 250px;
             background: var(--card-bg);
-            border-radius: 12px;
+            border-radius: 10px;
             overflow: hidden;
             display: flex;
-            flex-direction: column; /* Essencial para o alinhamento */
+            flex-direction: column;
             border: 1px solid rgba(255,255,255,0.05);
             transition: 0.3s;
             height: 100%; 
@@ -77,7 +80,7 @@
 
         .job-img {
             width: 100%;
-            height: 160px; 
+            height: 140px; 
             object-fit: cover;
             border-bottom: 4px solid #333;
         }
@@ -85,57 +88,56 @@
         .job-totem.unlocked .job-img { border-bottom-color: var(--primary); }
 
         .job-content {
-            padding: 15px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
             flex-grow: 1;
-            justify-content: flex-start; /* Alinha o título no topo */
+            justify-content: flex-start;
         }
 
         .job-content h3 { 
             margin: 0; 
-            font-size: 18px; 
+            font-size: 16px; 
             color: #fff; 
             text-transform: uppercase; 
             text-align: center; 
             font-weight: 800;
-            min-height: 44px; /* Garante que títulos de 2 linhas não desalinhem o resto */
+            min-height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
         .job-content p { 
-            margin: 12px 0; 
-            font-size: 12px; 
+            margin: 8px 0; 
+            font-size: 11px; 
             color: #aaa; 
-            line-height: 1.5; 
+            line-height: 1.4; 
             text-align: center;
-            /* TRAVA A ALTURA DA DESCRIÇÃO */
             display: -webkit-box;
-            -webkit-line-clamp: 3; /* No máximo 3 linhas de texto */
+            -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
             text-overflow: ellipsis;
-            height: 34px; /* Altura fixa para o bloco de texto */
+            height: 46px;
         }
 
         .job-footer {
-            padding: 15px;
+            padding: 12px;
             text-align: center;
             background: rgba(0,0,0,0.2);
-            margin-top: auto; /* Empurra para o fim do card */
-            min-height: 5px; /* Garante que o rodapé tenha sempre o mesmo tamanho */
+            margin-top: auto;
+            min-height: 5px;
             display: flex;
             flex-direction: column;
             justify-content: center;
         }
 
         .lvl-tag {
-            font-size: 11px;
+            font-size: 10px;
             color: var(--primary);
             font-weight: 800;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             display: block;
             letter-spacing: 1px;
         }
@@ -144,7 +146,7 @@
             background: #222;
             color: white;
             border: 1px solid #444;
-            padding: 12px;
+            padding: 10px;
             border-radius: 6px;
             font-size: 12px;
             font-weight: 900;
@@ -169,10 +171,13 @@
 <div class="container">
     <div class="header">
         <div>
-            <h1 id="player-name">DIGUINHO</h1>
-            <span class="user-stats" id="player-meta">CARREGANDO DADOS...</span>
+            <h1 id="player-name">CARREGANDO...</h1>
+            <p id="player-docs" style="margin: 5px 0 0; font-size: 12px; color: #aaa; font-weight: 600;">CPF: Aguardando | CLT: Aguardando</p>
         </div>
-        <button onclick="closeUI()" style="background:none; border:none; color:white; cursor:pointer; font-size:24px;">&times;</button>
+        <div class="user-stats">
+            <span id="player-lvl">NÍVEL: 1</span>
+        </div>
+        <button onclick="closeUI()" style="background:none; border:none; color:white; cursor:pointer; font-size:28px; margin-left: 20px;">&times;</button>
     </div>
 
     <div class="job-slider" id="job-list"></div>
@@ -183,23 +188,32 @@
         { id: 1, name: "Servidor Público", desc: "Manutenção e limpeza das vias públicas de Moc. Ajude a manter a cidade impecável.", lvl: 1, img: "gari.jpg" },
         { id: 2, name: "Repositor BH", desc: "Abasteça as prateleiras no Supermercados BH e organize o estoque.", lvl: 1, img: "repositor.jpg" },
         { id: 3, name: "Operador VGX", desc: "Atendimento e suporte no Call Center da VGX Montes Claros.", lvl: 2, img: "tele.jpg" },
-        { id: 4, name: "Eletricista CEMIG", desc: "Trabalhe na manutenção da rede elétrica e reparos de iluminação urbana. Por Montes Claros e Regiao!", lvl: 5, img: "Cemig.jpg" },
+        { id: 4, name: "Eletricista CEMIG", desc: "Trabalhe na manutenção da rede elétrica e reparos de iluminação urbana.", lvl: 5, img: "Cemig.jpg" },
         { id: 5, name: "Motorista MocBus", desc: "Opere as linhas de transporte coletivo urbano em toda a cidade.", lvl: 8, img: "mocbus.jpg" },
-        { id: 6, name: "Entregador Sedex", desc: "Entregas e logística para os Correios e Sedex regional. Montes Claros e Regiao!", lvl: 12, img: "sedex.jpg" },
-        { id: 7, name: "Caminhoneiro Sedex", desc: "Entregas pesadas e logística para os Correios e Sedex Nacional. Montes Claros e Cidade", lvl: 15, img: "sedexcaminhao.jpg" },
-        { id: 8, name: "Caminhoneiro Petrobras", desc: "Entregas De Gasolina e Disel apartir da Pretrobras para o Pais!", lvl: 12, img: "pretobras.jpg" }
+        { id: 6, name: "Entregador Sedex", desc: "Entregas e logística para os Correios e Sedex regional.", lvl: 12, img: "sedex.jpg" },
+        { id: 7, name: "Caminhoneiro Sedex", desc: "Entregas pesadas e logística para os Correios e Sedex Nacional.", lvl: 15, img: "sedexcaminhao.jpg" },
+        { id: 8, name: "Caminhoneiro Petrobras", desc: "Entregas de Gasolina e Diesel a partir da Petrobras para o País!", lvl: 12, img: "pretobras.jpg" }
     ];
 
-    function init(name, level, money) {
-        // Atualiza os dados dinâmicos do jogador
-        document.getElementById('player-name').innerText = name.toUpperCase();
-        document.getElementById('player-meta').innerText = `NÍVEL ${level} | SALDO: R$ ${money.toLocaleString('pt-BR')}`;
+    // A função agora pede Nome, CPF e CLT.
+    function init(nome, cpf, clt) {
+        
+        let levelEstatico = 1; // DEIXEI O LEVEL ESTÁTICO AQUI COMO PEDIU!
+        
+        // Trata os textos caso o cara não tenha documento
+        let displayCpf = (!cpf || cpf === "Nenhum") ? "Nenhum" : cpf;
+        let displayClt = (!clt || clt === "Nao Assinada" || clt === "Nenhum") ? "Nenhuma" : clt;
+
+        // Atualiza a tela
+        document.getElementById('player-name').innerText = nome.toUpperCase();
+        document.getElementById('player-docs').innerText = `CPF: ${displayCpf} | CLT: ${displayClt}`;
+        document.getElementById('player-lvl').innerText = `NÍVEL: ${levelEstatico}`;
         
         const slider = document.getElementById('job-list');
         slider.innerHTML = '';
 
         jobs.forEach(job => {
-            const locked = level < job.lvl;
+            const locked = levelEstatico < job.lvl;
             slider.innerHTML += `
                 <div class="job-totem ${locked ? '' : 'unlocked'}">
                     <img src="${job.img}" class="job-img" onerror="this.src='https://via.placeholder.com/260x160?text=Emprego'">
@@ -221,8 +235,8 @@
     function chooseJob(id) { if(window.geckoju) window.geckoju.send("job_" + id); }
     function closeUI() { if(window.geckoju) window.geckoju.send("job_close"); }
 
-    // Simulação - O SAMP vai acionar isso
-    init("Diego", 1, 10000); 
+    // Simulação para testar no navegador:
+    init("Diego", "123.456.789-10", "15987-MG"); 
 </script>
 </body>
 </html>
