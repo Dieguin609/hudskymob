@@ -218,7 +218,7 @@
         });
     }
 
-    function chooseJob(id) { if(window.geckoju) window.geckoju.send("job_select", id); }
+    function chooseJob(id) { if(window.geckoju) window.geckoju.send("job_" + id); }
     function closeUI() { if(window.geckoju) window.geckoju.send("job_close"); }
 
     // Simulação - O SAMP vai acionar isso
