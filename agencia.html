@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --primary: #3498db; 
+            --bg-dark: rgba(10, 10, 10, 0.98);
+            --card-bg: rgba(20, 20, 20, 1);
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #000; 
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 900px; 
+            height: 520px; 
+            background: var(--bg-dark);
+            border-radius: 15px;
+            border: 1px solid rgba(52, 152, 219, 0.2);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 50px rgba(0,0,0,1);
+        }
+
+        .header {
+            padding: 20px 30px;
+            background: rgba(52, 152, 219, 0.05);
+            border-bottom: 4px solid var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 { margin: 0; font-size: 20px; text-transform: uppercase; font-weight: 900; }
+        .user-stats { font-size: 13px; color: var(--primary); font-weight: bold; }
+
+        .job-slider {
+            flex: 1;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: row; 
+            gap: 20px;
+            overflow-x: auto; 
+            overflow-y: hidden; 
+            scroll-behavior: smooth;
+        }
+
+        .job-totem {
+            min-width: 260px; 
+            max-width: 260px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column; /* Essencial para o alinhamento */
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: 0.3s;
+            height: 100%; 
+        }
+
+        .job-totem:hover {
+            border-color: var(--primary);
+            background: #181818;
+            transform: scale(1.02);
+        }
+
+        .job-img {
+            width: 100%;
+            height: 160px; 
+            object-fit: cover;
+            border-bottom: 4px solid #333;
+        }
+
+        .job-totem.unlocked .job-img { border-bottom-color: var(--primary); }
+
+        .job-content {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            justify-content: flex-start; /* Alinha o título no topo */
+        }
+
+        .job-content h3 { 
+            margin: 0; 
+            font-size: 18px; 
+            color: #fff; 
+            text-transform: uppercase; 
+            text-align: center; 
+            font-weight: 800;
+            min-height: 44px; /* Garante que títulos de 2 linhas não desalinhem o resto */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .job-content p { 
+            margin: 12px 0; 
+            font-size: 12px; 
+            color: #aaa; 
+            line-height: 1.5; 
+            text-align: center;
+            /* TRAVA A ALTURA DA DESCRIÇÃO */
+            display: -webkit-box;
+            -webkit-line-clamp: 3; /* No máximo 3 linhas de texto */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            height: 34px; /* Altura fixa para o bloco de texto */
+        }
+
+        .job-footer {
+            padding: 15px;
+            text-align: center;
+            background: rgba(0,0,0,0.2);
+            margin-top: auto; /* Empurra para o fim do card */
+            min-height: 5px; /* Garante que o rodapé tenha sempre o mesmo tamanho */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .lvl-tag {
+            font-size: 11px;
+            color: var(--primary);
+            font-weight: 800;
+            margin-bottom: 12px;
+            display: block;
+            letter-spacing: 1px;
+        }
+
+        .btn-apply {
+            background: #222;
+            color: white;
+            border: 1px solid #444;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            width: 100%;
+            transition: 0.2s;
+        }
+
+        .job-totem.unlocked .btn-apply {
+            background: var(--primary);
+            border: none;
+            color: #000;
+        }
+
+        .job-slider::-webkit-scrollbar { height: 6px; }
+        .job-slider::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div>
+            <h1 id="player-name">DIGUINHO</h1>
+            <span class="user-stats" id="player-meta">CARREGANDO DADOS...</span>
+        </div>
+        <button onclick="closeUI()" style="background:none; border:none; color:white; cursor:pointer; font-size:24px;">&times;</button>
+    </div>
+
+    <div class="job-slider" id="job-list"></div>
+</div>
+
+<script>
+    const jobs = [
+        { id: 1, name: "Servidor Público", desc: "Manutenção e limpeza das vias públicas de Moc. Ajude a manter a cidade impecável.", lvl: 1, img: "gari.jpg" },
+        { id: 2, name: "Repositor BH", desc: "Abasteça as prateleiras no Supermercados BH e organize o estoque.", lvl: 1, img: "repositor.jpg" },
+        { id: 3, name: "Operador VGX", desc: "Atendimento e suporte no Call Center da VGX Montes Claros.", lvl: 2, img: "tele.jpg" },
+        { id: 4, name: "Eletricista CEMIG", desc: "Trabalhe na manutenção da rede elétrica e reparos de iluminação urbana. Por Montes Claros e Regiao!", lvl: 5, img: "Cemig.jpg" },
+        { id: 5, name: "Motorista MocBus", desc: "Opere as linhas de transporte coletivo urbano em toda a cidade.", lvl: 8, img: "mocbus.jpg" },
+        { id: 6, name: "Entregador Sedex", desc: "Entregas e logística para os Correios e Sedex regional. Montes Claros e Regiao!", lvl: 12, img: "sedex.jpg" },
+        { id: 7, name: "Caminhoneiro Sedex", desc: "Entregas pesadas e logística para os Correios e Sedex Nacional. Montes Claros e Cidade", lvl: 15, img: "sedexcaminhao.jpg" },
+        { id: 8, name: "Caminhoneiro Petrobras", desc: "Entregas De Gasolina e Disel apartir da Pretrobras para o Pais!", lvl: 12, img: "pretobras.jpg" }
+    ];
+
+    function init(name, level, money) {
+        // Atualiza os dados dinâmicos do jogador
+        document.getElementById('player-name').innerText = name.toUpperCase();
+        document.getElementById('player-meta').innerText = `NÍVEL ${level} | SALDO: R$ ${money.toLocaleString('pt-BR')}`;
+        
+        const slider = document.getElementById('job-list');
+        slider.innerHTML = '';
+
+        jobs.forEach(job => {
+            const locked = level < job.lvl;
+            slider.innerHTML += `
+                <div class="job-totem ${locked ? '' : 'unlocked'}">
+                    <img src="${job.img}" class="job-img" onerror="this.src='https://via.placeholder.com/260x160?text=Emprego'">
+                    <div class="job-content">
+                        <h3>${job.name}</h3>
+                        <p>${job.desc}</p>
+                    </div>
+                    <div class="job-footer">
+                        <span class="lvl-tag">REQUISITO: NÍVEL ${job.lvl}</span>
+                        <button class="btn-apply" ${locked ? 'disabled' : ''} onclick="chooseJob(${job.id})">
+                            ${locked ? 'BLOQUEADO' : 'CANDIDATAR'}
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function chooseJob(id) { if(window.geckoju) window.geckoju.send("job_select", id); }
+    function closeUI() { if(window.geckoju) window.geckoju.send("job_close"); }
+
+    // Simulação - O SAMP vai acionar isso
+    init("Diego", 1, 10000); 
+</script>
+</body>
+</html>
