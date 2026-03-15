@@ -12,7 +12,7 @@
 
         body {
             font-family: 'Segoe UI', sans-serif;
-            background: transparent; /* FUNDO REMOVIDO PARA MOSTRAR O JOGO */
+            background: transparent; 
             color: white;
             display: flex;
             justify-content: center;
@@ -20,24 +20,26 @@
             height: 100vh;
             margin: 0;
             overflow: hidden;
+            touch-action: none;
+            user-select: none;
         }
 
         .container {
-            width: 880px; /* Um pouco mais largo que a prefeitura */
-            height: 480px; /* Altura reduzida para caber bem na tela */
+            width: 880px; 
+            height: 480px; 
             background: var(--bg-dark);
             border-radius: 12px;
             border: 1px solid rgba(52, 152, 219, 0.3);
             display: flex;
             flex-direction: column;
             box-shadow: 0 15px 40px rgba(0,0,0,0.8);
-            backdrop-filter: blur(10px); /* Efeito de vidro igual da prefeitura */
-            transform: scale(0.85); /* Deixa proporcional no mobile */
+            backdrop-filter: blur(10px); 
+            transform: scale(0.85); 
             transform-origin: center;
         }
 
         .header {
-            padding: 15px 25px; /* Reduzido para ganhar espaço */
+            padding: 15px 25px; 
             background: rgba(52, 152, 219, 0.05);
             border-bottom: 4px solid var(--primary);
             display: flex;
@@ -60,7 +62,7 @@
         }
 
         .job-totem {
-            min-width: 250px; /* Ligeiramente mais fino pra caber melhor */
+            min-width: 250px; 
             max-width: 250px;
             background: var(--card-bg);
             border-radius: 10px;
@@ -70,12 +72,6 @@
             border: 1px solid rgba(255,255,255,0.05);
             transition: 0.3s;
             height: 100%; 
-        }
-
-        .job-totem:hover {
-            border-color: var(--primary);
-            background: #181818;
-            transform: scale(1.02);
         }
 
         .job-img {
@@ -195,16 +191,21 @@
         { id: 8, name: "Caminhoneiro Petrobras", desc: "Entregas de Gasolina e Diesel a partir da Petrobras para o País!", lvl: 12, img: "pretobras.jpg" }
     ];
 
-    // A função agora pede Nome, CPF e CLT.
-    function init(nome, cpf, clt) {
+    // MÁGICA 1: O HTML AVISA O SAMP QUE ESTÁ PRONTO PARA RECEBER OS DADOS
+    var esperaPlugin = setInterval(function() {
+        if(window.geckoju) {
+            window.geckoju.send("carregar_dados_agencia");
+            clearInterval(esperaPlugin);
+        }
+    }, 100);
+
+    // MÁGICA 2: A FUNÇÃO QUE O SAMP VAI CHAMAR (Igual a SetarDadosPrefeitura)
+    window.SetarDadosAgencia = function(nome, cpf, clt) {
+        let levelEstatico = 1; 
         
-        let levelEstatico = 1; // DEIXEI O LEVEL ESTÁTICO AQUI COMO PEDIU!
-        
-        // Trata os textos caso o cara não tenha documento
         let displayCpf = (!cpf || cpf === "Nenhum") ? "Nenhum" : cpf;
         let displayClt = (!clt || clt === "Nao Assinada" || clt === "Nenhum") ? "Nenhuma" : clt;
 
-        // Atualiza a tela
         document.getElementById('player-name').innerText = nome.toUpperCase();
         document.getElementById('player-docs').innerText = `CPF: ${displayCpf} | CLT: ${displayClt}`;
         document.getElementById('player-lvl').innerText = `NÍVEL: ${levelEstatico}`;
@@ -230,13 +231,10 @@
                 </div>
             `;
         });
-    }
+    };
 
     function chooseJob(id) { if(window.geckoju) window.geckoju.send("job_" + id); }
     function closeUI() { if(window.geckoju) window.geckoju.send("job_close"); }
-
-    // Simulação para testar no navegador:
-    init("Diego", "123.456.789-10", "15987-MG"); 
 </script>
 </body>
 </html>
