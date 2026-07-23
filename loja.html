@@ -29,82 +29,82 @@
 
         .fade-in { animation: fadeSlideIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
 
-        /* ================= PAINEL ESQUERDO (PRINCIPAL) ================= */
+        /* ================= PAINEL ESQUERDO (OTIMIZADO PARA MOBILE) ================= */
         .left-panel {
-            width: 420px;
+            width: 300px;
             height: 100vh;
-            background: linear-gradient(90deg, rgba(10, 10, 15, 0.95) 0%, rgba(10, 10, 15, 0.6) 100%);
+            background: linear-gradient(90deg, rgba(10, 10, 15, 0.95) 0%, rgba(10, 10, 15, 0.75) 100%);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
-            padding: 40px 30px;
+            padding: 20px 15px;
             display: flex;
             flex-direction: column;
-            border-right: 1px solid rgba(255, 193, 7, 0.1);
+            border-right: 1px solid rgba(255, 193, 7, 0.2);
         }
 
         .sub-header {
-            font-size: 10px;
+            font-size: 9px;
             color: #aaa;
             letter-spacing: 1px;
             text-transform: uppercase;
-            margin-bottom: -5px;
+            margin-bottom: -2px;
         }
 
         .main-header {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 5px;
+            gap: 8px;
+            margin-bottom: 4px;
         }
 
         .main-header h1 {
-            font-size: 38px;
+            font-size: 24px;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1px;
-            text-shadow: 0 0 15px rgba(255, 193, 7, 0.3);
+            text-shadow: 0 0 10px rgba(255, 193, 7, 0.3);
         }
 
         .decorative-lines {
             display: flex;
-            gap: 15px;
-            margin-bottom: 30px;
+            gap: 10px;
+            margin-bottom: 20px;
             align-items: center;
         }
         .line { height: 2px; background: #FFC107; border-radius: 2px; }
-        .line.long { width: 120px; box-shadow: 0 0 8px #FFC107; }
-        .line.short { width: 30px; opacity: 0.5; }
+        .line.long { width: 80px; box-shadow: 0 0 6px #FFC107; }
+        .line.short { width: 20px; opacity: 0.5; }
 
         /* AREA DE ROLAGEM DE ITENS */
         .items-scroll-area {
             flex: 1;
             overflow-y: auto;
-            padding-right: 10px;
+            padding-right: 5px;
             display: flex;
             flex-direction: column;
-            gap: 25px;
+            gap: 15px;
         }
-        .items-scroll-area::-webkit-scrollbar { width: 4px; }
-        .items-scroll-area::-webkit-scrollbar-thumb { background: rgba(255, 193, 7, 0.3); border-radius: 4px; }
+        .items-scroll-area::-webkit-scrollbar { width: 3px; }
+        .items-scroll-area::-webkit-scrollbar-thumb { background: rgba(255, 193, 7, 0.4); border-radius: 3px; }
 
         /* LINHA DO ITEM */
         .item-row h3 {
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 600;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             color: #ddd;
         }
 
         .selectors-container {
             display: flex;
-            gap: 20px;
+            gap: 10px;
         }
         .selector-box { flex: 1; }
         .selector-label {
-            font-size: 9px;
+            font-size: 8px;
             color: #777;
             text-transform: uppercase;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
             display: block;
             font-weight: 800;
         }
@@ -115,43 +115,43 @@
             justify-content: space-between;
             background: rgba(20, 20, 30, 0.8);
             border: 1px solid rgba(255, 193, 7, 0.5);
-            border-radius: 25px;
-            padding: 6px 15px;
+            border-radius: 20px;
+            padding: 4px 10px;
             transition: 0.3s;
         }
         .pill-selector:hover {
-            box-shadow: 0 0 15px rgba(255, 193, 7, 0.2);
+            box-shadow: 0 0 12px rgba(255, 193, 7, 0.2);
             background: rgba(255, 193, 7, 0.05);
         }
         .pill-selector button {
             background: none;
             border: none;
             color: #FFC107;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
             cursor: pointer;
             transition: 0.2s;
-            padding: 0 5px;
+            padding: 0 4px;
         }
         .pill-selector button:hover { color: #fff; transform: scale(1.2); }
         .pill-selector span {
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 800;
             color: #fff;
-            min-width: 20px;
+            min-width: 15px;
             text-align: center;
         }
 
         /* CONTROLES INFERIORES */
         .bottom-controls {
-            margin-top: 20px;
-            padding-top: 20px;
+            margin-top: 15px;
+            padding-top: 15px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .toggle-row { display: flex; gap: 15px; margin-bottom: 20px; }
+        .toggle-row { display: flex; gap: 10px; margin-bottom: 12px; }
         .toggle-btn {
-            width: 35px;
-            height: 35px;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.1);
             border: none;
@@ -161,30 +161,30 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 12px;
         }
         .toggle-btn.active {
             background: #FFC107;
             color: #000;
-            box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+            box-shadow: 0 0 8px rgba(255, 193, 7, 0.5);
         }
-        .slider-container { margin-bottom: 15px; }
+        .slider-container { margin-bottom: 10px; }
         .slider-container input[type="range"] {
             width: 100%;
             appearance: none;
-            height: 4px;
+            height: 3px;
             background: rgba(255, 255, 255, 0.2);
             border-radius: 2px;
             outline: none;
         }
         .slider-container input[type="range"]::-webkit-slider-thumb {
             appearance: none;
-            width: 14px;
-            height: 14px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
             background: #FFC107;
             cursor: pointer;
-            box-shadow: 0 0 8px rgba(255, 193, 7, 0.8);
+            box-shadow: 0 0 6px rgba(255, 193, 7, 0.8);
         }
 
         /* ================= LADO DIREITO ================= */
@@ -196,12 +196,12 @@
         /* Barra de Categorias Curvada */
         .category-sidebar {
             position: absolute;
-            right: 60px;
+            right: 20px;
             top: 50%;
             transform: translateY(-50%);
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 15px;
             animation: fadeInRight 0.8s ease forwards;
         }
         .category-sidebar::before {
@@ -209,17 +209,17 @@
             position: absolute;
             top: 10%;
             bottom: 10%;
-            right: 25px;
+            right: 20px;
             width: 2px;
             background-image: linear-gradient(to bottom, transparent 50%, rgba(255,193,7,0.3) 50%);
-            background-size: 2px 15px;
+            background-size: 2px 12px;
             z-index: -1;
             border-radius: 50%;
         }
 
         .cat-icon {
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             background: rgba(20, 20, 25, 0.9);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -227,41 +227,41 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 16px;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .cat-icon:hover { color: #fff; border-color: #FFC107; transform: scale(1.1) translateX(-5px); }
+        .cat-icon:hover { color: #fff; border-color: #FFC107; transform: scale(1.1) translateX(-3px); }
         .cat-icon.active {
             background: transparent;
             border: 2px solid #FFC107;
             color: #FFC107;
-            box-shadow: 0 0 20px rgba(255, 193, 7, 0.4);
-            transform: scale(1.15) translateX(-10px);
+            box-shadow: 0 0 15px rgba(255, 193, 7, 0.4);
+            transform: scale(1.15) translateX(-6px);
         }
 
         .action-buttons {
             position: absolute;
-            bottom: 40px;
-            right: 140px;
+            bottom: 20px;
+            right: 80px;
             display: flex;
-            gap: 15px;
+            gap: 10px;
         }
         .btn-action {
             background: rgba(20, 20, 25, 0.8);
             border: 1px solid rgba(255, 193, 7, 0.5);
             color: #FFC107;
-            padding: 10px 25px;
-            border-radius: 20px;
+            padding: 8px 18px;
+            border-radius: 15px;
             font-weight: bold;
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
             cursor: pointer;
             transition: 0.3s;
         }
-        .btn-action:hover { background: #FFC107; color: #000; box-shadow: 0 0 15px rgba(255, 193, 7, 0.4); }
+        .btn-action:hover { background: #FFC107; color: #000; box-shadow: 0 0 12px rgba(255, 193, 7, 0.4); }
         .btn-cancel { border-color: #ff4444; color: #ff4444; }
-        .btn-cancel:hover { background: #ff4444; color: #fff; box-shadow: 0 0 15px rgba(255, 68, 68, 0.4); }
+        .btn-cancel:hover { background: #ff4444; color: #fff; box-shadow: 0 0 12px rgba(255, 68, 68, 0.4); }
 
     </style>
 </head>
@@ -279,7 +279,7 @@
             <div class="line short"></div>
         </div>
 
-        <!-- Área de Itens (Sem botões visíveis de seleção de gênero/pele) -->
+        <!-- Área de Itens -->
         <div class="items-scroll-area" id="items-container"></div>
 
         <div class="bottom-controls">
@@ -316,7 +316,7 @@
     </div>
 
     <script>
-        // BANCO DE DADOS COMPLETO E SEPARADO
+        // BANCO DE DADOS COMPLETO E SEPARADO[cite: 11]
         const bancoDeRoupas = {
             "masculino": {
                 "cabeca": {
@@ -463,17 +463,15 @@
             }
         };
 
-        // ESTADOS RECEBIDOS DE FORMA INVISÍVEL PELO SCRIPT DO JOGO
-        let generoAtual = 'masculino'; // Padrão caso não venha nada
-        let peleAtual = 'branca';     // Padrão caso não venha nada
+        let generoAtual = 'masculino';
+        let peleAtual = 'branca';
         let catAtual = 'camisas';
         let selecoes = {}; 
 
-        // FUNÇÃO QUE O JOGO CHAMA AO ABRIR A LOJA (Ex: "masculino", "negra")
         function definirIdentidadePlayer(genero, pele) {
             if (genero) generoAtual = genero.toLowerCase();
             if (pele) peleAtual = pele.toLowerCase();
-            selecoes = {}; // Reseta seleções ao trocar o perfil base
+            selecoes = {}; 
             renderizarItens();
         }
 
@@ -488,7 +486,6 @@
         function renderizarItens() {
             const container = document.getElementById('items-container');
             
-            // Segurança caso venha um gênero/categoria inválido
             if (!bancoDeRoupas[generoAtual] || !bancoDeRoupas[generoAtual][catAtual]) return;
 
             const dados = bancoDeRoupas[generoAtual][catAtual];
@@ -593,7 +590,6 @@
             }
         }
 
-        // Inicialização padrão (caso aberto no navegador direto para teste)
         window.onload = () => {
             definirIdentidadePlayer('masculino', 'branca');
         };
