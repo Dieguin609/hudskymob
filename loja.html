@@ -305,134 +305,6 @@
     </div>
 
     <script>
-        const bancoDeRoupas = {
-            "masculino": {
-                "cabeca": {
-                    titulo: "CABEÇA / BARBAS",
-                    slotId: 1,
-                    opcoes: [
-                        {
-                            nome: "Estilos de Barba",
-                            modelos: ["cs_head"],
-                            texturas: {
-                                "branca": ["goatee", "bald", "player_face", "hairpink", "baldbeard", "beard"],
-                                "negra": ["Baldbeard", "afroblond", "hairred", "hairblond", "slope", "wedge"]
-                            }
-                        }
-                    ]
-                },
-                "camisas": {
-                    titulo: "TORSO / CAMISAS",
-                    slotId: 0,
-                    opcoes: [
-                        {
-                            nome: "[0] Peito Sem Roupa",
-                            modelos: ["torso"],
-                            texturas: { "branca": ["torso"], "negra": ["tash"] }
-                        },
-                        {
-                            nome: "Blusinhas e Moletons",
-                            modelos: ["bbjack", "baseball", "gimptorso", "hoodjack", "shirta"],
-                            texturas: {
-                                "branca": ["shirtbplaid", "letter", "bballjackrstar", "tshirtmaddgrey"],
-                                "negra": ["bbjersey", "sleevtbrown", "bbjackrim", "tshirtproblk"]
-                            }
-                        }
-                    ]
-                },
-                "calcas": {
-                    titulo: "SHORTS / CALÇAS",
-                    slotId: 3, 
-                    opcoes: [
-                        {
-                            nome: "Cueca e Chinelo",
-                            modelos: ["legs"],
-                            texturas: { "branca": ["legsboxerswht"], "negra": ["country"] }
-                        }
-                    ]
-                },
-                "sapatos": {
-                    titulo: "PÉS / SAPATOS",
-                    slotId: 4, 
-                    opcoes: [
-                        {
-                            nome: "Short e Tênis",
-                            modelos: ["chinos"],
-                            texturas: { "branca": ["legsboxerswht"], "negra": ["country"] }
-                        }
-                    ]
-                },
-                "maos": {
-                    titulo: "MÃOS / LUVAS",
-                    slotId: 14,
-                    opcoes: [
-                        {
-                            nome: "[0] Mão Masculina Padrão",
-                            modelos: ["gimphands"],
-                            texturas: { "branca": ["torso"], "negra": ["tash"] }
-                        }
-                    ]
-                }
-            },
-            "feminino": {
-                "cabeca": {
-                    titulo: "CABEÇA / CABELOS",
-                    slotId: 1,
-                    opcoes: [
-                        {
-                            nome: "Cabelos Femininos",
-                            modelos: ["afro", "cs_elvishair"],
-                            texturas: { "branca": ["afro"], "negra": ["afrobeard"] }
-                        }
-                    ]
-                },
-                "camisas": {
-                    titulo: "TORSO / CAMISAS",
-                    slotId: 0,
-                    opcoes: [
-                        {
-                            nome: "[0] Biquíni Simples",
-                            modelos: ["baskball"],
-                            texturas: { "branca": ["Baskballloc"], "negra": ["vest_vest"] }
-                        }
-                    ]
-                },
-                "calcas": {
-                    titulo: "CALÇAS / LEGS",
-                    slotId: 3,
-                    opcoes: [
-                        {
-                            nome: "Leg Preta Simples",
-                            modelos: ["boxingshort", "shorts"],
-                            texturas: { "branca": ["boater"], "negra": ["boater"] }
-                        }
-                    ]
-                },
-                "sapatos": {
-                    titulo: "PÉS / SAPATOS",
-                    slotId: 4,
-                    opcoes: [
-                        {
-                            nome: "[0] Pés Descalços",
-                            modelos: ["feet"],
-                            texturas: { "branca": ["feet"], "negra": ["torso"] }
-                        }
-                    ]
-                },
-                "maos": {
-                    titulo: "MÃOS / LUVAS",
-                    slotId: 14,
-                    opcoes: [
-                        {
-                            nome: "[0] Mão Feminina",
-                            modelos: ["hands"],
-                            texturas: { "branca": ["Baskballloc"], "negra": ["vest_vest"] }
-                        }
-                    ]
-                }
-            }
-        };
-
         let generoAtual = 'masculino';
         let peleAtual = 'branca';
         let catAtual = 'camisas';
@@ -516,7 +388,6 @@
         }
 
         function enviarPreview(cat, idxItem) {
-            // Envia limpo: roupa | genero | categoria | indiceDoItem
             if (window.geckoju) {
                 window.geckoju.send(`roupa|${generoAtual}|${cat}|${idxItem}`);
             }
@@ -532,6 +403,21 @@
                 window.geckoju.send("fechar_loja");
             }
         }
+
+        // SEGURANÇA: Se o Pawn demorar mais de 400ms para enviar os dados, 
+        // o HTML inicia sozinho como masculino/branca para nunca travar em "CARREGANDO..."
+        let carregouDados = false;
+        const originalDefinir = window.definirIdentidadePlayer;
+        window.definirIdentidadePlayer = function(g, p) {
+            carregouDados = true;
+            originalDefinir(g, p);
+        };
+
+        setTimeout(() => {
+            if (!carregouDados) {
+                definirIdentidadePlayer('masculino', 'branca');
+            }
+        }, 400);
     </script>
 </body>
 </html>
