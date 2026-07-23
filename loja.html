@@ -516,17 +516,9 @@
         }
 
         function enviarPreview(cat, idxItem) {
-            let keyId = `${generoAtual}_${cat}_${idxItem}`;
-            let item = bancoDeRoupas[generoAtual][cat].opcoes[idxItem];
-            let slot = bancoDeRoupas[generoAtual][cat].slotId;
-            
-            let modeloSelecionado = item.modelos[selecoes[keyId].mod] || "";
-            let listaTexturas = item.texturas[peleAtual] || item.texturas["branca"];
-            let texturaSelecionada = listaTexturas[selecoes[keyId].tex] || "";
-
-            // EXATAMENTE PURA APENAS GECKOJU MOBILE: comprar_roupa|slot|modelo|textura
+            // Envia limpo: roupa | genero | categoria | indiceDoItem
             if (window.geckoju) {
-                window.geckoju.send(`comprar_roupa|${slot}|${modeloSelecionado}|${texturaSelecionada}`);
+                window.geckoju.send(`roupa|${generoAtual}|${cat}|${idxItem}`);
             }
         }
 
@@ -540,10 +532,6 @@
                 window.geckoju.send("fechar_loja");
             }
         }
-
-        window.onload = () => {
-            definirIdentidadePlayer('masculino', 'branca');
-        };
     </script>
 </body>
 </html>
