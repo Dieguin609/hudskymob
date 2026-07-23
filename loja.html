@@ -310,6 +310,41 @@
         let catAtual = 'camisas';
         let selecoes = {}; 
 
+        // 1. VOCÊ PRECISA DESTE BANCO DE DADOS PARA FUNCIONAR
+        // Aqui você define os nomes exatos dos arquivos .txd e .dff das roupas e o SLOT do ClothSync
+        const bancoDeRoupas = {
+            masculino: {
+                camisas: {
+                    titulo: "CAMISAS E TORSOS",
+                    slotId: 0, // Slot 0 = Torso (Exemplo. Ajuste para o slot correto da sua base)
+                    opcoes: [
+                        {
+                            nome: "Camisa Social",
+                            modelos: ["social_dff_1", "social_dff_2"], // Nomes dos arquivos .dff
+                            texturas: {
+                                branca: ["social_branca_tex", "social_cinza_tex"], // Nomes dos arquivos .txd para pele branca
+                                negra: ["social_negra_tex", "social_preta_tex"] // Nomes dos arquivos .txd para pele negra
+                            }
+                        },
+                        {
+                            nome: "Jaqueta de Couro",
+                            modelos: ["jaqueta_dff_1"],
+                            texturas: {
+                                branca: ["jaqueta_tex_1", "jaqueta_tex_2"],
+                                negra: ["jaqueta_tex_1", "jaqueta_tex_2"]
+                            }
+                        }
+                    ]
+                },
+                // Exemplo de outra categoria (Crie as outras seguindo essa mesma lógica)
+                calcas: {
+                    titulo: "CALÇAS E SHORTS",
+                    slotId: 1, // Slot 1 = Calças
+                    opcoes: [] 
+                }
+            }
+        };
+
         function definirIdentidadePlayer(genero, pele) {
             if (genero) generoAtual = genero.toLowerCase();
             if (pele) peleAtual = pele.toLowerCase();
@@ -327,6 +362,7 @@
 
         function renderizarItens() {
             const container = document.getElementById('items-container');
+            // Proteção caso a categoria não exista no bancoDeRoupas
             if (!bancoDeRoupas[generoAtual] || !bancoDeRoupas[generoAtual][catAtual]) return;
 
             const dados = bancoDeRoupas[generoAtual][catAtual];
@@ -387,9 +423,27 @@
             enviarPreview(catAtual, idxItem);
         }
 
+        // 2. FUNÇÃO CORRIGIDA PARA BATER COM O PAWN
         function enviarPreview(cat, idxItem) {
+            let keyId = `${generoAtual}_${cat}_${idxItem}`;
+            
+            // Verifica se a seleção e o banco existem
+            if(!selecoes[keyId] || !bancoDeRoupas[generoAtual] || !bancoDeRoupas[generoAtual][cat]) return;
+
+            let selModIndex = selecoes[keyId].mod;
+            let selTexIndex = selecoes[keyId].tex;
+
+            let dadosCat = bancoDeRoupas[generoAtual][cat];
+            let item = dadosCat.opcoes[idxItem];
+
+            // Pega o slot da categoria e os nomes exatos do DFF e TXD
+            let slot = dadosCat.slotId;
+            let dffNome = item.modelos[selModIndex];
+            let txdNome = item.texturas[peleAtual][selTexIndex];
+
             if (window.geckoju) {
-                window.geckoju.send(`roupa|${generoAtual}|${cat}|${idxItem}`);
+                // Envia no formato exato que o servidor espera: comprar_roupa|slot|txd|dff
+                window.geckoju.send(`comprar_roupa|${slot}|${txdNome}|${dffNome}`);
             }
         }
 
@@ -404,8 +458,6 @@
             }
         }
 
-        // SEGURANÇA: Se o Pawn demorar mais de 400ms para enviar os dados, 
-        // o HTML inicia sozinho como masculino/branca para nunca travar em "CARREGANDO..."
         let carregouDados = false;
         const originalDefinir = window.definirIdentidadePlayer;
         window.definirIdentidadePlayer = function(g, p) {
