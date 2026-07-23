@@ -563,17 +563,18 @@
             let slot = bancoDeRoupas[generoAtual][cat].slotId;
             
             let modeloSelecionado = item.modelos[selecoes[keyId].mod] || "";
-            
-            // Tratamento blindado para garantir que a textura nunca venha vazia
             let listaTexturas = item.texturas[peleAtual] || item.texturas["branca"];
             let texturaSelecionada = listaTexturas[selecoes[keyId].tex] || "";
 
+            // ORDEM EXATA: Comando | Slot | Modelo (DFF) | Textura (TXD)
+            let comando = `comprar_roupa|${slot}|${modeloSelecionado}|${texturaSelecionada}`;
+
             if (window.geckoju) {
-                window.geckoju.send(`comprar_roupa|${slot}|${texturaSelecionada}|${modeloSelecionado}`);
+                window.geckoju.send(comando);
             } else if (window.cef) {
-                cef.emit("comprar_roupa", slot, texturaSelecionada, modeloSelecionado);
+                cef.emit("comprar_roupa", slot, modeloSelecionado, texturaSelecionada);
             } else {
-                console.log(`[Preview] Gênero: ${generoAtual} | Pele: ${peleAtual} | Slot: ${slot} | DFF: ${modeloSelecionado} | TXD: ${texturaSelecionada}`);
+                console.log(`[Preview] Slot: ${slot} | DFF: ${modeloSelecionado} | TXD: ${texturaSelecionada}`);
             }
         }
 
