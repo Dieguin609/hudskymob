@@ -17,7 +17,6 @@
             color: #fff;
         }
 
-        /* ANIMAÇÕES */
         @keyframes fadeSlideIn {
             0% { opacity: 0; transform: translateX(-30px); }
             100% { opacity: 1; transform: translateX(0); }
@@ -29,7 +28,6 @@
 
         .fade-in { animation: fadeSlideIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
 
-        /* ================= PAINEL ESQUERDO (OTIMIZADO PARA MOBILE) ================= */
         .left-panel {
             width: 300px;
             height: 100vh;
@@ -75,7 +73,6 @@
         .line.long { width: 80px; box-shadow: 0 0 6px #FFC107; }
         .line.short { width: 20px; opacity: 0.5; }
 
-        /* AREA DE ROLAGEM DE ITENS */
         .items-scroll-area {
             flex: 1;
             overflow-y: auto;
@@ -87,7 +84,6 @@
         .items-scroll-area::-webkit-scrollbar { width: 3px; }
         .items-scroll-area::-webkit-scrollbar-thumb { background: rgba(255, 193, 7, 0.4); border-radius: 3px; }
 
-        /* LINHA DO ITEM */
         .item-row h3 {
             font-size: 12px;
             font-weight: 600;
@@ -142,7 +138,6 @@
             text-align: center;
         }
 
-        /* CONTROLES INFERIORES */
         .bottom-controls {
             margin-top: 15px;
             padding-top: 15px;
@@ -187,13 +182,11 @@
             box-shadow: 0 0 6px rgba(255, 193, 7, 0.8);
         }
 
-        /* ================= LADO DIREITO ================= */
         .right-area {
             flex: 1;
             position: relative;
         }
 
-        /* Barra de Categorias Curvada */
         .category-sidebar {
             position: absolute;
             right: 20px;
@@ -262,12 +255,10 @@
         .btn-action:hover { background: #FFC107; color: #000; box-shadow: 0 0 12px rgba(255, 193, 7, 0.4); }
         .btn-cancel { border-color: #ff4444; color: #ff4444; }
         .btn-cancel:hover { background: #ff4444; color: #fff; box-shadow: 0 0 12px rgba(255, 68, 68, 0.4); }
-
     </style>
 </head>
 <body>
 
-    <!-- PAINEL ESQUERDO -->
     <div class="left-panel fade-in">
         <span class="sub-header">create a UNIQUE LOOK</span>
         <div class="main-header">
@@ -279,7 +270,6 @@
             <div class="line short"></div>
         </div>
 
-        <!-- Área de Itens -->
         <div class="items-scroll-area" id="items-container"></div>
 
         <div class="bottom-controls">
@@ -299,7 +289,6 @@
         </div>
     </div>
 
-    <!-- PAINEL DIREITO -->
     <div class="right-area">
         <div class="category-sidebar">
             <div class="cat-icon" title="Cabeça / Chapéus / Barba" onclick="mudarCategoria('cabeca', this)">🧢</div>
@@ -316,7 +305,6 @@
     </div>
 
     <script>
-        // BANCO DE DADOS DE ROUPAS COM OS SLOTS CORrigidos (Mãos ajustado para o slot 14 correto do ClothSync)
         const bancoDeRoupas = {
             "masculino": {
                 "cabeca": {
@@ -360,11 +348,6 @@
                             nome: "Cueca e Chinelo",
                             modelos: ["legs"],
                             texturas: { "branca": ["legsboxerswht"], "negra": ["country"] }
-                        },
-                        {
-                            nome: "Short e Tênis",
-                            modelos: ["chinos"],
-                            texturas: { "branca": ["legsboxerswht"], "negra": ["country"] }
                         }
                     ]
                 },
@@ -372,11 +355,6 @@
                     titulo: "PÉS / SAPATOS",
                     slotId: 4, 
                     opcoes: [
-                        {
-                            nome: "Cueca e Chinelo",
-                            modelos: ["legs"],
-                            texturas: { "branca": ["legsboxerswht"], "negra": ["country"] }
-                        },
                         {
                             nome: "Short e Tênis",
                             modelos: ["chinos"],
@@ -386,7 +364,7 @@
                 },
                 "maos": {
                     titulo: "MÃOS / LUVAS",
-                    slotId: 14, // CORRIGIDO PARA O SLOT 14 DO CLOTHSYNC
+                    slotId: 14,
                     opcoes: [
                         {
                             nome: "[0] Mão Masculina Padrão",
@@ -416,14 +394,6 @@
                             nome: "[0] Biquíni Simples",
                             modelos: ["baskball"],
                             texturas: { "branca": ["Baskballloc"], "negra": ["vest_vest"] }
-                        },
-                        {
-                            nome: "Blusinhas Variadas",
-                            modelos: ["sleevt", "wcoat", "chucks", "coach", "denim"],
-                            texturas: {
-                                "branca": ["shirtbplaid", "letter", "bballjackrstar", "tshirtmaddgrey"],
-                                "negra": ["bbjersey", "sleevtbrown", "bbjackrim", "tshirtproblk"]
-                            }
                         }
                     ]
                 },
@@ -451,7 +421,7 @@
                 },
                 "maos": {
                     titulo: "MÃOS / LUVAS",
-                    slotId: 14, // CORRIGIDO PARA O SLOT 14 DO CLOTHSYNC
+                    slotId: 14,
                     opcoes: [
                         {
                             nome: "[0] Mão Feminina",
@@ -485,23 +455,14 @@
 
         function renderizarItens() {
             const container = document.getElementById('items-container');
-            
             if (!bancoDeRoupas[generoAtual] || !bancoDeRoupas[generoAtual][catAtual]) return;
 
             const dados = bancoDeRoupas[generoAtual][catAtual];
-            
             document.getElementById('menu-title').innerText = dados.titulo;
             container.style.opacity = '0';
             
             setTimeout(() => {
                 container.innerHTML = '';
-                
-                if (!dados.opcoes || dados.opcoes.length === 0) {
-                    container.innerHTML = '<h3 style="color:#aaa; text-align:center; margin-top:20px;">Nenhum item disponível</h3>';
-                    container.style.opacity = '1';
-                    return;
-                }
-
                 dados.opcoes.forEach((item, index) => {
                     let keyId = `${generoAtual}_${catAtual}_${index}`;
                     if (!selecoes[keyId]) selecoes[keyId] = { mod: 0, tex: 0 };
@@ -512,7 +473,7 @@
                     let selMod = selecoes[keyId].mod;
                     let selTex = selecoes[keyId].tex;
 
-                    let html = `
+                    container.innerHTML += `
                         <div class="item-row fade-in" style="animation-delay: ${index * 0.1}s">
                             <h3>${item.nome}</h3>
                             <div class="selectors-container">
@@ -535,9 +496,7 @@
                             </div>
                         </div>
                     `;
-                    container.innerHTML += html;
                 });
-                
                 container.style.opacity = '1';
                 if (dados.opcoes.length > 0) enviarPreview(catAtual, 0); 
             }, 250);
@@ -549,7 +508,6 @@
             if (!arrayAlvo || arrayAlvo.length === 0) return; 
 
             selecoes[keyId][tipo] += direcao;
-            
             if (selecoes[keyId][tipo] < 0) selecoes[keyId][tipo] = arrayAlvo.length - 1;
             if (selecoes[keyId][tipo] >= arrayAlvo.length) selecoes[keyId][tipo] = 0;
             
@@ -566,31 +524,20 @@
             let listaTexturas = item.texturas[peleAtual] || item.texturas["branca"];
             let texturaSelecionada = listaTexturas[selecoes[keyId].tex] || "";
 
-            // ORDEM EXATA: Comando | Slot | Modelo (DFF) | Textura (TXD)
-            let comando = `comprar_roupa|${slot}|${modeloSelecionado}|${texturaSelecionada}`;
-
+            // EXATAMENTE PURA APENAS GECKOJU MOBILE: comprar_roupa|slot|modelo|textura
             if (window.geckoju) {
-                window.geckoju.send(comando);
-            } else if (window.cef) {
-                cef.emit("comprar_roupa", slot, modeloSelecionado, texturaSelecionada);
-            } else {
-                console.log(`[Preview] Slot: ${slot} | DFF: ${modeloSelecionado} | TXD: ${texturaSelecionada}`);
+                window.geckoju.send(`comprar_roupa|${slot}|${modeloSelecionado}|${texturaSelecionada}`);
             }
         }
 
         function finalizarLoja() {
             if (window.geckoju) window.geckoju.send("fechar_loja");
-            if (window.cef) cef.emit("fechar_loja");
         }
 
         function fecharLoja() {
             if (window.geckoju) {
                 window.geckoju.send("resetar_roupas");
                 window.geckoju.send("fechar_loja");
-            }
-            if (window.cef) {
-                cef.emit("resetar_roupas");
-                cef.emit("fechar_loja");
             }
         }
 
