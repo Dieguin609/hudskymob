@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyPixel - Store UI</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; user-select: none; }
+        
+        body { 
+            background: transparent; 
+            height: 100vh; 
+            overflow: hidden; 
+            display: flex; 
+            color: #fff;
+        }
+
+        /* ANIMAÇÕES */
+        @keyframes fadeSlideIn {
+            0% { opacity: 0; transform: translateX(-30px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes fadeInRight {
+            0% { opacity: 0; transform: translateX(30px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+
+        .fade-in { animation: fadeSlideIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+
+        /* ================= PAINEL ESQUERDO (PRINCIPAL) ================= */
+        .left-panel {
+            width: 420px;
+            height: 100vh;
+            background: linear-gradient(90deg, rgba(10, 10, 15, 0.95) 0%, rgba(10, 10, 15, 0.6) 100%);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid rgba(255, 193, 7, 0.1);
+        }
+
+        .sub-header {
+            font-size: 10px;
+            color: #aaa;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: -5px;
+        }
+
+        .main-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+
+        .main-header h1 {
+            font-size: 38px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 0 15px rgba(255, 193, 7, 0.3);
+        }
+
+        .decorative-lines {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            align-items: center;
+        }
+        .line { height: 2px; background: #FFC107; border-radius: 2px; }
+        .line.long { width: 120px; box-shadow: 0 0 8px #FFC107; }
+        .line.short { width: 30px; opacity: 0.5; }
+
+        /* AREA DE ROLAGEM DE ITENS */
+        .items-scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        .items-scroll-area::-webkit-scrollbar { width: 4px; }
+        .items-scroll-area::-webkit-scrollbar-thumb { background: rgba(255, 193, 7, 0.3); border-radius: 4px; }
+
+        /* LINHA DO ITEM */
+        .item-row h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #ddd;
+        }
+
+        .selectors-container {
+            display: flex;
+            gap: 20px;
+        }
+        .selector-box { flex: 1; }
+        .selector-label {
+            font-size: 9px;
+            color: #777;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            display: block;
+            font-weight: 800;
+        }
+
+        .pill-selector {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(20, 20, 30, 0.8);
+            border: 1px solid rgba(255, 193, 7, 0.5);
+            border-radius: 25px;
+            padding: 6px 15px;
+            transition: 0.3s;
+        }
+        .pill-selector:hover {
+            box-shadow: 0 0 15px rgba(255, 193, 7, 0.2);
+            background: rgba(255, 193, 7, 0.05);
+        }
+        .pill-selector button {
+            background: none;
+            border: none;
+            color: #FFC107;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            padding: 0 5px;
+        }
+        .pill-selector button:hover { color: #fff; transform: scale(1.2); }
+        .pill-selector span {
+            font-size: 14px;
+            font-weight: 800;
+            color: #fff;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        /* CONTROLES INFERIORES */
+        .bottom-controls {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .toggle-row { display: flex; gap: 15px; margin-bottom: 20px; }
+        .toggle-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        .toggle-btn.active {
+            background: #FFC107;
+            color: #000;
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+        }
+        .slider-container { margin-bottom: 15px; }
+        .slider-container input[type="range"] {
+            width: 100%;
+            appearance: none;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            outline: none;
+        }
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #FFC107;
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(255, 193, 7, 0.8);
+        }
+
+        /* ================= LADO DIREITO ================= */
+        .right-area {
+            flex: 1;
+            position: relative;
+        }
+
+        /* Barra de Categorias Curvada */
+        .category-sidebar {
+            position: absolute;
+            right: 60px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            animation: fadeInRight 0.8s ease forwards;
+        }
+        .category-sidebar::before {
+            content: '';
+            position: absolute;
+            top: 10%;
+            bottom: 10%;
+            right: 25px;
+            width: 2px;
+            background-image: linear-gradient(to bottom, transparent 50%, rgba(255,193,7,0.3) 50%);
+            background-size: 2px 15px;
+            z-index: -1;
+            border-radius: 50%;
+        }
+
+        .cat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(20, 20, 25, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #888;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .cat-icon:hover { color: #fff; border-color: #FFC107; transform: scale(1.1) translateX(-5px); }
+        .cat-icon.active {
+            background: transparent;
+            border: 2px solid #FFC107;
+            color: #FFC107;
+            box-shadow: 0 0 20px rgba(255, 193, 7, 0.4);
+            transform: scale(1.15) translateX(-10px);
+        }
+
+        .action-buttons {
+            position: absolute;
+            bottom: 40px;
+            right: 140px;
+            display: flex;
+            gap: 15px;
+        }
+        .btn-action {
+            background: rgba(20, 20, 25, 0.8);
+            border: 1px solid rgba(255, 193, 7, 0.5);
+            color: #FFC107;
+            padding: 10px 25px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn-action:hover { background: #FFC107; color: #000; box-shadow: 0 0 15px rgba(255, 193, 7, 0.4); }
+        .btn-cancel { border-color: #ff4444; color: #ff4444; }
+        .btn-cancel:hover { background: #ff4444; color: #fff; box-shadow: 0 0 15px rgba(255, 68, 68, 0.4); }
+
+    </style>
+</head>
+<body>
+
+    <!-- PAINEL ESQUERDO -->
+    <div class="left-panel fade-in">
+        <span class="sub-header">create a UNIQUE LOOK</span>
+        <div class="main-header">
+            <h1 id="menu-title">CARREGANDO...</h1>
+        </div>
+        <div class="decorative-lines">
+            <div class="line long"></div>
+            <div class="line short"></div>
+            <div class="line short"></div>
+        </div>
+
+        <!-- Área de Itens (Sem botões visíveis de seleção de gênero/pele) -->
+        <div class="items-scroll-area" id="items-container"></div>
+
+        <div class="bottom-controls">
+            <span class="selector-label">Hide/Show (Preview)</span>
+            <div class="toggle-row">
+                <button class="toggle-btn active">👕</button>
+                <button class="toggle-btn">🕶️</button>
+                <button class="toggle-btn">🧢</button>
+            </div>
+            <span class="selector-label">Zoom In / Rotate</span>
+            <div class="slider-container">
+                <input type="range" min="0" max="100" value="50">
+            </div>
+            <div class="slider-container">
+                <input type="range" min="0" max="360" value="180">
+            </div>
+        </div>
+    </div>
+
+    <!-- PAINEL DIREITO -->
+    <div class="right-area">
+        <div class="category-sidebar">
+            <div class="cat-icon" title="Cabeça / Chapéus / Barba" onclick="mudarCategoria('cabeca', this)">🧢</div>
+            <div class="cat-icon active" title="Torsos / Camisas" onclick="mudarCategoria('camisas', this)">👕</div>
+            <div class="cat-icon" title="Calças / Shorts" onclick="mudarCategoria('calcas', this)">👖</div>
+            <div class="cat-icon" title="Mãos / Luvas" onclick="mudarCategoria('maos', this)">🖐️</div>
+            <div class="cat-icon" title="Sapatos / Pés" onclick="mudarCategoria('sapatos', this)">👟</div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn-action btn-cancel" onclick="fecharLoja()">Cancelar</button>
+            <button class="btn-action" onclick="finalizarLoja()">Confirmar Estilo</button>
+        </div>
+    </div>
+
+    <script>
+        // BANCO DE DADOS COMPLETO E SEPARADO
+        const bancoDeRoupas = {
+            "masculino": {
+                "cabeca": {
+                    titulo: "CABEÇA / BARBAS",
+                    slotId: 1,
+                    opcoes: [
+                        {
+                            nome: "Estilos de Barba",
+                            modelos: ["cs_head"],
+                            texturas: {
+                                "branca": ["goatee", "bald", "player_face", "hairpink", "baldbeard", "beard"],
+                                "negra": ["Baldbeard", "afroblond", "hairred", "hairblond", "slope", "wedge"]
+                            }
+                        }
+                    ]
+                },
+                "camisas": {
+                    titulo: "TORSO / CAMISAS",
+                    slotId: 0,
+                    opcoes: [
+                        {
+                            nome: "[0] Peito Sem Roupa",
+                            modelos: ["torso"],
+                            texturas: { "branca": ["torso"], "negra": ["tash"] }
+                        },
+                        {
+                            nome: "Blusinhas e Moletons",
+                            modelos: ["bbjack", "baseball", "gimptorso", "hoodjack", "shirta"],
+                            texturas: {
+                                "branca": ["shirtbplaid", "letter", "bballjackrstar", "tshirtmaddgrey"],
+                                "negra": ["bbjersey", "sleevtbrown", "bbjackrim", "tshirtproblk"]
+                            }
+                        }
+                    ]
+                },
+                "calcas": {
+                    titulo: "SHORTS / CALÇAS",
+                    slotId: 3, 
+                    opcoes: [
+                        {
+                            nome: "Cueca e Chinelo",
+                            modelos: ["legs"],
+                            texturas: { "branca": ["legsboxerswht"], "negra": ["country"] }
+                        },
+                        {
+                            nome: "Short e Tênis",
+                            modelos: ["chinos"],
+                            texturas: { "branca": ["legsboxerswht"], "negra": ["country"] }
+                        }
+                    ]
+                },
+                "sapatos": {
+                    titulo: "PÉS / SAPATOS",
+                    slotId: 4, 
+                    opcoes: [
+                        {
+                            nome: "Cueca e Chinelo",
+                            modelos: ["legs"],
+                            texturas: { "branca": ["legsboxerswht"], "negra": ["country"] }
+                        },
+                        {
+                            nome: "Short e Tênis",
+                            modelos: ["chinos"],
+                            texturas: { "branca": ["legsboxerswht"], "negra": ["country"] }
+                        }
+                    ]
+                },
+                "maos": {
+                    titulo: "MÃOS / LUVAS",
+                    slotId: 5,
+                    opcoes: [
+                        {
+                            nome: "[0] Mão Masculina Padrão",
+                            modelos: ["gimphands"],
+                            texturas: { "branca": ["torso"], "negra": ["tash"] }
+                        }
+                    ]
+                }
+            },
+            "feminino": {
+                "cabeca": {
+                    titulo: "CABEÇA / CABELOS",
+                    slotId: 1,
+                    opcoes: [
+                        {
+                            nome: "Cabelos Femininos",
+                            modelos: ["afro", "cs_elvishair"],
+                            texturas: { "branca": ["afro"], "negra": ["afrobeard"] }
+                        }
+                    ]
+                },
+                "camisas": {
+                    titulo: "TORSO / CAMISAS",
+                    slotId: 0,
+                    opcoes: [
+                        {
+                            nome: "[0] Biquíni Simples",
+                            modelos: ["baskball"],
+                            texturas: { "branca": ["Baskballloc"], "negra": ["vest_vest"] }
+                        },
+                        {
+                            nome: "Blusinhas Variadas",
+                            modelos: ["sleevt", "wcoat", "chucks", "coach", "denim"],
+                            texturas: {
+                                "branca": ["shirtbplaid", "letter", "bballjackrstar", "tshirtmaddgrey"],
+                                "negra": ["bbjersey", "sleevtbrown", "bbjackrim", "tshirtproblk"]
+                            }
+                        }
+                    ]
+                },
+                "calcas": {
+                    titulo: "CALÇAS / LEGS",
+                    slotId: 3,
+                    opcoes: [
+                        {
+                            nome: "Leg Preta Simples",
+                            modelos: ["boxingshort", "shorts"],
+                            texturas: { "branca": ["boater"], "negra": ["boater"] }
+                        }
+                    ]
+                },
+                "sapatos": {
+                    titulo: "PÉS / SAPATOS",
+                    slotId: 4,
+                    opcoes: [
+                        {
+                            nome: "[0] Pés Descalços",
+                            modelos: ["feet"],
+                            texturas: { "branca": ["feet"], "negra": ["torso"] }
+                        }
+                    ]
+                },
+                "maos": {
+                    titulo: "MÃOS / LUVAS",
+                    slotId: 5,
+                    opcoes: [
+                        {
+                            nome: "[0] Mão Feminina",
+                            modelos: ["hands"],
+                            texturas: { "branca": ["Baskballloc"], "negra": ["vest_vest"] }
+                        }
+                    ]
+                }
+            }
+        };
+
+        // ESTADOS RECEBIDOS DE FORMA INVISÍVEL PELO SCRIPT DO JOGO
+        let generoAtual = 'masculino'; // Padrão caso não venha nada
+        let peleAtual = 'branca';     // Padrão caso não venha nada
+        let catAtual = 'camisas';
+        let selecoes = {}; 
+
+        // FUNÇÃO QUE O JOGO CHAMA AO ABRIR A LOJA (Ex: "masculino", "negra")
+        function definirIdentidadePlayer(genero, pele) {
+            if (genero) generoAtual = genero.toLowerCase();
+            if (pele) peleAtual = pele.toLowerCase();
+            selecoes = {}; // Reseta seleções ao trocar o perfil base
+            renderizarItens();
+        }
+
+        function mudarCategoria(cat, elemento) {
+            if (catAtual === cat) return; 
+            catAtual = cat;
+            document.querySelectorAll('.cat-icon').forEach(el => el.classList.remove('active'));
+            elemento.classList.add('active');
+            renderizarItens();
+        }
+
+        function renderizarItens() {
+            const container = document.getElementById('items-container');
+            
+            // Segurança caso venha um gênero/categoria inválido
+            if (!bancoDeRoupas[generoAtual] || !bancoDeRoupas[generoAtual][catAtual]) return;
+
+            const dados = bancoDeRoupas[generoAtual][catAtual];
+            
+            document.getElementById('menu-title').innerText = dados.titulo;
+            container.style.opacity = '0';
+            
+            setTimeout(() => {
+                container.innerHTML = '';
+                
+                if (!dados.opcoes || dados.opcoes.length === 0) {
+                    container.innerHTML = '<h3 style="color:#aaa; text-align:center; margin-top:20px;">Nenhum item disponível</h3>';
+                    container.style.opacity = '1';
+                    return;
+                }
+
+                dados.opcoes.forEach((item, index) => {
+                    let keyId = `${generoAtual}_${catAtual}_${index}`;
+                    if (!selecoes[keyId]) selecoes[keyId] = { mod: 0, tex: 0 };
+                    
+                    let maxTex = item.texturas[peleAtual] ? item.texturas[peleAtual].length : 1;
+                    if (selecoes[keyId].tex >= maxTex) selecoes[keyId].tex = 0;
+
+                    let selMod = selecoes[keyId].mod;
+                    let selTex = selecoes[keyId].tex;
+
+                    let html = `
+                        <div class="item-row fade-in" style="animation-delay: ${index * 0.1}s">
+                            <h3>${item.nome}</h3>
+                            <div class="selectors-container">
+                                <div class="selector-box">
+                                    <span class="selector-label">MODELO</span>
+                                    <div class="pill-selector">
+                                        <button onclick="alterarValor('${keyId}', 'mod', -1, ${index})">❮</button>
+                                        <span id="val_mod_${keyId}">${selMod}</span>
+                                        <button onclick="alterarValor('${keyId}', 'mod', 1, ${index})">❯</button>
+                                    </div>
+                                </div>
+                                <div class="selector-box">
+                                    <span class="selector-label">TEXTURA</span>
+                                    <div class="pill-selector">
+                                        <button onclick="alterarValor('${keyId}', 'tex', -1, ${index})">❮</button>
+                                        <span id="val_tex_${keyId}">${selTex}</span>
+                                        <button onclick="alterarValor('${keyId}', 'tex', 1, ${index})">❯</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += html;
+                });
+                
+                container.style.opacity = '1';
+                if (dados.opcoes.length > 0) enviarPreview(catAtual, 0); 
+            }, 250);
+        }
+
+        function alterarValor(keyId, tipo, direcao, idxItem) {
+            let itemData = bancoDeRoupas[generoAtual][catAtual].opcoes[idxItem];
+            let arrayAlvo = tipo === 'mod' ? itemData.modelos : itemData.texturas[peleAtual];
+            if (!arrayAlvo || arrayAlvo.length === 0) return; 
+
+            selecoes[keyId][tipo] += direcao;
+            
+            if (selecoes[keyId][tipo] < 0) selecoes[keyId][tipo] = arrayAlvo.length - 1;
+            if (selecoes[keyId][tipo] >= arrayAlvo.length) selecoes[keyId][tipo] = 0;
+            
+            document.getElementById(`val_${tipo}_${keyId}`).innerText = selecoes[keyId][tipo];
+            enviarPreview(catAtual, idxItem);
+        }
+
+        function enviarPreview(cat, idxItem) {
+            let keyId = `${generoAtual}_${cat}_${idxItem}`;
+            let item = bancoDeRoupas[generoAtual][cat].opcoes[idxItem];
+            let slot = bancoDeRoupas[generoAtual][cat].slotId;
+            
+            let modeloSelecionado = item.modelos[selecoes[keyId].mod] || "";
+            let texturaSelecionada = item.texturas[peleAtual][selecoes[keyId].tex] || "";
+
+            if (window.geckoju) {
+                window.geckoju.send(`comprar_roupa|${slot}|${texturaSelecionada}|${modeloSelecionado}`);
+            } else if (window.cef) {
+                cef.emit("comprar_roupa", slot, texturaSelecionada, modeloSelecionado);
+            } else {
+                console.log(`[Preview] Gênero: ${generoAtual} | Pele: ${peleAtual} | Slot: ${slot} | DFF: ${modeloSelecionado} | TXD: ${texturaSelecionada}`);
+            }
+        }
+
+        function finalizarLoja() {
+            if (window.geckoju) window.geckoju.send("fechar_loja");
+            if (window.cef) cef.emit("fechar_loja");
+        }
+
+        function fecharLoja() {
+            if (window.geckoju) {
+                window.geckoju.send("resetar_roupas");
+                window.geckoju.send("fechar_loja");
+            }
+            if (window.cef) {
+                cef.emit("resetar_roupas");
+                cef.emit("fechar_loja");
+            }
+        }
+
+        // Inicialização padrão (caso aberto no navegador direto para teste)
+        window.onload = () => {
+            definirIdentidadePlayer('masculino', 'branca');
+        };
+    </script>
+</body>
+</html>
