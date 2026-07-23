@@ -316,7 +316,7 @@
     </div>
 
     <script>
-        // BANCO DE DADOS COMPLETO E SEPARADO[cite: 11]
+        // BANCO DE DADOS DE ROUPAS COM OS SLOTS CORrigidos (Mãos ajustado para o slot 14 correto do ClothSync)
         const bancoDeRoupas = {
             "masculino": {
                 "cabeca": {
@@ -386,7 +386,7 @@
                 },
                 "maos": {
                     titulo: "MÃOS / LUVAS",
-                    slotId: 5,
+                    slotId: 14, // CORRIGIDO PARA O SLOT 14 DO CLOTHSYNC
                     opcoes: [
                         {
                             nome: "[0] Mão Masculina Padrão",
@@ -451,7 +451,7 @@
                 },
                 "maos": {
                     titulo: "MÃOS / LUVAS",
-                    slotId: 5,
+                    slotId: 14, // CORRIGIDO PARA O SLOT 14 DO CLOTHSYNC
                     opcoes: [
                         {
                             nome: "[0] Mão Feminina",
@@ -563,7 +563,10 @@
             let slot = bancoDeRoupas[generoAtual][cat].slotId;
             
             let modeloSelecionado = item.modelos[selecoes[keyId].mod] || "";
-            let texturaSelecionada = item.texturas[peleAtual][selecoes[keyId].tex] || "";
+            
+            // Tratamento blindado para garantir que a textura nunca venha vazia
+            let listaTexturas = item.texturas[peleAtual] || item.texturas["branca"];
+            let texturaSelecionada = listaTexturas[selecoes[keyId].tex] || "";
 
             if (window.geckoju) {
                 window.geckoju.send(`comprar_roupa|${slot}|${texturaSelecionada}|${modeloSelecionado}`);
