@@ -399,8 +399,25 @@
                 // Exemplo de outra categoria (Crie as outras seguindo essa mesma lógica)
                 calcas: {
                     titulo: "CALÇAS E SHORTS",
-                    slotId: 1, // Slot 1 = Calças
-                    opcoes: [] 
+                    slotId: 3, // Slot 3 = Calças
+                    opcoes: [
+                        {
+                            nome: "Bermuda",
+                            modelos: ["chinos"],
+                            texturas: {
+                                branca: ["shirtbplaid", "letter", "bballjackrstar", "tshirtmaddgrey", "hattiger", "baskballdrib", "tshirtzipcrm", "tshirtsuburb", "coachsemi", "bowling", "denimfade", "gimpmask", "hoodyabase5", "hoodyablue", "hoodyamerc", "hoodyarockstar"], // Nomes dos arquivos .txd para pele branca
+                                negra: ["bbjersey", "sleevtbrown", "bbjackrim", "tshirtproblk", "baskballrim", "tshirtzipgry", "tshirt_tshirtwhite", "tshirtprored", "coach_coach", "hawaiired_hawaiiblue", "field", "hatmancblk", "hoodjackbeige", "hoodyablack", "hoodyagreen", "hoodyb"] // Nomes dos arquivos .txd para pele negra
+                            }
+                        },
+                        {
+                            nome: "Bermuda f",
+                            modelos: ["shorts", "capknit", "chonger", "worktr"],
+                            texturas: {
+                                branca: ["bbshortred", "boxshort", "boaterblk", "shirtbplaid", "letter", "bballjackrstar", "tshirtmaddgrey", "hattiger", "baskballdrib", "tshirtzipcrm", "tshirtsuburb", "coachsemi", "bowling", "denimfade", "gimpmask", "hoodyabase5", "hoodyablue", "hoodyamerc", "hoodyarockstar"], // Nomes dos arquivos .txd para pele branca
+                                negra: ["bbjersey", "sleevtbrown", "bbjackrim", "tshirtproblk", "baskballrim", "tshirtzipgry", "tshirt_tshirtwhite", "tshirtprored", "coach_coach", "hawaiired_hawaiiblue", "field", "hatmancblk", "hoodjackbeige", "hoodyablack", "hoodyagreen", "hoodyb"] // Nomes dos arquivos .txd para pele negra
+                            }
+                        }
+                    ]
                 }
             }
         };
