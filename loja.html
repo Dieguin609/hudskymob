@@ -210,6 +210,12 @@
             border-radius: 50%;
         }
 
+        .cat-icon img {
+            width: 36px;    /* Diminua ou aumente este valor (ex: 14px, 16px, 18px) */
+            height: 36px;   /* Mantenha o mesmo valor da largura para o ícone continuar quadrado */
+            object-fit: contain;
+            pointer-events: none;
+        }
         .cat-icon {
             width: 40px;
             height: 40px;
@@ -226,11 +232,13 @@
         }
         .cat-icon:hover { color: #fff; border-color: #FFC107; transform: scale(1.1) translateX(-3px); }
         .cat-icon.active {
-            background: transparent;
+            background: #FFC107;
             border: 2px solid #FFC107;
-            color: #FFC107;
             box-shadow: 0 0 15px rgba(255, 193, 7, 0.4);
             transform: scale(1.15) translateX(-6px);
+        }
+        .cat-icon.active img {
+            filter: brightness(0);
         }
 
         .action-buttons {
@@ -291,11 +299,18 @@
 
     <div class="right-area">
         <div class="category-sidebar">
-            <div class="cat-icon" title="Cabeça / Chapéus / Barba" onclick="mudarCategoria('cabeca', this)">🧢</div>
-            <div class="cat-icon active" title="Torsos / Camisas" onclick="mudarCategoria('camisas', this)">👕</div>
-            <div class="cat-icon" title="Calças / Shorts" onclick="mudarCategoria('calcas', this)">👖</div>
-            <div class="cat-icon" title="Mãos / Luvas" onclick="mudarCategoria('maos', this)">🖐️</div>
-            <div class="cat-icon" title="Sapatos / Pés" onclick="mudarCategoria('sapatos', this)">👟</div>
+            <div class="cat-icon" title="Cabeça / Chapéus / Barba" onclick="mudarCategoria('cabeca', this)">
+                <img src="icone_cabeca.png" alt="Cabeça">
+            </div>
+            <div class="cat-icon active" title="Torsos / Camisas" onclick="mudarCategoria('camisas', this)">
+                <img src="icone_camisa.png" alt="Camisas">
+            </div>
+            <div class="cat-icon" title="Calças / Shorts" onclick="mudarCategoria('calcas', this)">
+                <img src="icone_calca.png" alt="Calças">
+            </div>
+            <div class="cat-icon" title="Sapatos / Pés" onclick="mudarCategoria('sapatos', this)">
+                <img src="icone_sapato.png" alt="Sapatos">
+            </div>
         </div>
 
         <div class="action-buttons">
@@ -314,6 +329,11 @@
         // Aqui você define os nomes exatos dos arquivos .txd e .dff das roupas e o SLOT do ClothSync
         const bancoDeRoupas = {
             masculino: {
+                cabeca: {
+                    titulo: "Bones, Chapéus e Acessórios",
+                    slotId: 1, // Slot 1 = Cabeça
+                    opcoes: [] 
+                },
                 camisas: {
                     titulo: "CAMISAS E TORSOS",
                     slotId: 0, // Slot 0 = Torso (Exemplo. Ajuste para o slot correto da sua base)
@@ -373,6 +393,33 @@
                     titulo: "CALÇAS E SHORTS",
                     slotId: 1, // Slot 1 = Calças
                     opcoes: [] 
+                }
+            }
+            feminino: {
+                
+                cabeca: {
+                    titulo: "cahpeus e acessórios femininos",
+                    slotId: 0,
+                    opcoes: []
+                },
+                camisa: {
+                    titulo: "CAMISAS E TORSOS",
+                    slotId: 0,
+                    opcoes: [
+                        {
+                            nome: "Blusas",
+                            modelos: ["sleevt", "wcoat", "chucks", "coach", "denim", "suit1", "sweat", "trackytop1", "tshirt", "tshirt2", "vest"],
+                            texturas: {
+                                branca: ["shirtbplaid", "letter", "bballjackrstar", "tshirtmaddgrey", "hattiger", "baskballdrib", "tshirtzipcrm", "tshirtsuburb", "coachsemi", "bowling", "denimfade", "gimpmask", "hoodyabase5", "hoodyablue", "hoodyamerc", "hoodyarockstar"], // Nomes dos arquivos .txd para pele branca
+                                negra: ["bbjersey", "sleevtbrown", "bbjackrim", "tshirtproblk", "baskballrim", "tshirtzipgry", "tshirt_tshirtwhite", "tshirtprored", "coach_coach", "hawaiired_hawaiiblue", "field", "hatmancblk", "hoodjackbeige", "hoodyablack", "hoodyagreen", "hoodyb"] // Nomes dos arquivos .txd para pele negra
+                            }
+                        }
+                    ]
+                },
+                sapatos: {
+                    titulo: "CALÇADOS FEMININOS",
+                    slotId: 3,
+                    opcoes: []
                 }
             }
         };
