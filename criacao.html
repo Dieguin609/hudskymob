@@ -363,18 +363,6 @@
             </div>
         </div>
 
-        <!-- NOVA SEÇÃO: NATURALIDADE -->
-        <div class="section">
-            <p>Naturalidade (Cidade de Origem)</p>
-            <select id="char-naturalidade" class="input-padrao" style="background: #111; cursor: pointer;">
-                <option value="Belo Horizonte - MG">Belo Horizonte - MG</option>
-                <option value="Goiânia - GO">Goiânia - GO</option>
-                <option value="São Paulo - SP">São Paulo - SP</option>
-                <option value="Brasília - DF">Brasília - DF</option>
-                <option value="Cuiabá - MT">Cuiabá - MT</option>
-            </select>
-        </div>
-
         <button class="btn-finish" onclick="finalizar()">Desembarcar na Cidade</button>
     </aside>
 
@@ -450,7 +438,6 @@
         function finalizar() {
             const nome = document.getElementById('char-name').value;
             const pass = document.getElementById('char-pass').value;
-            const naturalidade = document.getElementById('char-naturalidade').value; // Pega a cidade selecionada
             
             if(!nome.includes("_")) {
                 alert("O nome deve seguir o padrão: Nome_Sobrenome");
@@ -461,8 +448,8 @@
                 return;
             }
 
-            // Novo Payload enviando: NOME|SENHA|GENERO|PELE|ESTILO|NATURALIDADE
-            let payload = `finishCreation:${nome}|${pass}|${generoEscolhido}|${peleEscolhida}|${estiloEscolhido}|${naturalidade}`;
+            // Envia no padrão exato para o seu PAWN
+            let payload = "finishCreation:" + nome + "|" + pass + "|" + generoEscolhido + "|" + peleEscolhida + "|" + estiloEscolhido;
             
             if(window.geckoju) {
                 window.geckoju.send(payload);
