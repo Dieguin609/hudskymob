@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { 
+            --primary: #f39c12; 
+            --secondary: #f1c40f; 
+            --danger: #e74c3c;
+            --panel-bg: rgba(10, 10, 18, 0.75);
+            --border-glow: rgba(243, 156, 18, 0.2);
+            --text-sub: #70708a;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
+        
+        body { 
+            background: transparent; 
+            height: 100vh; 
+            width: 100vw; 
+            overflow: hidden; 
+            font-size: 14px;
+        }
+
+        /* PAINÉIS LATERAIS (FIVEM STYLE) */
+        .sidebar {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 320px; 
+            height: auto; 
+            max-height: 95vh; 
+            background: var(--panel-bg); 
+            backdrop-filter: blur(20px); 
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.05); 
+            border-radius: 8px; 
+            padding: 25px; 
+            color: white; 
+            display: flex; 
+            flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            overflow-y: auto;
+        }
+        .sidebar::-webkit-scrollbar { display: none; }
+
+        /* Painel Principal na Direita */
+        .main-panel {
+            right: 40px;
+            border-right: 4px solid var(--primary);
+        }
+
+        /* Painel de Preview na Esquerda */
+        .preview-panel {
+            left: 40px;
+            border-left: 4px solid var(--primary);
+            transition: all 0.3s ease;
+        }
+
+        h1 { 
+            font-weight: 900; 
+            font-size: 1.2rem; 
+            text-transform: uppercase; 
+            margin-bottom: 20px; 
+            text-align: center; 
+            letter-spacing: 2px; 
+        }
+        h1 span { color: var(--primary); }
+
+        .section { margin-bottom: 15px; position: relative; }
+        .section p { 
+            font-weight: 700; 
+            font-size: 0.65rem; 
+            text-transform: uppercase; 
+            color: var(--text-sub); 
+            margin-bottom: 8px; 
+            letter-spacing: 1px;
+        }
+
+        /* INPUTS */
+        .input-padrao {
+            width: 100%; 
+            padding: 12px 15px; 
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.06); 
+            border-radius: 6px;
+            color: white; 
+            font-size: 0.8rem; 
+            outline: none; 
+            transition: all 0.3s;
+            letter-spacing: 1px;
+        }
+        .input-padrao:focus { 
+            border-color: var(--primary); 
+            background: rgba(243, 156, 18, 0.05); 
+            box-shadow: 0 0 15px rgba(243, 156, 18, 0.15);
+        }
+
+        .grid-options { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 8px; 
+        }
+        
+        /* BOTÕES DE GÊNERO */
+        .box-opt {
+            padding: 12px; 
+            background: rgba(255,255,255,0.03); 
+            border: 1px solid rgba(255,255,255,0.06);
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+            font-size: 0.8rem; 
+            font-weight: 700;
+            border-radius: 6px; 
+            color: var(--text-sub);
+            transition: all 0.2s;
+        }
+        .box-opt:hover { border-color: rgba(243, 156, 18, 0.4); color: white; }
+        .box-opt.active { 
+            background: linear-gradient(135deg, var(--secondary), var(--primary)); 
+            color: #111; 
+            border-color: var(--primary); 
+            box-shadow: 0 0 15px rgba(243, 156, 18, 0.25);
+        }
+
+        /* CAIXAS DE COR DE PELE */
+        .color-grid {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+        }
+        .color-box {
+            width: 100%;
+            height: 40px;
+            border-radius: 6px;
+            border: 2px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .color-box:hover { transform: scale(1.05); }
+        .color-box.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(243, 156, 18, 0.4);
+            transform: scale(1.05);
+        }
+
+        /* GRID DE PREVIEW DE FOTOS (BARBA/CABELO) */
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        .preview-img-box {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1; /* Quadrado perfeito */
+            background-color: rgba(0,0,0,0.5);
+            border: 2px solid rgba(255,255,255,0.05);
+            border-radius: 8px;
+            cursor: pointer;
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
+            transition: all 0.2s;
+            display: flex;
+            align-items: flex-end;
+        }
+        .preview-img-box:hover {
+            border-color: rgba(243, 156, 18, 0.5);
+            transform: scale(1.03);
+        }
+        .preview-img-box.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(243, 156, 18, 0.4);
+        }
+        .preview-label {
+            width: 100%;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            text-align: center;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 5px 0;
+            text-transform: uppercase;
+        }
+
+        /* SETAS DE GIRAR NO CENTRO */
+        .center-rotate {
+            position: fixed; 
+            left: 50%; 
+            top: 85%; 
+            transform: translate(-50%, -50%);
+            width: 350px; 
+            display: flex; 
+            justify-content: space-between; 
+            pointer-events: none;
+            z-index: 5;
+        }
+        .arrow-rotate {
+            pointer-events: auto; 
+            background: rgba(0,0,0,0.5); 
+            border: 1px solid rgba(243, 156, 18, 0.3);
+            color: var(--primary); 
+            width: 50px; 
+            height: 50px; 
+            border-radius: 50%;
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            backdrop-filter: blur(5px);
+        }
+        .arrow-rotate:hover {
+            background: rgba(243, 156, 18, 0.2);
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(243, 156, 18, 0.4);
+            transform: scale(1.1);
+        }
+
+        /* BOTÃO FINALIZAR */
+        .btn-finish {
+            margin-top: 15px; 
+            background: linear-gradient(135deg, var(--secondary), var(--primary)); 
+            border: none;
+            padding: 16px; 
+            color: #111; 
+            font-weight: 900; 
+            border-radius: 6px;
+            cursor: pointer; 
+            text-transform: uppercase; 
+            font-size: 0.8rem; 
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            box-shadow: 0 5px 20px rgba(243, 156, 18, 0.3);
+        }
+        .btn-finish:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 8px 25px rgba(243, 156, 18, 0.4); 
+            filter: brightness(1.1);
+        }
+
+        /* ================= AJUSTE FINO MOBILE (AFUNDADO NAS BEIRADINHAS E COMPACTO) ================= */
+        @media (max-width: 768px) {
+            body { overflow-y: auto; }
+            .sidebar {
+                width: 90% !important;
+                max-width: 320px !important;
+                padding: 15px !important;
+                max-height: 85vh !important;
+            }
+            .preview-panel {
+                left: 10px !important; /* Bem colado na beiradinha esquerda */
+                right: auto;
+            }
+            .main-panel {
+                right: 10px !important; /* Bem colado na beiradinha direita */
+                left: auto;
+            }
+            /* Se a tela for muito estreita, empilha e centraliza com margens nas pontas */
+            @media (max-width: 650px) {
+                .sidebar {
+                    position: relative !important;
+                    top: auto !important;
+                    transform: none !important;
+                    margin: 15px auto !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    width: 92% !important;
+                }
+                body {
+                    display: block !important;
+                    overflow-y: auto !important;
+                }
+                .center-rotate {
+                    position: relative !important;
+                    top: auto !important;
+                    transform: none !important;
+                    margin: 10px auto !important;
+                }
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PAINEL DA ESQUERDA: FOTOS E PREVIEWS -->
+    <aside class="sidebar preview-panel" id="painel-opcoes">
+        <h1 id="titulo-preview">ESTILO<span>FACIAL</span></h1>
+        
+        <!-- Grid de Barbas (MASCULINO) -->
+        <div id="grid-barbas" class="preview-grid">
+            <div class="preview-img-box active" style="background-image: url('barba1.png');" onclick="setEstilo(1, this)">
+                <div class="preview-label">Simples</div>
+            </div>
+            <div class="preview-img-box" style="background-image: url('barba2.png');" onclick="setEstilo(2, this)">
+                <div class="preview-label">Careca</div>
+            </div>
+            <div class="preview-img-box" style="background-image: url('barba3.png');" onclick="setEstilo(3, this)">
+                <div class="preview-label">Preenchido</div>
+            </div>
+            <div class="preview-img-box" style="background-image: url('barba4.png');" onclick="setEstilo(4, this)">
+                <div class="preview-label">Rala</div>
+            </div>
+            <div class="preview-img-box" style="background-image: url('barba5.png');" onclick="setEstilo(5, this)">
+                <div class="preview-label">Cheia</div>
+            </div>
+            <div class="preview-img-box" style="background-image: url('barba6.png');" onclick="setEstilo(6, this)">
+                <div class="preview-label">Carioca</div>
+            </div>
+        </div>
+
+        <!-- Grid de Cabelos (FEMININO) -->
+        <div id="grid-cabelos" class="preview-grid" style="display: none;">
+            <div class="preview-img-box active" style="background-image: url('cabelo1.png');" onclick="setEstilo(1, this)">
+                <div class="preview-label">Curto</div>
+            </div>
+            <div class="preview-img-box" style="background-image: url('cabelo2.png');" onclick="setEstilo(2, this)">
+                <div class="preview-label">Rabo Cavalo</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- SETAS DO CENTRO DA TELA -->
+    <div class="center-rotate">
+        <div class="arrow-rotate" onmousedown="startRotate(-5)" onmouseup="stopRotate()" onmouseleave="stopRotate()"><i class="fas fa-undo"></i></div>
+        <div class="arrow-rotate" onmousedown="startRotate(5)" onmouseup="stopRotate()" onmouseleave="stopRotate()"><i class="fas fa-redo"></i></div>
+    </div>
+
+    <!-- PAINEL DA DIREITA: DADOS E FINALIZAÇÃO -->
+    <aside class="sidebar main-panel">
+        <h1>EIXO<span>CENTRAL</span></h1>
+
+        <div class="section">
+            <p>Nome do Personagem</p>
+            <input type="text" id="char-name" class="input-padrao" placeholder="Nome_Sobrenome">
+        </div>
+
+        <div class="section">
+            <p>Defina sua Senha</p>
+            <input type="password" id="char-pass" class="input-padrao" placeholder="Senha da conta...">
+        </div>
+
+        <div class="section">
+            <p>Gênero Base</p>
+            <div class="grid-options">
+                <div id="m-btn" class="box-opt active" onclick="setGender('M', 58)"><i class="fas fa-mars" style="margin-right: 5px;"></i> MASC</div>
+                <div id="f-btn" class="box-opt" onclick="setGender('F', 184)"><i class="fas fa-venus" style="margin-right: 5px;"></i> FEM</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <p>Tom de Pele</p>
+            <div class="color-grid">
+                <div id="pele-1" class="color-box active" style="background: #ffdbac;" onclick="setSkin(1)"></div>
+                <div id="pele-2" class="color-box" style="background: #8d5524;" onclick="setSkin(2)"></div>
+            </div>
+        </div>
+
+        <!-- NOVA SEÇÃO: NATURALIDADE -->
+        <div class="section">
+            <p>Naturalidade (Cidade de Origem)</p>
+            <select id="char-naturalidade" class="input-padrao" style="background: #111; cursor: pointer;">
+                <option value="Belo Horizonte - MG">Belo Horizonte - MG</option>
+                <option value="Goiânia - GO">Goiânia - GO</option>
+                <option value="São Paulo - SP">São Paulo - SP</option>
+                <option value="Brasília - DF">Brasília - DF</option>
+                <option value="Cuiabá - MT">Cuiabá - MT</option>
+            </select>
+        </div>
+
+        <button class="btn-finish" onclick="finalizar()">Desembarcar na Cidade</button>
+    </aside>
+
+    <script>
+        let rotateTimer;
+        let generoEscolhido = 1; // 1 = Masc, 2 = Fem
+        let peleEscolhida = 1;   // 1 = Branca, 2 = Negra
+        let estiloEscolhido = 1; // ID do cabelo ou barba (começa no 1)
+
+        function setGender(g, skinId) {
+            document.getElementById('m-btn').classList.remove('active');
+            document.getElementById('f-btn').classList.remove('active');
+            
+            // Reseta o estilo para o padrão 1 ao trocar de sexo
+            estiloEscolhido = 1;
+            removerAtivos(document.querySelectorAll('.preview-img-box'));
+            document.querySelectorAll('#grid-barbas .preview-img-box')[0].classList.add('active');
+            document.querySelectorAll('#grid-cabelos .preview-img-box')[0].classList.add('active');
+
+            if(g === 'M') {
+                document.getElementById('m-btn').classList.add('active');
+                generoEscolhido = 1;
+                // Altera o painel da esquerda para Barbas
+                document.getElementById('titulo-preview').innerHTML = "ESTILO<span>FACIAL</span>";
+                document.getElementById('grid-barbas').style.display = 'grid';
+                document.getElementById('grid-cabelos').style.display = 'none';
+            } else {
+                document.getElementById('f-btn').classList.add('active');
+                generoEscolhido = 2;
+                // Altera o painel da esquerda para Cabelos
+                document.getElementById('titulo-preview').innerHTML = "ESTILO<span>CABELO</span>";
+                document.getElementById('grid-barbas').style.display = 'none';
+                document.getElementById('grid-cabelos').style.display = 'grid';
+            }
+            
+            if(window.geckoju) window.geckoju.send("setGender:" + skinId);
+        }
+
+        function setSkin(id) { 
+            document.getElementById('pele-1').classList.remove('active');
+            document.getElementById('pele-2').classList.remove('active');
+            document.getElementById('pele-' + id).classList.add('active');
+            peleEscolhida = id;
+            if(window.geckoju) window.geckoju.send("setSkinColor:" + id); 
+        }
+
+        function setEstilo(id, elemento) {
+            estiloEscolhido = id;
+            
+            // Remove o brilho ativo de todas as caixinhas que estão visíveis
+            let gridAtiva = (generoEscolhido === 1) ? document.getElementById('grid-barbas') : document.getElementById('grid-cabelos');
+            removerAtivos(gridAtiva.querySelectorAll('.preview-img-box'));
+            
+            // Coloca o brilho na foto clicada
+            elemento.classList.add('active');
+
+            // Manda pro jogo em tempo real pra ele ver a roupa no boneco
+            if(window.geckoju) window.geckoju.send("previewStyle:" + id); 
+        }
+
+        function removerAtivos(elementos) {
+            elementos.forEach(el => el.classList.remove('active'));
+        }
+
+        function startRotate(val) { 
+            rotateTimer = setInterval(() => { 
+                if(window.geckoju) window.geckoju.send("rotateChar:" + val); 
+            }, 50); 
+        }
+
+        function stopRotate() { clearInterval(rotateTimer); }
+        
+        function finalizar() {
+            const nome = document.getElementById('char-name').value;
+            const pass = document.getElementById('char-pass').value;
+            const naturalidade = document.getElementById('char-naturalidade').value; // Pega a cidade selecionada
+            
+            if(!nome.includes("_")) {
+                alert("O nome deve seguir o padrão: Nome_Sobrenome");
+                return;
+            }
+            if(pass.length < 4) {
+                alert("A senha deve conter no mínimo 4 caracteres!");
+                return;
+            }
+
+            // Novo Payload enviando: NOME|SENHA|GENERO|PELE|ESTILO|NATURALIDADE
+            let payload = `finishCreation:${nome}|${pass}|${generoEscolhido}|${peleEscolhida}|${estiloEscolhido}|${naturalidade}`;
+            
+            if(window.geckoju) {
+                window.geckoju.send(payload);
+            } else {
+                console.log("Conta enviada para o PAWN:", payload);
+            }
+        }
+    </script>
+</body>
+</html>
