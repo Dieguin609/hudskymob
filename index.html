@@ -20,9 +20,9 @@
 
         /* AJUSTE PARA MOBILE (RESPONSIVIDADE) */
         .fivem-dashboard {
-            width: 95% !important; /* Mais largo em telas pequenas */
-            max-width: 900px !important; /* Um pouco mais compacto para centralizar */
-            transform: scale(0.9); /* Diminui levemente o painel inteiro */
+            width: 95% !important; 
+            max-width: 900px !important; 
+            transform: scale(0.9); 
             transform-origin: center;
         }
 
@@ -33,7 +33,7 @@
 
         /* Ajuste da sidebar de criação para não ser cortada */
         .creation-sidebar {
-            width: 280px !important; /* Um pouco mais estreita */
+            width: 280px !important; 
             padding: 20px !important;
             margin-left: 20px !important;
         }
@@ -66,6 +66,24 @@
             color: white;
             transition: 0.3s;
         }
+
+        /* Estilo extra para o checkbox de salvar nome */
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: -8px;
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+            color: #ccc;
+            cursor: pointer;
+        }
+        .checkbox-container input {
+            accent-color: var(--primary);
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -83,16 +101,28 @@
                 <span class="server-tag">Servidor Roleplay</span>
                 <h1 class="logo">EIXO<span>CENTRAL</span></h1>
                 
-                <div id="error-msg">ESTA CONTA JÁ EXISTE!</div>
+                <div id="error-msg" style="display:none;">ESTA CONTA JÁ EXISTE!</div>
                 
                 <div class="input-container">
+                    <!-- Campo de Nome Personalizado -->
+                    <span class="input-label">Nome do Personagem (RP)</span>
+                    <div class="input-group" style="margin-bottom: 12px;">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="login-name" placeholder="Ex: Nome_Sobrenome">
+                    </div>
+
+                    <!-- Checkbox Salvar Nome -->
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="save-name-checkbox" checked> Salvar meu nome para os próximos acessos
+                    </label>
+
                     <span class="input-label">Acesso de Segurança</span>
                     <div class="input-group">
                         <i class="fas fa-lock"></i>
                         <input type="password" id="login-pass" placeholder="DIGITE SUA SENHA">
                     </div>
                     
-                    <button class="btn-action" onclick="login()">CONECTAR AO SERVIDOR</button>
+                    <button class="btn-action" onclick="fazerLogin()">CONECTAR AO SERVIDOR</button>
                     <button class="btn-action register" onclick="checkRegister()">CRIAR NOVO PERSONAGEM</button>
                 </div>
             </div>
@@ -128,7 +158,7 @@
         </div>
     </div>
 
-    <div id="creation-screen">
+    <div id="creation-screen" style="display: none;">
         <aside class="creation-sidebar">
             <h1>CRIAR<span>CIDADÃO</span></h1>
 
@@ -165,17 +195,24 @@
             </div>
         </aside>
 
-        <!-- Alterado para chamar a nova função finalizarCriacao() -->
         <button class="btn-flutuante" onclick="finalizarCriacao()">INICIAR JORNADA <i class="fas fa-chevron-right"></i></button>
     </div>
 
     <script src="script.js"></script>
 
-    <!-- JS de Controle de Criação Integrado ao PAWN -->
+    <!-- JS de Controle de Login e Criação -->
     <script>
-        // Variáveis de Criação
-        let generoEscolhido = 1; // 1 = Masc, 2 = Fem
-        let peleEscolhida = 1;   // 1 = Branca, 2 = Negra
+        let generoEscolhido = 1; 
+        let peleEscolhida = 1;   
+
+        // Carrega o nome salvo no navegador (localStorage) ao abrir a página
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedName = localStorage.getItem('eixo_central_playername');
+            if (savedName) {
+                document.getElementById('login-name').value = savedName;
+                document.getElementById('save-name-checkbox').checked = true;
+            }
+        });
 
         function setGender(g) {
             document.getElementById('m-btn').classList.remove('active');
@@ -198,22 +235,71 @@
             peleEscolhida = id;
         }
 
-        // Função para finalizar a criação e mandar os dados via Geckoju
+        // Função de Login atualizada lendo nome, senha e salvando preferência
+        function fazerLogin() {
+            const playerName = document.getElementById('login-name').value.trim();
+            const pass = document.getElementById('login-pass').value;
+            const saveName = document.getElementById('save-name-checkbox').checked;
+
+            if(playerName === "") {
+                alert("Por favor, digite o nome do seu personagem!");
+                return;
+            }
+            if(pass === "") {
+                alert("Por favor, digite sua senha!");
+                return;
+            }
+
+            // Gerencia o salvamento local do nome
+            if (saveName) {
+                localStorage.setItem('eixo_central_playername', playerName);
+            } else {
+                localStorage.removeItem('eixo_central_playername');
+            }
+
+            // Payload formatado para o Pawn: login:NOME|SENHA
+            let payload = "login:" + playerName + "|" + pass;
+            
+            if(window.geckoju) {
+                window.geckoju.send(payload);
+            } else {
+                console.log("Simulando Login (Fora do Jogo):", payload);
+            }
+        }
+
+        // Função para finalizar a criação de conta
         function finalizarCriacao() {
+            const playerName = document.getElementById('login-name').value.trim();
             const pass = document.getElementById('char-pass').value;
+
+            if(playerName === "") {
+                alert("Volte na tela anterior e preencha o Nome do Personagem!");
+                return;
+            }
             if(pass.length < 4) {
                 alert("Sua senha deve ter pelo menos 4 caracteres!");
                 return;
             }
             
-            // Payload montado: finishCreation:SENHA|GENERO|PELE
-            let payload = "finishCreation:" + pass + "|" + generoEscolhido + "|" + peleEscolhida;
+            // Payload montado: finishCreation:NOME|SENHA|GENERO|PELE
+            let payload = "finishCreation:" + playerName + "|" + pass + "|" + generoEscolhido + "|" + peleEscolhida;
             
             if(window.geckoju) {
                 window.geckoju.send(payload);
             } else {
-                console.log("Simulando Envio (Fora do Jogo):", payload);
+                console.log("Simulando Criação (Fora do Jogo):", payload);
             }
+        }
+
+        // Alterna para a tela de registro (caso queira usar)
+        function checkRegister() {
+            const playerName = document.getElementById('login-name').value.trim();
+            if(playerName === "") {
+                alert("Digite o nome desejado para o personagem antes de criar!");
+                return;
+            }
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('creation-screen').style.display = 'block';
         }
     </script>
 </body>
