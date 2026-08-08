@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro Geral - Estado de Minas Gerais</title>
+  
+  <!-- Fonte Inter e Share Tech Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  
+  <!-- Ícones FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #f8fafc;
+      overflow: hidden;
+      padding: 10px;
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* =========================================================================
+       CARTEIRA DE IDENTIDADE (RG) - DESIGN GOVERNO DE MINAS GERAIS
+       ========================================================================= */
+    .rg-card {
+      width: 460px;
+      background: linear-gradient(135deg, #0d47a1 0%, #1565c0 40%, #1e88e5 100%);
+      border: 2px solid #90caf9;
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.85);
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+    }
+
+    .rg-card::before {
+      content: '';
+      position: absolute;
+      right: -40px;
+      bottom: -40px;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .rg-header {
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.25);
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+      gap: 12px;
+    }
+
+    .rg-logo-estado {
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+    }
+
+    .rg-header-texts h2 {
+      font-size: 0.85rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #fff;
+    }
+
+    .rg-header-texts h3 {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #bbdefb;
+      text-transform: uppercase;
+    }
+
+    .rg-header-texts span {
+      font-size: 0.62rem;
+      color: #e3f2fd;
+      display: block;
+    }
+
+    .rg-body {
+      display: flex;
+      gap: 14px;
+    }
+
+    .rg-photo-section {
+      width: 110px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .rg-photo-box {
+      width: 100px;
+      height: 125px;
+      background: #0a2540;
+      border: 2px solid #64b5f6;
+      border-radius: 6px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .rg-photo-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .rg-photo-stamp {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.65);
+      font-size: 0.5rem;
+      text-align: center;
+      padding: 2px 0;
+      letter-spacing: 0.5px;
+      color: #4ade80;
+      font-weight: 700;
+    }
+
+    .rg-fingerprint {
+      width: 60px;
+      height: 75px;
+      border: 1px dashed rgba(255,255,255,0.4);
+      border-radius: 4px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.8rem;
+      color: rgba(255,255,255,0.25);
+      margin-top: 4px;
+    }
+
+    .rg-info-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .rg-field {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .rg-label {
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      color: #90caf9;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+    }
+
+    .rg-value {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #ffffff;
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+      padding-bottom: 2px;
+    }
+
+    .rg-value-mono {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.95rem;
+      color: #fff;
+      letter-spacing: 1px;
+    }
+
+    .rg-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .rg-row .rg-field {
+      flex: 1;
+    }
+
+    .rg-signature {
+      margin-top: 6px;
+      text-align: center;
+      border-top: 1px solid #64b5f6;
+      padding-top: 4px;
+      font-family: 'Inter', cursive;
+      font-style: italic;
+      font-size: 0.9rem;
+      color: #e3f2fd;
+    }
+
+    .rg-close-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.3);
+      border: none;
+      color: #fff;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .rg-close-btn:hover {
+      background: rgba(239, 68, 68, 0.8);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="rg-card">
+    <button class="rg-close-btn" onclick="fecharRG()"><i class="fa-solid fa-xmark"></i></button>
+    
+    <div class="rg-header">
+      <img class="rg-logo-estado" src="bh.png" alt="Brasão MG" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'">
+      <div class="rg-header-texts">
+        <h2>República Federativa do Brasil</h2>
+        <h3>Estado de Minas Gerais • Secretaria de Segurança</h3>
+        <span>Carteira de Identidade - Cidadão</span>
+      </div>
+    </div>
+
+    <div class="rg-body">
+      <div class="rg-photo-section">
+        <div class="rg-photo-box">
+          <img id="rg-foto-src" src="barba5.png" alt="Foto Cidadão">
+          <div class="rg-photo-stamp">FOTO DIGITAL</div>
+        </div>
+        <div class="rg-fingerprint">
+          <i class="fa-solid fa-fingerprint"></i>
+        </div>
+      </div>
+
+      <div class="rg-info-section">
+        <div class="rg-field">
+          <span class="rg-label">Nome do Cidadão</span>
+          <div class="rg-value" id="rg-nome">CARLOS EDUARDO SILVA</div>
+        </div>
+
+        <div class="rg-row">
+          <div class="rg-field">
+            <span class="rg-label">Registro Geral (RG)</span>
+            <div class="rg-value rg-value-mono" id="rg-numero">MG-14.892.301</div>
+          </div>
+          <div class="rg-field">
+            <span class="rg-label">Cadastro de Pessoa Física (CPF)</span>
+            <div class="rg-value rg-value-mono" id="rg-cpf">123.456.789-00</div>
+          </div>
+        </div>
+
+        <div class="rg-row">
+          <div class="rg-field">
+            <span class="rg-label">Naturalidade</span>
+            <div class="rg-value" id="rg-naturalidade">BELO HORIZONTE - MG</div>
+          </div>
+          <div class="rg-field">
+            <span class="rg-label">Data de Expedição</span>
+            <div class="rg-value rg-value-mono" id="rg-data">08/08/2026</div>
+          </div>
+        </div>
+
+        <div class="rg-field">
+          <span class="rg-label">Assinatura do Titular</span>
+          <div class="rg-signature" id="rg-assinatura">Carlos E. Silva</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- FUNÇÃO PARA ATUALIZAR OS DADOS VINDO DO PAWN ---
+    function atualizarDadosRG(nome, rg, cpf, naturalidade, dataExp, fotoUrl) {
+      if(nome) {
+        document.getElementById('rg-nome').innerText = nome;
+        document.getElementById('rg-assinatura').innerText = nome;
+      }
+      if(rg) document.getElementById('rg-numero').innerText = rg;
+      if(cpf) document.getElementById('rg-cpf').innerText = cpf;
+      if(naturalidade) document.getElementById('rg-naturalidade').innerText = naturalidade;
+      if(dataExp) document.getElementById('rg-data').innerText = dataExp;
+      if(fotoUrl && fotoUrl !== "") {
+        document.getElementById('rg-foto-src').src = fotoUrl;
+      }
+    }
+
+    // --- FUNÇÃO PARA FECHAR O DOCUMENTO E AVISAR O SERVIDOR ---
+    function fecharRG() {
+      if (typeof window.geckoju !== 'undefined' && typeof window.geckoju.send === 'function') {
+        window.geckoju.send("RG_Fechar");
+      } else if (typeof window.cef !== 'undefined' && typeof window.cef.emit === 'function') {
+        window.cef.emit("RG_Fechar", -1);
+      } else {
+        console.log("RG_Fechar acionado (Modo Navegador Web)");
+        window.close();
+      }
+    }
+  </script>
+</body>
+</html>
