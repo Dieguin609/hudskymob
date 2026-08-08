@@ -8,7 +8,7 @@
   <!-- Fonte Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   
   <!-- Ícones FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -34,6 +34,7 @@
       padding: 10px;
     }
 
+    /* --- CONTAINER PRINCIPAL DA PREFEITURA --- */
     .nui-container {
       position: relative;
       width: 94%;
@@ -289,12 +290,216 @@
       background: rgba(255, 255, 255, 0.2);
       border-radius: 5px;
     }
+
+    /* =========================================================================
+       MODAL DE CARTEIRA DE IDENTIDADE (RG) - DESIGN GOVERNO DE MINAS GERAIS
+       ========================================================================= */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .rg-card {
+      width: 460px;
+      background: linear-gradient(135deg, #0d47a1 0%, #1565c0 40%, #1e88e5 100%);
+      border: 2px solid #90caf9;
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.8);
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+    }
+
+    .rg-card::before {
+      content: '';
+      position: absolute;
+      right: -40px;
+      bottom: -40px;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .rg-header {
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.25);
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+      gap: 12px;
+    }
+
+    .rg-logo-estado {
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+    }
+
+    .rg-header-texts h2 {
+      font-size: 0.85rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #fff;
+    }
+
+    .rg-header-texts h3 {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #bbdefb;
+      text-transform: uppercase;
+    }
+
+    .rg-header-texts span {
+      font-size: 0.62rem;
+      color: #e3f2fd;
+      display: block;
+    }
+
+    .rg-body {
+      display: flex;
+      gap: 14px;
+    }
+
+    .rg-photo-section {
+      width: 110px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .rg-photo-box {
+      width: 100px;
+      height: 125px;
+      background: #0a2540;
+      border: 2px solid #64b5f6;
+      border-radius: 6px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .rg-photo-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .rg-photo-stamp {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.65);
+      font-size: 0.5rem;
+      text-align: center;
+      padding: 2px 0;
+      letter-spacing: 0.5px;
+      color: #4ade80;
+      font-weight: 700;
+    }
+
+    .rg-fingerprint {
+      width: 60px;
+      height: 75px;
+      border: 1px dashed rgba(255,255,255,0.4);
+      border-radius: 4px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.8rem;
+      color: rgba(255,255,255,0.25);
+      margin-top: 4px;
+    }
+
+    .rg-info-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .rg-field {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .rg-label {
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      color: #90caf9;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+    }
+
+    .rg-value {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #ffffff;
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+      padding-bottom: 2px;
+    }
+
+    .rg-value-mono {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.95rem;
+      color: #fff;
+      letter-spacing: 1px;
+    }
+
+    .rg-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .rg-row .rg-field {
+      flex: 1;
+    }
+
+    .rg-signature {
+      margin-top: 6px;
+      text-align: center;
+      border-top: 1px solid #64b5f6;
+      padding-top: 4px;
+      font-family: 'Inter', cursive;
+      font-style: italic;
+      font-size: 0.9rem;
+      color: #e3f2fd;
+    }
+
+    .rg-close-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.3);
+      border: none;
+      color: #fff;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
   </style>
 </head>
 <body>
 
-  <div class="nui-container">
-    <!-- Topo -->
+  <!-- PAINEL PRINCIPAL DA PREFEITURA -->
+  <div class="nui-container" id="painel-prefeitura">
     <header class="nui-header">
       <div class="header-title">
         <img class="header-logo" src="bh.png" alt="Brasão BH" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'">
@@ -306,7 +511,6 @@
       <button class="close-btn" onclick="fecharCEF()"><i class="fa-solid fa-xmark"></i></button>
     </header>
 
-    <!-- Abas -->
     <nav class="nui-tabs">
       <button class="tab-btn active" onclick="abrirAba('geral', this)">
         <i class="fa-solid fa-sliders"></i> Atendimento Geral
@@ -319,13 +523,11 @@
       </button>
     </nav>
 
-    <!-- Área de Conteúdo -->
     <main class="nui-content">
       
       <!-- ABA 1: ATENDIMENTO GERAL -->
       <div id="geral" class="tab-pane active">
         <div class="cards-grid">
-          
           <div class="card">
             <div class="card-banner" style="background-image: url('https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=400&q=80');">
               <span class="card-badge badge-info">Finanças</span>
@@ -341,46 +543,12 @@
               </button>
             </div>
           </div>
-
-          <div class="card">
-            <div class="card-banner" style="background-image: url('https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=400&q=80');">
-              <span class="card-badge badge-info">Judiciário</span>
-            </div>
-            <div class="card-body">
-              <div>
-                <h3 class="card-title"><i class="fa-solid fa-gavel"></i> Multas & Infrações</h3>
-                <p class="card-desc">Pague multas rodoviárias e verifique mandados com a Polícia Estadual.</p>
-                <div class="card-price"><i class="fa-solid fa-clock"></i> Tempo Real</div>
-              </div>
-              <button class="card-btn" onclick="emitirEvento('ver_multas')">
-                <i class="fa-solid fa-list-check"></i> Ver Pendências
-              </button>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-banner" style="background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSiUa0yLH1B0rTIaRlVCq3fpGMZ_pIKmi85ekn1kGFtpg&s=10');">
-              <span class="card-badge badge-clt">Benefício</span>
-            </div>
-            <div class="card-body">
-              <div>
-                <h3 class="card-title"><i class="fa-solid fa-hand-holding-dollar"></i> Bolsa Família</h3>
-                <p class="card-desc">Subsídio de chegada ao Eixo Central para alimentação e transporte.</p>
-                <div class="card-price"><i class="fa-solid fa-money-bill-wave"></i> R$ 300,00</div>
-              </div>
-              <button class="card-btn btn-clt" onclick="emitirEvento('solicitar_auxilio')">
-                <i class="fa-solid fa-check-to-slot"></i> Resgatar
-              </button>
-            </div>
-          </div>
-
         </div>
       </div>
 
       <!-- ABA 2: CARTÓRIO CIVIL -->
       <div id="cartorio" class="tab-pane">
         <div class="cards-grid">
-          
           <div class="card">
             <div class="card-banner" style="background-image: url('https://images.unsplash.com/photo-1633265486064-086b219458ec?auto=format&fit=crop&w=400&q=80');">
               <span class="card-badge badge-doc">Obrigatório</span>
@@ -396,62 +564,12 @@
               </button>
             </div>
           </div>
-
-          <div class="card">
-            <div class="card-banner" style="background-image: url('https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=400&q=80');">
-              <span class="card-badge badge-doc">Registro</span>
-            </div>
-            <div class="card-body">
-              <div>
-                <h3 class="card-title"><i class="fa-solid fa-signature"></i> Mudança de Nome</h3>
-                <p class="card-desc">Processo administrativo para alteração de nome civil perante o Estado.</p>
-                <div class="card-price"><i class="fa-solid fa-tag"></i> Taxa: R$ 1.500,00</div>
-              </div>
-              <button class="card-btn" onclick="emitirEvento('alterar_nome')">
-                <i class="fa-solid fa-pen-to-square"></i> Solicitar Alteração
-              </button>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-banner" style="background-image: url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=400&q=80');">
-              <span class="card-badge badge-doc">Imóveis</span>
-            </div>
-            <div class="card-body">
-              <div>
-                <h3 class="card-title"><i class="fa-solid fa-house-chimney"></i> Escritura Pública</h3>
-                <p class="card-desc">Emissão de certidão para comprovação de posse de residências ou comércios.</p>
-                <div class="card-price"><i class="fa-solid fa-tag"></i> Taxa: R$ 150,00</div>
-              </div>
-              <button class="card-btn" onclick="emitirEvento('certidao_imovel')">
-                <i class="fa-solid fa-file-contract"></i> Emitir Escritura
-              </button>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-banner" style="background-image: url('https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=400&q=80');">
-              <span class="card-badge badge-doc">União</span>
-            </div>
-            <div class="card-body">
-              <div>
-                <h3 class="card-title"><i class="fa-solid fa-heart"></i> Registro de Casamento</h3>
-                <p class="card-desc">Oficialize união civil, compartilhe bens e obtenha benefícios fiscais.</p>
-                <div class="card-price"><i class="fa-solid fa-tag"></i> Taxa: R$ 500,00</div>
-              </div>
-              <button class="card-btn" onclick="emitirEvento('casamento_civil')">
-                <i class="fa-solid fa-ring"></i> Registrar Casamento
-              </button>
-            </div>
-          </div>
-
         </div>
       </div>
 
-      <!-- ABA 3: AGÊNCIA DO TRABALHADOR (EMPREGOS CLT) -->
+      <!-- ABA 3: EMPREGOS -->
       <div id="empregos" class="tab-pane">
         <div class="cards-grid">
-          
           <div class="card">
             <div class="card-banner" style="background-image: url('https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=400&q=80');">
               <span class="card-badge badge-clt">CLT • Diário</span>
@@ -467,116 +585,99 @@
               </button>
             </div>
           </div>
-
-          <div class="card">
-            <div class="card-banner" style="background-image: url('https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=400&q=80');">
-              <span class="card-badge badge-clt">CLT • Diário</span>
-            </div>
-            <div class="card-body">
-              <div>
-                <h3 class="card-title"><i class="fa-solid fa-trash"></i> Coletor de Resíduos</h3>
-                <p class="card-desc">Ajude na limpeza pública operando caminhões de lixo pela capital.</p>
-                <div class="card-price"><i class="fa-solid fa-wallet"></i> Salário: R$ 65,00 / Turno</div>
-              </div>
-              <button class="card-btn btn-clt" onclick="emitirEvento('emprego', 2)">
-                <i class="fa-solid fa-file-signature"></i> Assinar Carteira
-              </button>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-banner" style="background-image: url('https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=400&q=80');">
-              <span class="card-badge badge-clt">CLT • Diário</span>
-            </div>
-            <div class="card-body">
-              <div>
-                <h3 class="card-title"><i class="fa-solid fa-wrench"></i> Mecânico Auxiliar</h3>
-                <p class="card-desc">Serviços públicos de guincho e reparos em rodovias estaduais do Eixo Central.</p>
-                <div class="card-price"><i class="fa-solid fa-wallet"></i> Salário: R$ 85,00 / Turno</div>
-              </div>
-              <button class="card-btn btn-clt" onclick="emitirEvento('emprego', 3)">
-                <i class="fa-solid fa-file-signature"></i> Assinar Carteira
-              </button>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-banner" style="background-image: url('https://images.unsplash.com/photo-1607227063002-677dc5fdf96f?auto=format&fit=crop&w=400&q=80');">
-              <span class="card-badge badge-clt">CLT • Diário</span>
-            </div>
-            <div class="card-body">
-              <div>
-                <h3 class="card-title"><i class="fa-solid fa-box-open"></i> Entregador de Cargas</h3>
-                <p class="card-desc">Entrega de mercadorias leves e correspondências em Ibirité e bairros de BH.</p>
-                <div class="card-price"><i class="fa-solid fa-wallet"></i> Salário: R$ 70,00 / Turno</div>
-              </div>
-              <button class="card-btn btn-clt" onclick="emitirEvento('emprego', 4)">
-                <i class="fa-solid fa-file-signature"></i> Assinar Carteira
-              </button>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-banner" style="background-image: url('https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=400&q=80');">
-              <span class="card-badge badge-clt">CLT • Rodoviário</span>
-            </div>
-            <div class="card-body">
-              <div>
-                <h3 class="card-title"><i class="fa-solid fa-truck-moving"></i> Caminhoneiro Federal</h3>
-                <p class="card-desc">Transporte interestadual ligando Belo Horizonte, Goiânia, São Paulo e Brasília.</p>
-                <div class="card-price"><i class="fa-solid fa-wallet"></i> Salário: R$ 130,00 / Turno</div>
-              </div>
-              <button class="card-btn btn-clt" onclick="emitirEvento('emprego', 5)">
-                <i class="fa-solid fa-file-signature"></i> Assinar Carteira
-              </button>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-banner" style="background-image: url('https://images.unsplash.com/photo-1582139329536-e7284fece509?auto=format&fit=crop&w=400&q=80');">
-              <span class="card-badge badge-clt">CLT • Diário</span>
-            </div>
-            <div class="card-body">
-              <div>
-                <h3 class="card-title"><i class="fa-solid fa-shield-halved"></i> Vigilante Patrimonial</h3>
-                <p class="card-desc">Guarda de prédios governamentais e escolta de valores pela capital.</p>
-                <div class="card-price"><i class="fa-solid fa-wallet"></i> Salário: R$ 110,00 / Turno</div>
-              </div>
-              <button class="card-btn btn-clt" onclick="emitirEvento('emprego', 6)">
-                <i class="fa-solid fa-file-signature"></i> Assinar Carteira
-              </button>
-            </div>
-          </div>
-
         </div>
       </div>
 
     </main>
   </div>
 
+  <!-- =========================================================================
+       MODAL: CARTEIRA DE IDENTIDADE (RG)
+       ========================================================================= -->
+  <div class="modal-overlay" id="modal-rg">
+    <div class="rg-card">
+      <button class="rg-close-btn" onclick="fecharRG()"><i class="fa-solid fa-xmark"></i></button>
+      
+      <div class="rg-header">
+        <img class="rg-logo-estado" src="bh.png" alt="Brasão MG" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'">
+        <div class="rg-header-texts">
+          <h2>República Federativa do Brasil</h2>
+          <h3>Estado de Minas Gerais • Secretaria de Segurança</h3>
+          <span>Carteira de Identidade - Cidadão</span>
+        </div>
+      </div>
+
+      <div class="rg-body">
+        <div class="rg-photo-section">
+          <div class="rg-photo-box">
+            <img id="rg-foto-src" src="barba5.png" alt="Foto Cidadão">
+            <div class="rg-photo-stamp">FOTO DIGITAL</div>
+          </div>
+          <div class="rg-fingerprint">
+            <i class="fa-solid fa-fingerprint"></i>
+          </div>
+        </div>
+
+        <div class="rg-info-section">
+          <div class="rg-field">
+            <span class="rg-label">Nome do Cidadão</span>
+            <div class="rg-value" id="rg-nome">CARLOS EDUARDO SILVA</div>
+          </div>
+
+          <div class="rg-row">
+            <div class="rg-field">
+              <span class="rg-label">Registro Geral (RG)</span>
+              <div class="rg-value rg-value-mono" id="rg-numero">MG-14.892.301</div>
+            </div>
+            <div class="rg-field">
+              <span class="rg-label">Cadastro de Pessoa Física (CPF)</span>
+              <div class="rg-value rg-value-mono" id="rg-cpf">123.456.789-00</div>
+            </div>
+          </div>
+
+          <div class="rg-row">
+            <div class="rg-field">
+              <span class="rg-label">Naturalidade</span>
+              <div class="rg-value" id="rg-naturalidade">BELO HORIZONTE - MG</div>
+            </div>
+            <div class="rg-field">
+              <span class="rg-label">Data de Expedição</span>
+              <div class="rg-value rg-value-mono" id="rg-data">08/08/2026</div>
+            </div>
+          </div>
+
+          <div class="rg-field">
+            <span class="rg-label">Assinatura do Titular</span>
+            <div class="rg-signature" id="rg-assinatura">Carlos E. Silva</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     function abrirAba(idAba, botao) {
-      document.querySelectorAll('.tab-pane').forEach(aba => {
-        aba.classList.remove('active');
-      });
-      document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-      });
-
+      document.querySelectorAll('.tab-pane').forEach(aba => aba.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.getElementById(idAba).classList.add('active');
       botao.classList.add('active');
     }
 
-    // --- COMUNICAÇÃO USANDO O GECKOJU DO CEF MOBILE ---
+    // --- COMUNICAÇÃO INTELIGENTE (TESTE NO PC + SA-MP) ---
     function emitirEvento(acao, parametro = -1) {
-      // Envia uma string única no padrão: Prefeitura_Acao:acao|parametro
       const payload = `Prefeitura_Acao:${acao}|${parametro}`;
       
       if (window.geckoju) {
         window.geckoju.send(payload);
       } else {
-        console.log("[CEF-MOBILE DEBUG] Enviado:", payload);
-        alert(`[Modo Debug/PC] Comando: ${payload}`);
+        console.log("[CEF DEBUG] Enviado:", payload);
+        
+        // Se clicar em emitir RG no navegador do PC, abre o modal na hora para teste visual!
+        if(acao === 'emitir_rg') {
+          abrirRG();
+        } else {
+          alert(`[Modo Debug PC] Ação acionada: ${acao}`);
+        }
       }
     }
 
@@ -584,7 +685,36 @@
       if (window.geckoju) {
         window.geckoju.send("Prefeitura_Fechar");
       } else {
-        alert("Fechando menu...");
+        alert("Painel fechado (Modo Navegador).");
+      }
+    }
+
+    // =========================================================================
+    // FUNÇÕES DA CARTEIRA DE IDENTIDADE (RG)
+    // =========================================================================
+    function abrirRG(nome = "CARLOS EDUARDO SILVA", rg = "MG-14.892.301", cpf = "123.456.789-00", naturalidade = "BELO HORIZONTE - MG", dataExp = "08/08/2026", fotoUrl = "") {
+      document.getElementById('painel-prefeitura').style.display = 'none';
+      
+      document.getElementById('rg-nome').innerText = nome;
+      document.getElementById('rg-numero').innerText = rg;
+      document.getElementById('rg-cpf').innerText = cpf;
+      document.getElementById('rg-naturalidade').innerText = naturalidade;
+      document.getElementById('rg-data').innerText = dataExp;
+      document.getElementById('rg-assinatura').innerText = nome;
+
+      if(fotoUrl !== "") {
+        document.getElementById('rg-foto-src').src = fotoUrl;
+      }
+
+      document.getElementById('modal-rg').style.display = 'flex';
+    }
+
+    function fecharRG() {
+      document.getElementById('modal-rg').style.display = 'none';
+      document.getElementById('painel-prefeitura').style.display = 'flex';
+      
+      if (window.geckoju) {
+        window.geckoju.send("RG_Fechar");
       }
     }
   </script>
