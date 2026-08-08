@@ -663,27 +663,40 @@
       botao.classList.add('active');
     }
 
-    // --- COMUNICAÇÃO INTELIGENTE (TESTE NO PC + SA-MP) ---
-    function emitirEvento(acao, parametro = -1) {
+    // --- COMUNICAÇÃO INTELIGENTE (SUPORTE UNIFICADO GECKODJU + CEF) ---
+    function enviarParaServidor(acao, parametro = -1) {
       const payload = `Prefeitura_Acao:${acao}|${parametro}`;
       
-      if (window.geckoju) {
+      // 1. Prioridade: Geckodju (Mobile)
+      if (typeof window.geckoju !== 'undefined' && typeof window.geckoju.send === 'function') {
         window.geckoju.send(payload);
+        return;
+      }
+
+      // 2. Segunda opção: CEF Padrão do PC
+      if (typeof window.cef !== 'undefined' && typeof window.cef.emit === 'function') {
+        window.cef.emit(acao, parametro);
+        return;
+      }
+
+      // 3. Fallback / Modo de Teste em Navegador Web comum
+      console.log("[CEF DEBUG] Enviado:", payload);
+      if (acao === 'emitir_rg') {
+        abrirRG();
       } else {
-        console.log("[CEF DEBUG] Enviado:", payload);
-        
-        // Se clicar em emitir RG no navegador do PC, abre o modal na hora para teste visual!
-        if(acao === 'emitir_rg') {
-          abrirRG();
-        } else {
-          alert(`[Modo Debug PC] Ação acionada: ${acao}`);
-        }
+        alert(`[Modo Debug PC] Ação acionada: ${acao}`);
       }
     }
 
+    function emitirEvento(acao, parametro = -1) {
+      enviarParaServidor(acao, parametro);
+    }
+
     function fecharCEF() {
-      if (window.geckoju) {
+      if (typeof window.geckoju !== 'undefined' && typeof window.geckoju.send === 'function') {
         window.geckoju.send("Prefeitura_Fechar");
+      } else if (typeof window.cef !== 'undefined' && typeof window.cef.emit === 'function') {
+        window.cef.emit("Prefeitura_Fechar", -1);
       } else {
         alert("Painel fechado (Modo Navegador).");
       }
@@ -713,8 +726,10 @@
       document.getElementById('modal-rg').style.display = 'none';
       document.getElementById('painel-prefeitura').style.display = 'flex';
       
-      if (window.geckoju) {
+      if (typeof window.geckoju !== 'undefined' && typeof window.geckoju.send === 'function') {
         window.geckoju.send("RG_Fechar");
+      } else if (typeof window.cef !== 'undefined' && typeof window.cef.emit === 'function') {
+        window.cef.emit("RG_Fechar", -1);
       }
     }
   </script>
