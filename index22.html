@@ -13,26 +13,47 @@
             overflow: hidden; 
             width: 100%;
             height: 100%;
-            /* TRAVA DE TOQUE NA TELA */
             touch-action: none; 
             user-select: none;
         }
         
-        /* Onde a HUD fica posicionada (Embaixo na esquerda) */
+        /* HUD DE VIDA - Adicionado transition para animar ao abaixar */
         .hud-bottom-left {
             position: absolute;
             bottom: 15px;
             left: 15px;
             display: flex;
-            gap: 5px; /* Deixei um milímetro mais junto também */
+            gap: 5px;
+            transition: transform 0.5s ease-in-out;
         }
         
-        /* O fundo escuro do quadradinho - AGORA UM POUCO MENOR */
+        /* VELOCÍMETRO - Fica no meio, começa invisível e mais pra baixo */
+        .speedo-center {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px); /* Começa abaixado */
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            opacity: 0;
+            transition: all 0.5s ease-in-out;
+        }
+
+        /* Classes que o JS vai usar para animar as HUDs */
+        .hide-life-hud {
+            transform: translateY(100px); /* Joga a HUD de vida pra baixo da tela */
+        }
+        .show-speedo-hud {
+            transform: translateX(-50%) translateY(0); /* Sobe pro lugar certo */
+            opacity: 1;
+        }
+
         .status-box {
-            width: 30px;  /* Reduzido de 36px para 30px */
-            height: 30px; /* Reduzido de 36px para 30px */
+            width: 30px; 
+            height: 30px; 
             background-color: rgba(0, 0, 0, 0.65); 
-            border-radius: 5px; /* Ajustei a borda pro novo tamanho */
+            border-radius: 5px; 
             position: relative;
             overflow: hidden; 
             display: flex;
@@ -42,7 +63,6 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
-        /* A cor que preenche o quadradinho e "desce" */
         .status-fill {
             position: absolute;
             bottom: 0; 
@@ -52,66 +72,113 @@
             transition: height 0.3s ease-out; 
         }
         
-        /* As cores de cada status */
-        .fill-health { background-color: #FF1493; } /* Rosa choque/Pink */
-        .fill-armor  { background-color: #1E90FF; } /* Azul do Colete */
-        .fill-hunger { background-color: #FF8C00; } /* Laranja da Fome */
-        .fill-thirst { background-color: #00BFFF; } /* Azul claro da Sede */
+        .fill-health { background-color: #FF1493; }
+        .fill-armor  { background-color: #1E90FF; } 
+        .fill-hunger { background-color: #FF8C00; }
+        .fill-thirst { background-color: #00BFFF; } 
+        .fill-fuel   { background-color: #FFD700; } /* Amarelo pro Combustível */
         
-        /* O Ícone que fica por cima da cor - AGORA UM POUCO MENOR */
         .status-icon {
             position: relative;
             z-index: 2; 
             color: rgba(255, 255, 255, 0.95);
-            font-size: 17px; /* Reduzido de 20px para 17px pra caber certinho */
+            font-size: 17px; 
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8); 
+        }
+
+        /* Texto da velocidade */
+        .speed-text {
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            display: flex;
+            align-items: baseline;
+            gap: 2px;
+        }
+        .speed-kmh {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
         }
     </style>
 </head>
 <body>
 
-    <div class="hud-bottom-left">
+    <!-- HUD DE VIDA E STATUS -->
+    <div class="hud-bottom-left" id="lifeHUD">
         <div class="status-box">
             <div class="status-fill fill-health" id="fill-health" style="height: 100%;"></div>
             <span class="material-symbols-outlined status-icon">favorite</span>
         </div>
-
         <div class="status-box">
             <div class="status-fill fill-armor" id="fill-armor" style="height: 100%;"></div>
             <span class="material-symbols-outlined status-icon">security</span>
         </div>
-
         <div class="status-box">
             <div class="status-fill fill-hunger" id="fill-hunger" style="height: 100%;"></div>
             <span class="material-symbols-outlined status-icon">restaurant</span>
         </div>
-
         <div class="status-box">
             <div class="status-fill fill-thirst" id="fill-thirst" style="height: 100%;"></div>
             <span class="material-symbols-outlined status-icon">water_drop</span>
         </div>
     </div>
 
+    <!-- HUD DO VELOCÍMETRO -->
+    <div class="speedo-center" id="speedoHUD">
+        <div class="speed-text">
+            <span id="text-speed">0</span>
+            <span class="speed-kmh">KM/H</span>
+        </div>
+        
+        <!-- Bixinho igual os de vida, mas pra gasolina -->
+        <div class="status-box">
+            <div class="status-fill fill-fuel" id="fill-fuel" style="height: 100%;"></div>
+            <span class="material-symbols-outlined status-icon">local_gas_station</span>
+        </div>
+    </div>
+
     <script>
-        // Função que altera a altura da corzinha dentro do quadrado
         function setFill(id, percent) {
             const el = document.getElementById(id);
             if (!el) return;
-            // Garante que o valor não passe de 100 nem seja menor que 0
             percent = Math.max(0, Math.min(100, percent));
             el.style.height = percent + '%';
         }
 
-        // Recebe os dados do servidor SAMP
         if (window.geckoju) {
             window.geckoju.onData = function(data) {
                 try {
                     const obj = JSON.parse(data);
                     
+                    // Atualiza a vida
                     if(obj.health !== undefined) setFill('fill-health', obj.health);
                     if(obj.armor !== undefined) setFill('fill-armor', obj.armor);
                     if(obj.hunger !== undefined) setFill('fill-hunger', obj.hunger);
                     if(obj.thirst !== undefined) setFill('fill-thirst', obj.thirst); 
+
+                    // Atualiza Velocímetro
+                    if(obj.speed !== undefined) {
+                        document.getElementById('text-speed').innerText = obj.speed;
+                    }
+                    if(obj.fuel !== undefined) {
+                        setFill('fill-fuel', obj.fuel);
+                    }
+                    
+                    // Transição: Entrou ou Saiu do Veículo
+                    if(obj.inVehicle !== undefined) {
+                        const lifeHUD = document.getElementById('lifeHUD');
+                        const speedoHUD = document.getElementById('speedoHUD');
+
+                        if(obj.inVehicle === true) {
+                            lifeHUD.classList.add('hide-life-hud'); // Esconde vida
+                            speedoHUD.classList.add('show-speedo-hud'); // Mostra velocímetro
+                        } else {
+                            lifeHUD.classList.remove('hide-life-hud'); // Volta vida
+                            speedoHUD.classList.remove('show-speedo-hud'); // Esconde velocímetro
+                        }
+                    }
                     
                 } catch(e) {}
             };
