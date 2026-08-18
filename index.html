@@ -1,219 +1,276 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
-    <title>EIXO CENTRAL - Conectar</title>
-    
-    <link rel="stylesheet" href="style.css">
-
-    <!-- CSS Injetado: Aplica o tema Amarelo/Laranja do Eixo Central -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        :root {
-            --primary: #f39c12; 
-            --primary-hover: #e67e22; 
-            --danger: #e74c3c;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        html, body { 
+            background: transparent !important; 
+            overflow: hidden;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            /* 2. TRAVA DE DEDO NA TELA AQUI */
+            touch-action: none; 
+            user-select: none;
         }
 
-        /* AJUSTE PARA MOBILE (RESPONSIVIDADE) */
-        .fivem-dashboard {
-            width: 95% !important; /* Mais largo em telas pequenas */
-            max-width: 900px !important; /* Um pouco mais compacto para centralizar */
-            transform: scale(0.9); /* Diminui levemente o painel inteiro */
-            transform-origin: center;
+        .hud-top-right {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: -5px;
         }
 
-        /* Redução de margens e padding para não cortar */
-        .login-section { padding: 10px; }
-        .logo { font-size: 2.5rem !important; margin-bottom: 20px !important; }
-        .btn-action { padding: 14px !important; }
-
-        /* Ajuste da sidebar de criação para não ser cortada */
-        .creation-sidebar {
-            width: 280px !important; /* Um pouco mais estreita */
-            padding: 20px !important;
-            margin-left: 20px !important;
+        /* 1. DINHEIRO, BANCO E ID EM LINHA RETA */
+        .top-row {
+            display: flex;
+            flex-direction: row; 
+            gap: 6px; 
+            justify-content: flex-end;
         }
 
-        .btn-action, .btn-flutuante, .box-opt.active {
-            background: linear-gradient(135deg, #f1c40f, #e67e22) !important;
-            color: #111 !important;
-            border-color: #f39c12 !important;
-            font-weight: 800 !important;
-        }
-        .logo span, h1 span {
-            color: var(--primary) !important;
-        }
-        .grid-options { 
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); 
+        /* CAIXAS LISAS: AMARELO FORTE, SEM BORDA, TEXTO BRANCO */
+        .hud-bar {
+            background: #FFCC00; 
+            border: none; /* ZERO BORDA */
+            outline: none;
+            padding: 3px 8px; 
+            border-radius: 4px; 
+            display: flex;
+            align-items: center;
             gap: 5px; 
         }
-        .box-opt {
-            aspect-ratio: auto; 
-            min-height: 35px; 
-            background: rgba(255,255,255,0.05); 
-            border: 1px solid rgba(255,255,255,0.1);
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            cursor: pointer; 
-            font-size: 0.7rem; 
-            border-radius: 3px; 
-            color: white;
-            transition: 0.3s;
+
+        .hud-bar img { 
+            width: 13px; 
+            height: 13px; 
+            filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.5)); /* Destaca o ícone */
         }
+
+        /* TEXTO BRANCO COM SOMBRA PRA LER NO AMARELO */
+        .val { 
+            font-size: 11.5px; 
+            font-weight: 900; 
+            color: #FFFFFF; /* TEXTO BRANCO AQUI KRL */
+            white-space: nowrap; 
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8); /* Sombra preta na letra pra não sumir no amarelo */
+        }
+
+        .label-id {
+            font-size: 11px; 
+            font-weight: 900;
+            color: #FFFFFF; /* TEXTO BRANCO AQUI TAMBÉM */
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        /* 2. BLOCO DA IMAGEM E HORÁRIO */
+        .status-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-right: 2px;
+        }
+
+        /* Deixei o relógio branco pra combinar com o resto! */
+        .time { 
+            font-size: 10px; 
+            font-weight: 900; 
+            color: #FFFFFF; 
+            text-shadow: 1px 1px 3px black; 
+            /* 2. MOVER O RELÓGIO (A MÁGICA É AQUI) */
+            position: relative;
+            
+            top: -9px;   /* MOVER PARA BAIXO (se quiser mover pra CIMA, coloque negativo, ex: -5px) */
+            right: -49px; /* MOVER PARA A ESQUERDA (afasta da imagem). Para ir pra direita, use left: 5px; */
+        }
+
+        .crystal-img { 
+            width: 75px; 
+            height: 75px; 
+            object-fit: contain; 
+        }
+
+        /* 3. CRIPTOMOEDA DEBAIXO DA IMAGEM */
+        .crypto-row {
+            display: flex;
+            justify-content: flex-end;
+            margin-right: 2px;
+            gap: -2px;
+        }
+
+        .bar-crypto {
+            padding: 3px 10px;
+        }
+
+
+        /* =========================================
+           SISTEMA DE NOTIFICAÇÃO (AJUSTADO)
+           ========================================= */
+        #notify-container {
+            position: absolute;
+            top: 35px; /* <-- Descemos um pouquinho (antes era 10px) */
+            right: 15px; 
+            z-index: 9999; 
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none; 
+        }
+
+        .notify-box {
+            background: #111111; 
+            color: white;
+            padding: 8px 12px; /* <-- Diminuímos o tamanho da caixinha (antes era 12px 16px) */
+            border-radius: 5px;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 11.5px; /* <-- Fonte menor (antes era 13px) */
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px; /* <-- Diminuímos o espaço entre o emoji e o texto */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.8);
+            position: relative; 
+            overflow: hidden; 
+            animation: slideIn 0.3s ease-out, fadeOut 0.3s ease-in 4.7s forwards;
+        }
+
+        /* O "Cordãozinho" (Barrinha animada lá embaixo) */
+        .notify-box::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            width: 100%;
+            animation: shrinkBar 4.7s linear forwards; 
+        }
+
+        .notify-box.success::after { background: #00FF00; } 
+        .notify-box.error::after { background: #FF3333; } 
+        .notify-box.info::after { background: #FFCC00; } 
+
+        .notify-icon { font-size: 14px; } /* <-- Emoji menor (antes era 16px) */
+
+        @keyframes shrinkBar {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+        @keyframes slideIn {
+            from { transform: translateX(120%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; transform: translateY(-15px); }
+        }
+
     </style>
 </head>
 <body>
-    <img src="fundo.png" id="main-bg-image" alt="Background">
-    <div id="main-bg-overlay"></div>
 
-    <audio id="myAudio" loop>
-        <source src="musica.mp3" type="audio/mpeg">
-    </audio>
+    <audio id="audio-success" src="acerto.mp3" preload="auto"></audio>
+    <audio id="audio-error" src="erro.mp3" preload="auto"></audio>
 
-    <div id="login-screen">
-        <div class="fivem-dashboard">
-            
-            <div class="login-section">
-                <span class="server-tag">Servidor Roleplay</span>
-                <h1 class="logo">EIXO<span>CENTRAL</span></h1>
-                
-                <div id="error-msg">ESTA CONTA JÁ EXISTE!</div>
-                
-                <div class="input-container">
-                    <span class="input-label">Acesso de Segurança</span>
-                    <div class="input-group">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="login-pass" placeholder="DIGITE SUA SENHA">
-                    </div>
-                    
-                    <button class="btn-action" onclick="login()">CONECTAR AO SERVIDOR</button>
-                    <button class="btn-action register" onclick="checkRegister()">CRIAR NOVO PERSONAGEM</button>
-                </div>
+    <div id="notify-container"></div>
+
+
+    <div class="hud-top-right">
+        
+        <div class="top-row">
+            <div class="hud-bar">
+                <img src="cash_icon.png" alt="">
+                <span class="val" id="cash">$1.200</span>
             </div>
 
-            <div class="info-section">
-                <div class="music-card">
-                    <div class="disc-art">
-                        <img src="capa.png" id="music-cover" alt="Capa da Música">
-                    </div>
-                    <div class="music-info">
-                        <div class="music-title">Trilha Sonora Ativa</div>
-                        <div class="music-author">Buscando do Servidor</div>
-                    </div>
-                    <div class="music-controls">
-                        <button class="control-btn"><i class="fas fa-step-backward"></i></button>
-                        <i id="musicIcon" class="fas fa-pause" onclick="togglePlay()"></i>
-                        <button class="control-btn"><i class="fas fa-step-forward"></i></button>
-                    </div>
-                </div>
-
-                <div class="server-card">
-                    <h3>Bem-vindo à Cidade</h3>
-                    <p>Desenvolva sua história em uma das estruturas mais otimizadas da atualidade. Leia nossas diretrizes no Discord, configure seus comandos e tenha uma excelente jornada em nosso ecossistema.</p>
-                </div>
-
-                <div class="social-row">
-                    <div class="social-btn"><i class="fab fa-discord"></i></div>
-                    <div class="social-btn"><i class="fab fa-instagram"></i></div>
-                    <div class="social-btn"><i class="fab fa-youtube"></i></div>
-                </div>
+            <div class="hud-bar">
+                <img src="bank_icon.png" alt="">
+                <span class="val" id="bank">40.000</span>
             </div>
 
+            <div class="hud-bar">
+                <span class="label-id">ID:</span>
+                <span class="val" id="player_id">0</span>
+            </div>
         </div>
+
+        <div class="status-wrapper">
+            <span class="time" id="time">12:33</span>
+            <img src="cristal.png" class="crystal-img" alt="">
+        </div>
+
+        <div class="crypto-row">
+            <div class="hud-bar bar-crypto">
+                <img src="vip_icon.png" alt="">
+                <span class="val" id="coins">0</span>
+            </div>
+        </div>
+
     </div>
 
-    <div id="creation-screen">
-        <aside class="creation-sidebar">
-            <h1>CRIAR<span>CIDADÃO</span></h1>
-
-            <div class="section">
-                <p>Defina sua Senha</p>
-                <div class="input-group font-creation-input">
-                    <input type="password" id="char-pass" placeholder="Senha mestre...">
-                </div>
-            </div>
-
-            <div class="section">
-                <p>Gênero Base</p>
-                <div class="grid-options">
-                    <div id="m-btn" class="box-opt active" onclick="setGender('M')"><i class="fas fa-mars"></i> MASC</div>
-                    <div id="f-btn" class="box-opt" onclick="setGender('F')"><i class="fas fa-venus"></i> FEM</div>
-                </div>
-            </div>
-
-            <div class="section">
-                <p>Cor de Pele</p>
-                <div class="grid-options">
-                    <div id="pele-1" class="box-opt active" style="background: #ffdbac; color: black;" onclick="setSkin(1)">BRANCA</div>
-                    <div id="pele-2" class="box-opt" style="background: #8d5524; color: white;" onclick="setSkin(2)">NEGRA</div>
-                </div>
-            </div>
-
-            <div class="section">
-                <p>Cabelo & Barba</p>
-                <span class="badge-locked">BARBEARIA (IN-GAME)</span>
-                <div class="grid-options locked">
-                    <div class="box-opt"><i class="fas fa-lock"></i> CABELO</div>
-                    <div class="box-opt"><i class="fas fa-lock"></i> BARBA</div>
-                </div>
-            </div>
-        </aside>
-
-        <!-- Alterado para chamar a nova função finalizarCriacao() -->
-        <button class="btn-flutuante" onclick="finalizarCriacao()">INICIAR JORNADA <i class="fas fa-chevron-right"></i></button>
-    </div>
-
-    <script src="script.js"></script>
-
-    <!-- JS de Controle de Criação Integrado ao PAWN -->
     <script>
-        // Variáveis de Criação
-        let generoEscolhido = 1; // 1 = Masc, 2 = Fem
-        let peleEscolhida = 1;   // 1 = Branca, 2 = Negra
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('time').innerText = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
 
-        function setGender(g) {
-            document.getElementById('m-btn').classList.remove('active');
-            document.getElementById('f-btn').classList.remove('active');
+        // ==========================================
+        // FUNÇÃO DE CRIAR NOTIFICAÇÃO
+        // ==========================================
+        function showNotification(type, message) {
+            const container = document.getElementById('notify-container');
+            const notify = document.createElement('div');
+            notify.className = `notify-box ${type}`;
             
-            if(g === 'M') {
-                document.getElementById('m-btn').classList.add('active');
-                generoEscolhido = 1;
-            } else {
-                document.getElementById('f-btn').classList.add('active');
-                generoEscolhido = 2;
+            let icon = '💬';
+            let somId = 'audio-success'; 
+
+            if(type === 'error') { 
+                icon = '⚠️'; 
+                somId = 'audio-error'; 
             }
+            if(type === 'success') { 
+                icon = '✅'; 
+            }
+
+            notify.innerHTML = `<span class="notify-icon">${icon}</span> <span>${message}</span>`;
+            container.appendChild(notify);
+            
+            const audio = document.getElementById(somId);
+            if(audio) {
+                audio.currentTime = 0;
+                audio.play().catch(e => console.log("O navegador bloqueou o som", e));
+            }
+
+            setTimeout(() => {
+                if(notify.parentElement) notify.remove();
+            }, 5000);
         }
 
-        function setSkin(id) {
-            document.getElementById('pele-1').classList.remove('active');
-            document.getElementById('pele-2').classList.remove('active');
-            
-            document.getElementById('pele-' + id).classList.add('active');
-            peleEscolhida = id;
-        }
+        // <-- MENSAGEM INICIAL ATUALIZADA AQUI -->
+        window.onload = function() {
+            setTimeout(() => {
+                showNotification('success', 'Bem-vindo ao Eixo Central!');
+            }, 1000);
+        };
 
-        // Função para finalizar a criação e mandar os dados via Geckoju
-        function finalizarCriacao() {
-            const pass = document.getElementById('char-pass').value;
-            if(pass.length < 4) {
-                alert("Sua senha deve ter pelo menos 4 caracteres!");
-                return;
-            }
-            
-            // Payload montado: finishCreation:SENHA|GENERO|PELE
-            let payload = "finishCreation:" + pass + "|" + generoEscolhido + "|" + peleEscolhida;
-            
-            if(window.geckoju) {
-                window.geckoju.send(payload);
-            } else {
-                console.log("Simulando Envio (Fora do Jogo):", payload);
-            }
+
+        // Integração com o Jogo
+        if (window.geckoju) {
+            window.geckoju.onData = function(data) {
+                try {
+                    const obj = JSON.parse(data);
+                    if (obj.cash !== undefined) document.getElementById('cash').innerText = "$" + obj.cash.toLocaleString('pt-BR');
+                    if (obj.bank !== undefined) document.getElementById('bank').innerText = obj.bank.toLocaleString('pt-BR');
+                    if (obj.id !== undefined) document.getElementById('player_id').innerText = obj.id;
+                    if (obj.coins !== undefined) document.getElementById('coins').innerText = obj.coins;
+                } catch(e) {}
+            };
         }
     </script>
 </body>
