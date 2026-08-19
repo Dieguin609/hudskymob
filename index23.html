@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..400,1,1" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap" />
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        html, body { 
+            background: transparent !important; 
+            overflow: hidden; 
+            width: 100%;
+            height: 100%;
+            touch-action: none; 
+            user-select: none;
+        }
+
+        .speedo-container {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 180px;
+            height: 180px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .speedo-svg-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .speedo-center-content {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+        }
+
+        .speed-text {
+            color: #ffffff;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 36px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .speed-kmh {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 9px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 2px;
+            margin-top: 2px;
+        }
+
+        .indicators-row {
+            position: absolute;
+            bottom: -22px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 3px;
+            z-index: 5;
+            width: max-content;
+        }
+
+        .ind-btn {
+            width: 25px;
+            height: 25px;
+            background: rgba(15, 15, 20, 0.9);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .ind-btn span {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.3);
+            transition: color 0.3s ease;
+        }
+
+        .ind-btn.active {
+            background: rgba(210, 20, 20, 0.95);
+            border-color: rgba(255, 50, 50, 0.6);
+        }
+
+        .ind-btn.active span { color: #ffffff; }
+
+        .ind-btn.blink-active {
+            background: rgba(0, 210, 100, 0.95);
+            border-color: rgba(0, 255, 120, 0.6);
+        }
+        .ind-btn.blink-active span { color: #ffffff; }
+    </style>
+</head>
+<body>
+
+    <div class="speedo-container" id="speedoHUD">
+        <svg class="speedo-svg-container" viewBox="0 0 180 180">
+            <circle cx="90" cy="90" r="65" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="6"></circle>
+            <circle id="speed-ring" cx="90" cy="90" r="65" fill="none" stroke="#00d2ff" stroke-width="7" stroke-linecap="round"
+                stroke-dasharray="408" stroke-dashoffset="408" transform="rotate(-90 90 90)"
+                style="transition: stroke-dashoffset 0.15s ease;">
+            </circle>
+
+            <path d="M 42 58 A 65 65 0 0 1 78 28" fill="none" stroke="rgba(0,0,0,0.6)" stroke-width="5" stroke-linecap="round"/>
+            <path id="path-fuel" d="M 42 58 A 65 65 0 0 1 78 28" fill="none" stroke="#ffaa00" stroke-width="5" stroke-linecap="round"
+                stroke-dasharray="45" stroke-dashoffset="0" style="transition: stroke-dashoffset 0.3s ease;"/>
+
+            <path d="M 102 28 A 65 65 0 0 1 138 58" fill="none" stroke="rgba(0,0,0,0.6)" stroke-width="5" stroke-linecap="round"/>
+            <path id="path-oil" d="M 102 28 A 65 65 0 0 1 138 58" fill="none" stroke="#00ffaa" stroke-width="5" stroke-linecap="round"
+                stroke-dasharray="45" stroke-dashoffset="0" style="transition: stroke-dashoffset 0.3s ease;"/>
+        </svg>
+
+        <div class="speedo-center-content">
+            <span class="speed-text" id="text-speed">00</span>
+            <span class="speed-kmh">KM/H</span>
+        </div>
+
+        <div class="indicators-row">
+            <div class="ind-btn" id="btn-turn-left"><span class="material-symbols-outlined">chevron_left</span></div>
+            <div class="ind-btn" id="btn-health-hud"><span class="material-symbols-outlined">favorite</span></div>
+            <div class="ind-btn" id="btn-armor-hud"><span class="material-symbols-outlined">security</span></div>
+            <div class="ind-btn active" id="btn-seatbelt"><span class="material-symbols-outlined">airline_seat_recline_normal</span></div>
+            <div class="ind-btn" id="btn-hunger-hud"><span class="material-symbols-outlined">restaurant</span></div>
+            <div class="ind-btn" id="btn-thirst-hud"><span class="material-symbols-outlined">water_drop</span></div>
+            <div class="ind-btn" id="btn-lock"><span class="material-symbols-outlined">lock</span></div>
+            <div class="ind-btn" id="btn-gear"><span style="font-size: 10px; font-weight: bold; color: #fff; font-family: 'Rajdhani';" id="gear-text">N</span></div>
+            <div class="ind-btn" id="btn-lights"><span class="material-symbols-outlined">light_mode</span></div>
+            <div class="ind-btn" id="btn-handbrake"><span class="material-symbols-outlined">radio_button_checked</span></div>
+            <div class="ind-btn" id="btn-turn-right"><span class="material-symbols-outlined">chevron_right</span></div>
+        </div>
+    </div>
+
+    <script>
+        function handleIncomingData(data) {
+            try {
+                const obj = typeof data === 'string' ? JSON.parse(data) : data;
+                if (!obj) return;
+
+                if(obj.health !== undefined) {
+                    const hHud = document.getElementById('btn-health-hud');
+                    if(obj.health <= 20) hHud.classList.add('active'); else hHud.classList.remove('active');
+                }
+                if(obj.armor !== undefined) {
+                    const aHud = document.getElementById('btn-armor-hud');
+                    if(obj.armor <= 20 && obj.armor > 0) aHud.classList.add('active'); else aHud.classList.remove('active');
+                }
+                if(obj.hunger !== undefined) {
+                    const hgHud = document.getElementById('btn-hunger-hud');
+                    if(obj.hunger <= 20) hgHud.classList.add('active'); else hgHud.classList.remove('active');
+                }
+                if(obj.thirst !== undefined) {
+                    const tHud = document.getElementById('btn-thirst-hud');
+                    if(obj.thirst <= 20) tHud.classList.add('active'); else tHud.classList.remove('active');
+                }
+
+                if(obj.speed !== undefined) {
+                    let speedVal = Math.floor(obj.speed);
+                    document.getElementById('text-speed').innerText = speedVal;
+                    let ring = document.getElementById('speed-ring');
+                    let circumference = 408;
+                    let maxSpeed = 200;
+                    let offset = circumference - (Math.min(speedVal, maxSpeed) / maxSpeed) * circumference;
+                    ring.style.strokeDashoffset = offset;
+                }
+
+                if(obj.fuel !== undefined) {
+                    let fuelPercent = Math.max(0, Math.min(100, obj.fuel));
+                    document.getElementById('path-fuel').style.strokeDashoffset = 45 - (fuelPercent / 100) * 45;
+                }
+
+                if(obj.oil !== undefined) {
+                    let oilPercent = Math.max(0, Math.min(100, obj.oil));
+                    document.getElementById('path-oil').style.strokeDashoffset = 45 - (oilPercent / 100) * 45;
+                }
+
+                if(obj.seatbelt !== undefined) {
+                    const sb = document.getElementById('btn-seatbelt');
+                    if(obj.seatbelt === true || obj.seatbelt === 1) sb.classList.remove('active'); else sb.classList.add('active');
+                }
+
+                if(obj.locked !== undefined) {
+                    const lk = document.getElementById('btn-lock');
+                    const icon = lk.querySelector('span');
+                    if(obj.locked === true || obj.locked === 1) { lk.classList.add('active'); icon.innerText = 'lock'; }
+                    else { lk.classList.remove('active'); icon.innerText = 'lock_open'; }
+                }
+
+                if(obj.lights !== undefined) {
+                    const lt = document.getElementById('btn-lights');
+                    if(obj.lights === true || obj.lights === 1) lt.classList.add('active'); else lt.classList.remove('active');
+                }
+
+                if(obj.handbrake !== undefined) {
+                    const hb = document.getElementById('btn-handbrake');
+                    if(obj.handbrake === true || obj.handbrake === 1) hb.classList.add('active'); else hb.classList.remove('active');
+                }
+
+                if(obj.gear !== undefined) {
+                    document.getElementById('gear-text').innerText = obj.gear;
+                }
+
+                if(obj.turnLeft !== undefined) {
+                    const tl = document.getElementById('btn-turn-left');
+                    if(obj.turnLeft) tl.classList.add('blink-active'); else tl.classList.remove('blink-active');
+                }
+                if(obj.turnRight !== undefined) {
+                    const tr = document.getElementById('btn-turn-right');
+                    if(obj.turnRight) tr.classList.add('blink-active'); else tr.classList.remove('blink-active');
+                }
+            } catch(e) {
+                console.error("Erro no parse do velocímetro: ", e);
+            }
+        }
+
+        if (window.geckoju) {
+            window.geckoju.onData = function(data) { handleIncomingData(data); };
+        }
+        window.addEventListener('message', function(event) { handleIncomingData(event.data); });
+    </script>
+</body>
+</html>
