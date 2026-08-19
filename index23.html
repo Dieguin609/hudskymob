@@ -173,12 +173,17 @@
     <script>
         // Envia o pedido de atualização para a callback OnGeckojuEvent do Pawn
         function solicitarDadosPawn() {
-            if (window.geckoju && typeof window.geckoju.send === 'function') {
-                window.geckoju.send("obter_velocimetro");
-            } else if (window.geckoju && typeof window.geckoju.sendData === 'function') {
-                window.geckoju.sendData("obter_velocimetro");
+            if (window.geckoju) {
+                if (typeof window.geckoju.send === 'function') {
+                    window.geckoju.send("obter_velocimetro");
+                } else if (typeof window.geckoju.sendData === 'function') {
+                    window.geckoju.sendData("obter_velocimetro");
+                }
             } else {
-                window.location.href = "geckoju:obter_velocimetro";
+                // Fallback caso o objeto nativo demore a injetar
+                try {
+                    window.location.href = "geckoju:obter_velocimetro";
+                } catch(e) {}
             }
         }
 
@@ -187,10 +192,11 @@
 
         function handleIncomingData(data) {
             try {
+                if (!data) return;
                 const obj = typeof data === 'string' ? JSON.parse(data) : data;
                 if (!obj) return;
 
-                // Velocidade
+                // 1. Velocidade
                 if (obj.speed !== undefined) {
                     let speedVal = Math.floor(obj.speed);
                     document.getElementById('text-speed').innerText = speedVal < 10 ? '0' + speedVal : speedVal;
@@ -201,7 +207,7 @@
                     ring.style.strokeDashoffset = offset;
                 }
 
-                // Combustível
+                // 2. Combustível
                 if (obj.fuel !== undefined) {
                     let fuelPercent = Math.max(0, Math.min(100, obj.fuel));
                     let maxDash = 67;
@@ -209,7 +215,7 @@
                     document.getElementById('path-fuel').style.strokeDashoffset = offsetFuel;
                 }
 
-                // Vida do Motor (Recebe "health" enviado pelo Pawn e aplica na barra direita de óleo/engine)
+                // 3. Vida do Motor / Óleo
                 let motorVal = obj.health !== undefined ? obj.health : obj.oil;
                 if (motorVal !== undefined) {
                     let oilPercent = Math.max(0, Math.min(100, motorVal));
@@ -218,13 +224,17 @@
                     document.getElementById('path-oil').style.strokeDashoffset = offsetOil;
                 }
 
-                // Cinto de Segurança
+                // 4. Cinto de Segurança
                 if (obj.seatbelt !== undefined) {
                     const sb = document.getElementById('btn-seatbelt');
-                    if (obj.seatbelt === 1 || obj.seatbelt === true) sb.classList.remove('active'); else sb.classList.add('active');
+                    if (obj.seatbelt === 1 || obj.seatbelt === true) {
+                        sb.classList.remove('active');
+                    } else {
+                        sb.classList.add('active');
+                    }
                 }
 
-                // Veículo Trancado
+                // 5. Veículo Trancado
                 if (obj.locked !== undefined) {
                     const lk = document.getElementById('btn-lock');
                     const icon = lk.querySelector('span');
@@ -237,24 +247,32 @@
                     }
                 }
 
-                // Farol
+                // 6. Farol
                 if (obj.lights !== undefined) {
                     const lt = document.getElementById('btn-lights');
-                    if (obj.lights === 1 || obj.lights === true) lt.classList.add('active'); else lt.classList.remove('active');
+                    if (obj.lights === 1 || obj.lights === true) {
+                        lt.classList.add('active');
+                    } else {
+                        lt.classList.remove('active');
+                    }
                 }
 
-                // Marcha (Gear)
+                // 7. Marcha (Gear)
                 if (obj.gear !== undefined) {
                     document.getElementById('gear-text').innerText = obj.gear;
                 }
 
-                // Freio de Mão
+                // 8. Freio de Mão
                 if (obj.handbrake !== undefined) {
                     const hb = document.getElementById('btn-handbrake');
-                    if (obj.handbrake === 1 || obj.handbrake === true) hb.classList.add('active'); else hb.classList.remove('active');
+                    if (obj.handbrake === 1 || obj.handbrake === true) {
+                        hb.classList.add('active');
+                    } else {
+                        hb.classList.remove('active');
+                    }
                 }
 
-                // Setas
+                // 9. Setas
                 if (obj.turnLeft !== undefined) {
                     const tl = document.getElementById('btn-turn-left');
                     if (obj.turnLeft) tl.classList.add('blink-active'); else tl.classList.remove('blink-active');
@@ -268,11 +286,15 @@
             }
         }
 
-        // Receptores do Geckoju / SF Mobile
-        if (window.geckoju) {
-            window.geckoju.onData = function(data) { handleIncomingData(data); };
+        // Inicialização dos Listeners do Geckoju / SF Mobile
+        function initGeckojuListeners() {
+            if (window.geckoju) {
+                window.geckoju.onData = function(data) { 
+                    handleIncomingData(data); 
+                };
+            }
         }
-        
+
         window.addEventListener('geckojuEvent', function(event) {
             handleIncomingData(event.detail);
         });
@@ -280,6 +302,10 @@
         window.addEventListener('message', function(event) { 
             handleIncomingData(event.data); 
         });
+
+        // Tenta vincular imediatamente e refaz caso o objeto carregue com atraso
+        initGeckojuListeners();
+        setTimeout(initGeckojuListeners, 500);
     </script>
 </body>
 </html>
