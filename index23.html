@@ -10,7 +10,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         html, body { 
-            background: #000000 !important; /* Mantido preto para ajuste. Mude para 'transparent' depois */
+            background: transparent !important; /* Fundo 100% invisível para o jogo */
             overflow: hidden; 
             width: 100%;
             height: 100%;
@@ -132,17 +132,17 @@
 
     <div class="speedo-container" id="speedoHUD">
         <svg class="speedo-svg-container" viewBox="0 0 180 125">
-            <!-- Velocímetro Principal em Meia-Lua (Raio 58, Centro X=90, Y=85) -->
+            <!-- Velocímetro Principal em Meia-Lua -->
             <path d="M 32 85 A 58 58 0 0 1 148 85" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="6" stroke-linecap="round"/>
             <path id="speed-ring" d="M 32 85 A 58 58 0 0 1 148 85" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round"
                 stroke-dasharray="273" stroke-dashoffset="273" style="transition: stroke-dashoffset 0.15s ease;"/>
 
-            <!-- Barra Combustível Esquerda (Raio 67, perfeitamente concêntrica e paralela) -->
+            <!-- Barra Combustível Esquerda -->
             <path d="M 23 75 A 67 67 0 0 1 73 18" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4" stroke-linecap="round"/>
             <path id="path-fuel" d="M 23 75 A 67 67 0 0 1 73 18" fill="none" stroke="#ffaa00" stroke-width="4" stroke-linecap="round"
                 stroke-dasharray="67" stroke-dashoffset="67" style="transition: stroke-dashoffset 0.3s ease;"/>
 
-            <!-- Barra Motor Direita (Raio 67, perfeitamente concêntrica e paralela) -->
+            <!-- Barra Motor Direita -->
             <path d="M 157 75 A 67 67 0 0 0 107 18" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4" stroke-linecap="round"/>
             <path id="path-oil" d="M 157 75 A 67 67 0 0 0 107 18" fill="none" stroke="#FF3333" stroke-width="4" stroke-linecap="round"
                 stroke-dasharray="67" stroke-dashoffset="67" style="transition: stroke-dashoffset 0.3s ease;"/>
