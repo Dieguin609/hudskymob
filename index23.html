@@ -10,7 +10,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         html, body { 
-            background: transparent !important; /* Fundo 100% invisível para o jogo */
+            background: transparent !important;
             overflow: hidden; 
             width: 100%;
             height: 100%;
@@ -66,7 +66,6 @@
             margin-top: 2px;
         }
 
-        /* Ícones informativos nas pontas inferiores */
         .bar-icon-left, .bar-icon-right {
             position: absolute;
             bottom: 25px;
@@ -84,7 +83,6 @@
             color: rgba(255, 255, 255, 0.7);
         }
 
-        /* Botões inferiores colados */
         .indicators-row {
             position: absolute;
             bottom: -10px;
@@ -132,23 +130,19 @@
 
     <div class="speedo-container" id="speedoHUD">
         <svg class="speedo-svg-container" viewBox="0 0 180 125">
-            <!-- Velocímetro Principal em Meia-Lua -->
             <path d="M 32 85 A 58 58 0 0 1 148 85" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="6" stroke-linecap="round"/>
             <path id="speed-ring" d="M 32 85 A 58 58 0 0 1 148 85" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round"
                 stroke-dasharray="273" stroke-dashoffset="273" style="transition: stroke-dashoffset 0.15s ease;"/>
 
-            <!-- Barra Combustível Esquerda -->
             <path d="M 23 75 A 67 67 0 0 1 73 18" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4" stroke-linecap="round"/>
             <path id="path-fuel" d="M 23 75 A 67 67 0 0 1 73 18" fill="none" stroke="#ffaa00" stroke-width="4" stroke-linecap="round"
                 stroke-dasharray="67" stroke-dashoffset="67" style="transition: stroke-dashoffset 0.3s ease;"/>
 
-            <!-- Barra Motor Direita -->
             <path d="M 157 75 A 67 67 0 0 0 107 18" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4" stroke-linecap="round"/>
             <path id="path-oil" d="M 157 75 A 67 67 0 0 0 107 18" fill="none" stroke="#FF3333" stroke-width="4" stroke-linecap="round"
                 stroke-dasharray="67" stroke-dashoffset="67" style="transition: stroke-dashoffset 0.3s ease;"/>
         </svg>
 
-        <!-- Ícones nas pontas -->
         <div class="bar-icon-left">
             <span class="material-symbols-outlined">local_gas_station</span>
         </div>
@@ -165,7 +159,7 @@
             <div class="ind-btn" id="btn-turn-left"><span class="material-symbols-outlined">chevron_left</span></div>
             <div class="ind-btn" id="btn-health-hud"><span class="material-symbols-outlined">favorite</span></div>
             <div class="ind-btn" id="btn-armor-hud"><span class="material-symbols-outlined">security</span></div>
-            <div class="ind-btn active" id="btn-seatbelt"><span class="material-symbols-outlined">airline_seat_recline_normal</span></div>
+            <div class="ind-btn" id="btn-seatbelt"><span class="material-symbols-outlined">airline_seat_recline_normal</span></div>
             <div class="ind-btn" id="btn-hunger-hud"><span class="material-symbols-outlined">restaurant</span></div>
             <div class="ind-btn" id="btn-thirst-hud"><span class="material-symbols-outlined">water_drop</span></div>
             <div class="ind-btn" id="btn-lock"><span class="material-symbols-outlined">lock</span></div>
@@ -177,31 +171,29 @@
     </div>
 
     <script>
+        // Envia o pedido de atualização para a callback OnGeckojuEvent do Pawn
+        function solicitarDadosPawn() {
+            if (window.geckoju && typeof window.geckoju.send === 'function') {
+                window.geckoju.send("obter_velocimetro");
+            } else if (window.geckoju && typeof window.geckoju.sendData === 'function') {
+                window.geckoju.sendData("obter_velocimetro");
+            } else {
+                window.location.href = "geckoju:obter_velocimetro";
+            }
+        }
+
+        // Pede os dados a cada 100ms (10 atualizações por segundo)
+        setInterval(solicitarDadosPawn, 100);
+
         function handleIncomingData(data) {
             try {
                 const obj = typeof data === 'string' ? JSON.parse(data) : data;
                 if (!obj) return;
 
-                if(obj.health !== undefined) {
-                    const hHud = document.getElementById('btn-health-hud');
-                    if(obj.health <= 20) hHud.classList.add('active'); else hHud.classList.remove('active');
-                }
-                if(obj.armor !== undefined) {
-                    const aHud = document.getElementById('btn-armor-hud');
-                    if(obj.armor <= 20 && obj.armor > 0) aHud.classList.add('active'); else aHud.classList.remove('active');
-                }
-                if(obj.hunger !== undefined) {
-                    const hgHud = document.getElementById('btn-hunger-hud');
-                    if(obj.hunger <= 20) hgHud.classList.add('active'); else hgHud.classList.remove('active');
-                }
-                if(obj.thirst !== undefined) {
-                    const tHud = document.getElementById('btn-thirst-hud');
-                    if(obj.thirst <= 20) tHud.classList.add('active'); else tHud.classList.remove('active');
-                }
-
-                if(obj.speed !== undefined) {
+                // Velocidade
+                if (obj.speed !== undefined) {
                     let speedVal = Math.floor(obj.speed);
-                    document.getElementById('text-speed').innerText = speedVal;
+                    document.getElementById('text-speed').innerText = speedVal < 10 ? '0' + speedVal : speedVal;
                     let ring = document.getElementById('speed-ring');
                     let circumference = 273;
                     let maxSpeed = 200;
@@ -209,60 +201,74 @@
                     ring.style.strokeDashoffset = offset;
                 }
 
-                if(obj.fuel !== undefined) {
+                // Combustível
+                if (obj.fuel !== undefined) {
                     let fuelPercent = Math.max(0, Math.min(100, obj.fuel));
                     let maxDash = 67;
                     let offsetFuel = maxDash - (fuelPercent / 100) * maxDash;
                     document.getElementById('path-fuel').style.strokeDashoffset = offsetFuel;
                 }
 
-                if(obj.oil !== undefined) {
-                    let oilPercent = Math.max(0, Math.min(100, obj.oil));
+                // Vida do Motor (Recebe "health" enviado pelo Pawn e aplica na barra direita de óleo/engine)
+                let motorVal = obj.health !== undefined ? obj.health : obj.oil;
+                if (motorVal !== undefined) {
+                    let oilPercent = Math.max(0, Math.min(100, motorVal));
                     let maxDash = 67;
                     let offsetOil = maxDash - (oilPercent / 100) * maxDash;
                     document.getElementById('path-oil').style.strokeDashoffset = offsetOil;
                 }
 
-                if(obj.seatbelt !== undefined) {
+                // Cinto de Segurança
+                if (obj.seatbelt !== undefined) {
                     const sb = document.getElementById('btn-seatbelt');
-                    if(obj.seatbelt === true || obj.seatbelt === 1) sb.classList.remove('active'); else sb.classList.add('active');
+                    if (obj.seatbelt === 1 || obj.seatbelt === true) sb.classList.remove('active'); else sb.classList.add('active');
                 }
 
-                if(obj.locked !== undefined) {
+                // Veículo Trancado
+                if (obj.locked !== undefined) {
                     const lk = document.getElementById('btn-lock');
                     const icon = lk.querySelector('span');
-                    if(obj.locked === true || obj.locked === 1) { lk.classList.add('active'); icon.innerText = 'lock'; }
-                    else { lk.classList.remove('active'); icon.innerText = 'lock_open'; }
+                    if (obj.locked === 1 || obj.locked === true) { 
+                        lk.classList.add('active'); 
+                        icon.innerText = 'lock'; 
+                    } else { 
+                        lk.classList.remove('active'); 
+                        icon.innerText = 'lock_open'; 
+                    }
                 }
 
-                if(obj.lights !== undefined) {
+                // Farol
+                if (obj.lights !== undefined) {
                     const lt = document.getElementById('btn-lights');
-                    if(obj.lights === true || obj.lights === 1) lt.classList.add('active'); else lt.classList.remove('active');
+                    if (obj.lights === 1 || obj.lights === true) lt.classList.add('active'); else lt.classList.remove('active');
                 }
 
-                if(obj.handbrake !== undefined) {
-                    const hb = document.getElementById('btn-handbrake');
-                    if(obj.handbrake === true || obj.handbrake === 1) hb.classList.add('active'); else hb.classList.remove('active');
-                }
-
-                if(obj.gear !== undefined) {
+                // Marcha (Gear)
+                if (obj.gear !== undefined) {
                     document.getElementById('gear-text').innerText = obj.gear;
                 }
 
-                if(obj.turnLeft !== undefined) {
+                // Freio de Mão
+                if (obj.handbrake !== undefined) {
+                    const hb = document.getElementById('btn-handbrake');
+                    if (obj.handbrake === 1 || obj.handbrake === true) hb.classList.add('active'); else hb.classList.remove('active');
+                }
+
+                // Setas
+                if (obj.turnLeft !== undefined) {
                     const tl = document.getElementById('btn-turn-left');
-                    if(obj.turnLeft) tl.classList.add('blink-active'); else tl.classList.remove('blink-active');
+                    if (obj.turnLeft) tl.classList.add('blink-active'); else tl.classList.remove('blink-active');
                 }
-                if(obj.turnRight !== undefined) {
+                if (obj.turnRight !== undefined) {
                     const tr = document.getElementById('btn-turn-right');
-                    if(obj.turnRight) tr.classList.add('blink-active'); else tr.classList.remove('blink-active');
+                    if (obj.turnRight) tr.classList.add('blink-active'); else tr.classList.remove('blink-active');
                 }
-            } catch(e) {
+            } catch (e) {
                 console.error("Erro no parse do velocímetro: ", e);
             }
         }
 
-        // Conexões com o plugin Geckoju e CEF nativo
+        // Receptores do Geckoju / SF Mobile
         if (window.geckoju) {
             window.geckoju.onData = function(data) { handleIncomingData(data); };
         }
