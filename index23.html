@@ -262,10 +262,18 @@
             }
         }
 
+        // Conexões com o plugin Geckoju e CEF nativo
         if (window.geckoju) {
             window.geckoju.onData = function(data) { handleIncomingData(data); };
         }
-        window.addEventListener('message', function(event) { handleIncomingData(event.data); });
+        
+        window.addEventListener('geckojuEvent', function(event) {
+            handleIncomingData(event.detail);
+        });
+
+        window.addEventListener('message', function(event) { 
+            handleIncomingData(event.data); 
+        });
     </script>
 </body>
 </html>
